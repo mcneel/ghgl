@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Eto.Forms;
 
 namespace ghgl
@@ -6,6 +7,11 @@ namespace ghgl
 
     class GLSLEditorDialog : Dialog<bool>
     {
+        static GLSLEditorDialog()
+        {
+            Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandler());
+        }
+
         class SimpleCommand : Eto.Forms.Command
         {
             public SimpleCommand(string text, Action action)
@@ -13,6 +19,22 @@ namespace ghgl
                 MenuText = text;
                 Executed += (s, e) => action();
             }
+        }
+
+        ScriptEditorControl _vertexShaderControl;
+        ScriptEditorControl _fragmentShaderControl;
+        ScriptEditorControl _geometryShaderControl;
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if( !e.Cancel )
+            {
+                var model = DataContext as GLSLViewModel;
+                model.VertexShaderCode = _vertexShaderControl.Text;
+                model.GeometryShaderCode = _geometryShaderControl.Text;
+                model.FragmentShaderCode = _fragmentShaderControl.Text;
+            }
+            base.OnClosing(e);
         }
 
         public GLSLEditorDialog(GLSLViewModel model)
@@ -42,28 +64,15 @@ namespace ghgl
             };
 
             var tabarea = new TabControl();
-            var ta = new TextArea();
-            ta.BindDataContext(c => c.Text, (GLSLViewModel m) => m.VertexShaderCode);
-            var font = new Eto.Drawing.Font("Courier New", 12);
-            ta.Font = font;
-            tabarea.Pages.Add(new TabPage() { Text = "Vertex Shader", Content = ta });
-            // Add these back in after we get the basics working
-            /*
-            ta = new TextArea();
-            ta.BindDataContext(c => c.Text, (GLSLViewModel m) => m.TessellationControlCode);
-            tabarea.Pages.Add(new TabPage() { Text = "Tessellation Control", Content = ta });
-            ta = new TextArea();
-            ta.BindDataContext(c => c.Text, (GLSLViewModel m) => m.TessellationEvalualtionCode);
-            tabarea.Pages.Add(new TabPage() { Text = "Tessellation Eval", Content = ta });
-            */
-            ta = new TextArea();
-            ta.BindDataContext(c => c.Text, (GLSLViewModel m) => m.GeometryShaderCode);
-            ta.Font = font;
-            tabarea.Pages.Add(new TabPage() { Text = "Geometry Shader", Content = ta });
-            ta = new TextArea();
-            ta.BindDataContext(c => c.Text, (GLSLViewModel m) => m.FragmentShaderCode);
-            ta.Font = font;
-            tabarea.Pages.Add(new TabPage() { Text = "Fragment Shader", Content = ta });
+            _vertexShaderControl = new ScriptEditorControl();
+            _vertexShaderControl.Text = model.VertexShaderCode;
+            tabarea.Pages.Add(new TabPage() { Text = "Vertex Shader", Content = _vertexShaderControl });
+            _geometryShaderControl = new ScriptEditorControl();
+            _geometryShaderControl.Text = model.GeometryShaderCode;
+            tabarea.Pages.Add(new TabPage() { Text = "Geometry Shader", Content = _geometryShaderControl });
+            _fragmentShaderControl = new ScriptEditorControl();
+            _fragmentShaderControl.Text = model.FragmentShaderCode;
+            tabarea.Pages.Add(new TabPage() { Text = "Fragment Shader", Content = _fragmentShaderControl });
 
             Content = new StackLayout
             {
