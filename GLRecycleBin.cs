@@ -4,10 +4,10 @@ namespace ghgl
 {
     static class GLRecycleBin
     {
-        static HashSet<uint> _shadersToDelete = new HashSet<uint>();
-        static HashSet<uint> _programsToDelete = new HashSet<uint>();
-        static HashSet<uint> _vbosToDelete = new HashSet<uint>();
-        static HashSet<uint> _texturesToDelete = new HashSet<uint>();
+        static readonly HashSet<uint> _shadersToDelete = new HashSet<uint>();
+        static readonly HashSet<uint> _programsToDelete = new HashSet<uint>();
+        static readonly HashSet<uint> _vbosToDelete = new HashSet<uint>();
+        static readonly HashSet<uint> _texturesToDelete = new HashSet<uint>();
 
         public static void AddShaderToDeleteList(uint shader)
         {
@@ -39,9 +39,9 @@ namespace ghgl
             foreach (var program in _programsToDelete)
                 OpenGL.glDeleteProgram(program);
             foreach (var vbo in _vbosToDelete)
-                OpenGL.glDeleteBuffers(1, new uint[] { vbo });
+                OpenGL.glDeleteBuffers(1, new[] { vbo });
             foreach (var texture in _texturesToDelete)
-                OpenGL.glDeleteTextures(1, new uint[] { texture });
+                OpenGL.glDeleteTextures(1, new[] { texture });
 
             _shadersToDelete.Clear();
             _programsToDelete.Clear();

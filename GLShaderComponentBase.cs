@@ -16,9 +16,9 @@ namespace ghgl
     {
         internal GLSLViewModel _model = new GLSLViewModel();
 
-        static uint _viewSerialNumber = 0;
+        static uint _viewSerialNumber;
         static IntPtr _hglrc;
-        static bool _initializeCallbackSet = false;
+        static bool _initializeCallbackSet;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -28,8 +28,7 @@ namespace ghgl
                 _initializeCallbackSet = true;
                 DisplayPipeline.DrawForeground += DisplayPipeline_DrawForeground;
                 var doc = Rhino.RhinoDoc.ActiveDoc;
-                if (doc != null)
-                    doc.Views.Redraw();
+                doc?.Views.Redraw();
             }
             _model.PropertyChanged += ModelPropertyChanged;
         }
@@ -43,8 +42,6 @@ namespace ghgl
                 case "glPointSize":
                     ExpirePreview(true);
                     break;
-                default:
-                    break;
             }
         }
 
@@ -54,7 +51,6 @@ namespace ghgl
             if (!OpenGL.Initialized)
                 OpenGL.Initialize();
 
-            bool resolve = (IntPtr.Zero == _hglrc || 0 == _viewSerialNumber);
             _hglrc = OpenGL.wglGetCurrentContext();
             _viewSerialNumber = e.Display.Viewport.ParentView.RuntimeSerialNumber;
         }
@@ -326,7 +322,6 @@ namespace ghgl
             base.AppendAdditionalMenuItems(menu);
 
             var tsi = new System.Windows.Forms.ToolStripMenuItem("&Edit code...", null, (sender, e) => { OpenEditor(); });
-            int insert_location = menu.Items.Count - 2;
             tsi.Font = new System.Drawing.Font(tsi.Font, System.Drawing.FontStyle.Bold);
             menu.Items.Add(tsi);
 

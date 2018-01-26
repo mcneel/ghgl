@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ghgl
 {
@@ -30,7 +28,7 @@ namespace ghgl
             ShaderType = type;
         }
 
-        public ShaderType ShaderType { get; private set; }
+        public ShaderType ShaderType { get; }
 
         public uint ShaderId
         {
@@ -93,7 +91,7 @@ namespace ghgl
                         break;
                 }
                 uint hShader = OpenGL.glCreateShader(glShader);
-                OpenGL.glShaderSource(hShader, 1, new string[] { Code }, null);
+                OpenGL.glShaderSource(hShader, 1, new[] { Code }, null);
                 OpenGL.glCompileShader(hShader);
                 int success;
                 OpenGL.glGetShaderiv(hShader, OpenGL.GL_COMPILE_STATUS, out success);

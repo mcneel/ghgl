@@ -295,7 +295,7 @@ namespace ghgl
             _glBufferData(target, size, data, usage);
         }
 
-        delegate void glBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
+        //delegate void glBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
 
 
         delegate void glAttachShaderProc(GLuint program, GLuint shader);

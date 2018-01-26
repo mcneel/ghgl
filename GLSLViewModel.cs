@@ -7,16 +7,16 @@ namespace ghgl
 {
     class GLSLViewModel : System.ComponentModel.INotifyPropertyChanged
     {
-        const double DEFAULT_LINE_WIDTH = 3.0;
-        const double DEFAULT_POINT_SIZE = 8.0;
+        const double DefaultLineWidth = 3.0;
+        const double DefaultPointSize = 8.0;
 
         readonly Shader[] _shaders = new Shader[5];
-        bool _compileFailed = false;
+        bool _compileFailed;
         uint _programId;
-        double _glLineWidth = DEFAULT_LINE_WIDTH;
-        double _glPointSize = DEFAULT_POINT_SIZE;
+        double _glLineWidth = DefaultLineWidth;
+        double _glPointSize = DefaultPointSize;
         uint _drawMode;
-        DateTime _startTime = DateTime.Now;
+        readonly DateTime _startTime = DateTime.Now;
 
         public GLSLViewModel()
         {
@@ -35,28 +35,28 @@ namespace ghgl
 
         public string VertexShaderCode
         {
-            get { return _shaders[(int)ShaderType.Vertex].Code; }
-            set { SetCode((int)ShaderType.Vertex, value); }
+            get => _shaders[(int)ShaderType.Vertex].Code;
+            set => SetCode((int)ShaderType.Vertex, value);
         }
         public string TessellationControlCode
         {
-            get { return _shaders[(int)ShaderType.TessellationControl].Code; }
-            set { SetCode((int)ShaderType.TessellationControl, value); }
+            get => _shaders[(int)ShaderType.TessellationControl].Code;
+            set => SetCode((int)ShaderType.TessellationControl, value);
         }
         public string TessellationEvalualtionCode
         {
-            get { return _shaders[(int)ShaderType.TessellationEval].Code; }
-            set { SetCode((int)ShaderType.TessellationEval, value); }
+            get => _shaders[(int)ShaderType.TessellationEval].Code;
+            set => SetCode((int)ShaderType.TessellationEval, value);
         }
         public string FragmentShaderCode
         {
-            get { return _shaders[(int)ShaderType.Fragment].Code; }
-            set { SetCode((int)ShaderType.Fragment, value); }
+            get => _shaders[(int)ShaderType.Fragment].Code;
+            set => SetCode((int)ShaderType.Fragment, value);
         }
         public string GeometryShaderCode
         {
-            get { return _shaders[(int)ShaderType.Geometry].Code; }
-            set { SetCode((int)ShaderType.Geometry, value); }
+            get => _shaders[(int)ShaderType.Geometry].Code;
+            set => SetCode((int)ShaderType.Geometry, value);
         }
 
         public uint ProgramId
@@ -192,30 +192,11 @@ namespace ghgl
         public bool Read(GH_IO.Serialization.GH_IReader reader)
         {
             string s = "";
-            if (reader.TryGetString("VertexShader", ref s))
-                VertexShaderCode = s;
-            else
-                VertexShaderCode = "";
-
-            if (reader.TryGetString("GeometryShader", ref s))
-                GeometryShaderCode = s;
-            else
-                GeometryShaderCode = "";
-
-            if (reader.TryGetString("FragmentShader", ref s))
-                FragmentShaderCode = s;
-            else
-                FragmentShaderCode = "";
-
-            if (reader.TryGetString("TessCtrlShader", ref s))
-                TessellationControlCode = s;
-            else
-                TessellationControlCode = "";
-
-            if (reader.TryGetString("TessEvalShader", ref s))
-                TessellationEvalualtionCode = s;
-            else
-                TessellationEvalualtionCode = "";
+            VertexShaderCode = reader.TryGetString("VertexShader", ref s) ? s : "";
+            GeometryShaderCode = reader.TryGetString("GeometryShader", ref s) ? s : "";
+            FragmentShaderCode = reader.TryGetString("FragmentShader", ref s) ? s : "";
+            TessellationControlCode = reader.TryGetString("TessCtrlShader", ref s) ? s : "";
+            TessellationEvalualtionCode = reader.TryGetString("TessEvalShader", ref s) ? s : "";
 
             double d = 0;
             if (reader.TryGetDouble("glLineWidth", ref d))
@@ -311,7 +292,7 @@ namespace ghgl
             }
             public static uint CreateTexture(string path)
             {
-                uint textureId = 0;
+                uint textureId;
                 try
                 {
                     using (var bmp = new System.Drawing.Bitmap(path))
@@ -350,11 +331,11 @@ namespace ghgl
             }
         }
 
-        List<UniformData<int>> _intUniforms = new List<UniformData<int>>();
-        List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
-        List<UniformData<Rhino.Geometry.Point3f>> _vec3Uniforms = new List<UniformData<Rhino.Geometry.Point3f>>();
-        List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
-        List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
+        readonly List<UniformData<int>> _intUniforms = new List<UniformData<int>>();
+        readonly List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
+        readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
+        readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
+        readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
 
         public void AddUniform(string name, int value)
         {
@@ -364,9 +345,9 @@ namespace ghgl
         {
             _floatUniforms.Add(new UniformData<float>(name, value));
         }
-        public void AddUniform(string name, Rhino.Geometry.Point3f value)
+        public void AddUniform(string name, Point3f value)
         {
-            _vec3Uniforms.Add(new UniformData<Rhino.Geometry.Point3f>(name, value));
+            _vec3Uniforms.Add(new UniformData<Point3f>(name, value));
         }
         public void AddUniform(string name, Vec4 value)
         {
@@ -397,9 +378,9 @@ namespace ghgl
         {
             _floatAttribs.Add(new GLAttribute<float>(name, location, value));
         }
-        public void AddAttribute(string name, int location, Rhino.Geometry.Point3f[] value)
+        public void AddAttribute(string name, int location, Point3f[] value)
         {
-            _vec3Attribs.Add(new GLAttribute<Rhino.Geometry.Point3f>(name, location, value));
+            _vec3Attribs.Add(new GLAttribute<Point3f>(name, location, value));
         }
         public void AddAttribute(string name, int location, Vec4[] value)
         {
@@ -680,8 +661,7 @@ namespace ghgl
             OpenGL.glPointSize(pointsize);
 
             // Define standard uniforms
-            int uniformLocation = -1;
-            uniformLocation = OpenGL.glGetUniformLocation(programId, "_viewportSize");
+            int uniformLocation = OpenGL.glGetUniformLocation(programId, "_viewportSize");
             if (uniformLocation >= 0)
             {
                 var viewportSize = display.Viewport.Size;
