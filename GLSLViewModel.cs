@@ -673,6 +673,18 @@ namespace ghgl
                 float[] w2c = display.GetOpenGLWorldToClip(true);
                 OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, w2c);
             }
+            uniformLocation = OpenGL.glGetUniformLocation(programId, "_worldToCamera");
+            if (uniformLocation >= 0)
+            {
+                float[] w2c = display.GetOpenGLWorldToCamera(true);
+                OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, w2c);
+            }
+            uniformLocation = OpenGL.glGetUniformLocation(programId, "_cameraToClip");
+            if (uniformLocation >= 0)
+            {
+                float[] c2c = display.GetOpenGLCameraToClip();
+                OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, c2c);
+            }
             uniformLocation = OpenGL.glGetUniformLocation(programId, "_time");
             if (uniformLocation >= 0)
             {

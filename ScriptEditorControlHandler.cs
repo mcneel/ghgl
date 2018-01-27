@@ -53,9 +53,38 @@ namespace ghgl
 
             control.Lexer = Lexer.Cpp;
 
-            control.SetKeywords(0, "attribute layout uniform float int bool vec2 vec3 vec4 if else");
-            control.SetKeywords(1, "length sin cos main");
+            control.SetKeywords(0, "attribute layout uniform float int bool vec2 vec3 vec4 mat4 in out sampler2D if else return void flat discard");
+            control.SetKeywords(1, "length sin cos main texture _worldToClip _viewportSize _worldToCamera _cameraToClip");
 
+
+            // Instruct the lexer to calculate folding
+            control.SetProperty("fold", "1");
+            control.SetProperty("fold.compact", "1");
+
+            // Configure a margin to display folding symbols
+            control.Margins[2].Type = MarginType.Symbol;
+            control.Margins[2].Mask = Marker.MaskFolders;
+            control.Margins[2].Sensitive = true;
+            control.Margins[2].Width = 20;
+
+            // Set colors for all folding markers
+            for (int i = 25; i <= 31; i++)
+            {
+                control.Markers[i].SetForeColor(System.Drawing.SystemColors.ControlLightLight);
+                control.Markers[i].SetBackColor(System.Drawing.SystemColors.ControlDark);
+            }
+
+            // Configure folding markers with respective symbols
+            control.Markers[Marker.Folder].Symbol = MarkerSymbol.BoxPlus;
+            control.Markers[Marker.FolderOpen].Symbol = MarkerSymbol.BoxMinus;
+            control.Markers[Marker.FolderEnd].Symbol = MarkerSymbol.BoxPlusConnected;
+            control.Markers[Marker.FolderMidTail].Symbol = MarkerSymbol.TCorner;
+            control.Markers[Marker.FolderOpenMid].Symbol = MarkerSymbol.BoxMinusConnected;
+            control.Markers[Marker.FolderSub].Symbol = MarkerSymbol.VLine;
+            control.Markers[Marker.FolderTail].Symbol = MarkerSymbol.LCorner;
+
+            // Enable automatic folding
+            control.AutomaticFold = (AutomaticFold.Show | AutomaticFold.Click | AutomaticFold.Change);
         }
 
 

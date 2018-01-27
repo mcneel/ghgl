@@ -143,6 +143,12 @@ namespace ghgl
                                     double dvalue;
                                     if (destination.CastTo(out dvalue))
                                         value = (int)dvalue;
+                                    else
+                                    {
+                                        bool bvalue;
+                                        if (destination.CastTo(out bvalue))
+                                            value = bvalue ? 1 : 0;
+                                    }
                                 }
                                 _model.AddUniform(varname, value);
                                 break;
