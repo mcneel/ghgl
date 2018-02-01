@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttributeDescription.cs" />
+    <Compile Include="CodeEditor\ScriptEditorControl.cs" />
+    <Compile Include="CodeEditor\ScriptEditorControlHandlerWin.cs" />
     <Compile Include="GLAttribute.cs" />
     <Compile Include="GLMeshShaderComponent.cs" />
     <Compile Include="GLRecycleBin.cs" />
@@ -78,8 +80,6 @@
     <Compile Include="LibraryInfo.cs" />
     <Compile Include="OpenGL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScriptEditorControl.cs" />
-    <Compile Include="ScriptEditorControlHandler.cs" />
     <Compile Include="Shader.cs" />
     <Compile Include="UniformDescription.cs" />
     <Compile Include="Vec4.cs" />

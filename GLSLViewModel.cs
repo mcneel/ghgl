@@ -331,11 +331,82 @@ namespace ghgl
             }
         }
 
+        class MeshData
+        {
+            uint _indexBuffer;
+            uint _vertexVbo;
+            uint _normalVbo;
+            uint _textureCoordVbo;
+            public MeshData(Mesh mesh)
+            {
+                Mesh = mesh;
+            }
+            public Mesh Mesh { get; private set; }
+
+            public uint IndexBuffer
+            {
+                get { return _indexBuffer; }
+                set
+                {
+                    if(_indexBuffer!=value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_indexBuffer);
+                        _indexBuffer = value;
+                    }
+                }
+            }
+
+            public uint VertexVbo
+            {
+                get { return _vertexVbo; }
+                set
+                {
+                    if(_vertexVbo!=value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_vertexVbo);
+                        _vertexVbo = value;
+                    }
+                }
+            }
+
+            public uint NormalVbo
+            {
+                get { return _normalVbo; }
+                set
+                {
+                    if(_normalVbo!=value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_normalVbo);
+                        _normalVbo = value;
+                    }
+                }
+            }
+
+            public uint TextureCoordVbo
+            {
+                get { return _textureCoordVbo; }
+                set
+                {
+                    if(_textureCoordVbo!=value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_textureCoordVbo);
+                        _textureCoordVbo = value;
+                    }
+                }
+            }
+        }
+
+        readonly List<MeshData> _meshes = new List<MeshData>();
         readonly List<UniformData<int>> _intUniforms = new List<UniformData<int>>();
         readonly List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
         readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
         readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
         readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
+
+        public void AddMesh(Mesh mesh)
+        {
+            _meshes.Add(new MeshData(mesh));
+        }
 
         public void AddUniform(string name, int value)
         {
@@ -435,9 +506,94 @@ namespace ghgl
             }
         }
 
-        int SetupGLAttributes()
+        int SetupGLAttributes(int index)
         {
             int element_count = 0;
+            if (_meshes.Count >= (index + 1))
+            {
+                var data = _meshes[index];
+                var mesh = data.Mesh;
+                element_count = mesh.Vertices.Count;
+                int location = OpenGL.glGetAttribLocation(ProgramId, "_meshVertex");
+                if(location>=0)
+                {
+                    if (data.VertexVbo == 0)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.VertexVbo = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.VertexVbo);
+                        IntPtr size = new IntPtr(3 * sizeof(float) * mesh.Vertices.Count);
+                        var points = mesh.Vertices.ToPoint3fArray();
+                        var handle = GCHandle.Alloc(points, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                        handle.Free();
+                    }
+                    OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.VertexVbo);
+                    OpenGL.glEnableVertexAttribArray((uint)location);
+                    OpenGL.glVertexAttribPointer((uint)location, 3, OpenGL.GL_FLOAT, 0, 0, IntPtr.Zero);
+                }
+                location = OpenGL.glGetAttribLocation(ProgramId, "_meshNormal");
+                if (location >= 0)
+                {
+                    if (data.NormalVbo == 0 && mesh.Normals.Count == mesh.Vertices.Count)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.NormalVbo = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.NormalVbo);
+                        IntPtr size = new IntPtr(3 * sizeof(float) * mesh.Normals.Count);
+                        var normals = mesh.Normals.ToFloatArray();
+                        var handle = GCHandle.Alloc(normals, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                        handle.Free();
+                    }
+                    if (data.NormalVbo != 0)
+                    {
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.NormalVbo);
+                        OpenGL.glEnableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttribPointer((uint)location, 3, OpenGL.GL_FLOAT, 0, 0, IntPtr.Zero);
+                    }
+                    else
+                    {
+                        OpenGL.glDisableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttrib3f((uint)location, 0, 0, 0);
+                    }
+                }
+
+                location = OpenGL.glGetAttribLocation(ProgramId, "_meshTextureCoordinate");
+                if (location >= 0)
+                {
+                    if (data.TextureCoordVbo == 0 && mesh.TextureCoordinates.Count == mesh.Vertices.Count)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.TextureCoordVbo = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.TextureCoordVbo);
+                        IntPtr size = new IntPtr(2 * sizeof(float) * mesh.TextureCoordinates.Count);
+                        var tcs = mesh.TextureCoordinates.ToFloatArray();
+                        var handle = GCHandle.Alloc(tcs, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                        handle.Free();
+                    }
+                    if (data.TextureCoordVbo != 0)
+                    {
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.TextureCoordVbo);
+                        OpenGL.glEnableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttribPointer((uint)location, 2, OpenGL.GL_FLOAT, 0, 0, IntPtr.Zero);
+                    }
+                    else
+                    {
+                        OpenGL.glDisableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttrib2f((uint)location, 0, 0);
+                    }
+                }
+
+            }
+
             foreach (var item in _intAttribs)
             {
                 if (element_count == 0)
@@ -608,6 +764,14 @@ namespace ghgl
 
         public void ClearData()
         {
+            foreach(var data in _meshes)
+            {
+                data.IndexBuffer = 0;
+                data.NormalVbo = 0;
+                data.TextureCoordVbo = 0;
+                data.VertexVbo = 0;
+            }
+            _meshes.Clear();
             _intUniforms.Clear();
             _floatUniforms.Clear();
             _vec3Uniforms.Clear();
@@ -648,8 +812,6 @@ namespace ghgl
             OpenGL.glUseProgram(programId);
 
             SetupGLUniforms();
-            int element_count = SetupGLAttributes();
-
 
             // TODO: Parse shader and figure out the proper number to place here
             if (OpenGL.GL_PATCHES == DrawMode)
@@ -693,17 +855,62 @@ namespace ghgl
                 OpenGL.glUniform1f(uniformLocation, (float)seconds);
             }
 
+            if (OpenGL.GL_POINTS == DrawMode)
+                OpenGL.glEnable(OpenGL.GL_VERTEX_PROGRAM_POINT_SIZE);
+            OpenGL.glEnable(OpenGL.GL_BLEND);
+            OpenGL.glBlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 
-            if (element_count > 0)
+            int totalCount = 1;
+            if (_meshes != null && _meshes.Count > 1)
+                totalCount = _meshes.Count;
+
+            for (int i = 0; i < totalCount; i++)
             {
-                if (OpenGL.GL_POINTS == DrawMode)
-                    OpenGL.glEnable(OpenGL.GL_VERTEX_PROGRAM_POINT_SIZE);
-                OpenGL.glEnable(OpenGL.GL_BLEND);
-                OpenGL.glBlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
+                int element_count = SetupGLAttributes(i);
+                if (element_count < 1)
+                    continue;
 
-                OpenGL.glDrawArrays(DrawMode, 0, element_count);
+                if( _meshes.Count>i )
+                {
+                    var data = _meshes[i];
+                    if(data.IndexBuffer==0)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.IndexBuffer = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.IndexBuffer);
+                        int[] indices = new int[3 * (data.Mesh.Faces.TriangleCount + 2 * data.Mesh.Faces.QuadCount)];
+                        int current = 0;
+                        foreach(var face in data.Mesh.Faces)
+                        {
+                            indices[current++] = face.A;
+                            indices[current++] = face.B;
+                            indices[current++] = face.C;
+                            if( face.IsQuad )
+                            {
+                                indices[current++] = face.C;
+                                indices[current++] = face.D;
+                                indices[current++] = face.A;
+                            }
+                        }
+
+                        var handle = GCHandle.Alloc(indices, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        IntPtr size = new IntPtr(sizeof(int) * indices.Length);
+                        OpenGL.glBufferData(OpenGL.GL_ELEMENT_ARRAY_BUFFER, size, pointer, OpenGL.GL_STATIC_DRAW);
+                        handle.Free();
+                    }
+                    if (data.IndexBuffer != 0)
+                    {
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.IndexBuffer);
+                        int indexCount = 3*(data.Mesh.Faces.TriangleCount + 2 * data.Mesh.Faces.QuadCount);
+                        OpenGL.glDrawElements(DrawMode, indexCount, OpenGL.GL_UNSIGNED_INT, IntPtr.Zero);
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, 0);
+                    }
+                }
+                else
+                    OpenGL.glDrawArrays(DrawMode, 0, element_count);
             }
-
             foreach (var item in _intAttribs)
                 DisableVertexAttribArray(item.Location);
             foreach (var item in _floatAttribs)

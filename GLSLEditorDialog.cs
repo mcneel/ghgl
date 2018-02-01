@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using Eto.Forms;
+using CodeEditor;
 
 namespace ghgl
 {
@@ -9,7 +10,7 @@ namespace ghgl
     {
         static GLSLEditorDialog()
         {
-            Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandler());
+            Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandlerWin());
         }
 
         class SimpleCommand : Eto.Forms.Command
@@ -66,12 +67,15 @@ namespace ghgl
             var tabarea = new TabControl();
             _vertexShaderControl = new ScriptEditorControl();
             _vertexShaderControl.Text = model.VertexShaderCode;
+            _vertexShaderControl.Language = ScriptEditorLanguage.GLSL;
             tabarea.Pages.Add(new TabPage() { Text = "Vertex Shader", Content = _vertexShaderControl });
             _geometryShaderControl = new ScriptEditorControl();
             _geometryShaderControl.Text = model.GeometryShaderCode;
+            _geometryShaderControl.Language = ScriptEditorLanguage.GLSL;
             tabarea.Pages.Add(new TabPage() { Text = "Geometry Shader", Content = _geometryShaderControl });
             _fragmentShaderControl = new ScriptEditorControl();
             _fragmentShaderControl.Text = model.FragmentShaderCode;
+            _fragmentShaderControl.Language = ScriptEditorLanguage.GLSL;
             tabarea.Pages.Add(new TabPage() { Text = "Fragment Shader", Content = _fragmentShaderControl });
 
             Content = new StackLayout

@@ -236,7 +236,9 @@ namespace ghgl
 
         [DllImport(OPENGL_LIB)]
         public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-        //public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, System.IntPtr indices);
 
         [DllImport(OPENGL_LIB)]
         public static extern void glBindTexture(GLenum target, GLuint texture);

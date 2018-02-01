@@ -106,6 +106,11 @@ namespace ghgl
 
         protected override void SolveInstance(IGH_DataAccess data)
         {
+            SolveInstanceHelper(data, 0);
+        }
+
+        protected void SolveInstanceHelper(IGH_DataAccess data, int startIndex)
+        {
             if (!ActivateGlContext())
                 return;
 
@@ -118,7 +123,7 @@ namespace ghgl
 
             _model.ClearData();
 
-            for (int i = 0; i < Params.Input.Count; i++)
+            for (int i = startIndex; i < Params.Input.Count; i++)
             {
                 string varname = Params.Input[i].NickName;
                 string datatype;
