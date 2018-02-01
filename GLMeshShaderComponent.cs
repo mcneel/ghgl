@@ -10,22 +10,28 @@ namespace ghgl
         {
             _model.DrawMode = OpenGL.GL_TRIANGLES;
             _model.VertexShaderCode =
-      @"#version 330
+@"#version 330
 
 layout(location = 0) in vec3 _meshVertex;
+layout(location = 1) in vec3 _meshNormal;
+
 uniform mat4 _worldToClip;
+out vec4 color;
 
 void main() 
 {
+  color = vec4(_meshNormal, 1);
   gl_Position = _worldToClip * vec4(_meshVertex,1);
 }
 ";
-            _model.FragmentShaderCode =
-      @"#version 330
 
+                _model.FragmentShaderCode =
+@"#version 330
+
+in vec4 color;
 void main()
 {
-  gl_FragColor = vec4(0,1,0,1);
+  gl_FragColor = color;
 }
 ";
         }
