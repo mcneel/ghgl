@@ -823,37 +823,8 @@ namespace ghgl
             OpenGL.glPointSize(pointsize);
 
             // Define standard uniforms
-            int uniformLocation = OpenGL.glGetUniformLocation(programId, "_viewportSize");
-            if (uniformLocation >= 0)
-            {
-                var viewportSize = display.Viewport.Size;
-                OpenGL.glUniform2f(uniformLocation, (float)viewportSize.Width, (float)viewportSize.Height);
-            }
-            uniformLocation = OpenGL.glGetUniformLocation(programId, "_worldToClip");
-            if (uniformLocation >= 0)
-            {
-                float[] w2c = display.GetOpenGLWorldToClip(true);
-                OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, w2c);
-            }
-            uniformLocation = OpenGL.glGetUniformLocation(programId, "_worldToCamera");
-            if (uniformLocation >= 0)
-            {
-                float[] w2c = display.GetOpenGLWorldToCamera(true);
-                OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, w2c);
-            }
-            uniformLocation = OpenGL.glGetUniformLocation(programId, "_cameraToClip");
-            if (uniformLocation >= 0)
-            {
-                float[] c2c = display.GetOpenGLCameraToClip();
-                OpenGL.glUniformMatrix4fv(uniformLocation, 1, false, c2c);
-            }
-            uniformLocation = OpenGL.glGetUniformLocation(programId, "_time");
-            if (uniformLocation >= 0)
-            {
-                var span = DateTime.Now - _startTime;
-                double seconds = span.TotalSeconds;
-                OpenGL.glUniform1f(uniformLocation, (float)seconds);
-            }
+            foreach(var builtin in BuiltIn.GetUniformBuiltIns())
+                builtin.Setup(programId, display);
 
             if (OpenGL.GL_POINTS == DrawMode)
                 OpenGL.glEnable(OpenGL.GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -929,6 +900,31 @@ namespace ghgl
         {
             if (location >= 0)
                 OpenGL.glDisableVertexAttribArray((uint)location);
+        }
+
+        public void SaveAs(string filename)
+        {
+            var text = new System.Text.StringBuilder();
+            text.AppendLine("[vertex shader]");
+            text.AppendLine(VertexShaderCode);
+            if( !string.IsNullOrWhiteSpace(GeometryShaderCode) )
+            {
+                text.AppendLine("[geometry shader]");
+                text.AppendLine(GeometryShaderCode);
+            }
+            if( !string.IsNullOrWhiteSpace(TessellationControlCode))
+            {
+                text.AppendLine("[tessctrl shader]");
+                text.AppendLine(TessellationControlCode);
+            }
+            if( !string.IsNullOrWhiteSpace(TessellationEvalualtionCode))
+            {
+                text.AppendLine("[tesseval shader]");
+                text.AppendLine(TessellationEvalualtionCode);
+            }
+            text.AppendLine("[fragment shader]");
+            text.AppendLine(FragmentShaderCode);
+            System.IO.File.WriteAllText(filename, text.ToString());
         }
     }
 }

@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttributeDescription.cs" />
+    <Compile Include="BuiltIn.cs" />
     <Compile Include="CodeEditor\ScriptEditorControl.cs" />
     <Compile Include="CodeEditor\ScriptEditorControlHandlerWin.cs" />
     <Compile Include="GLAttribute.cs" />

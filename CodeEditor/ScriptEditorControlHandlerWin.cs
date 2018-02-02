@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ScintillaNET;
 
 namespace CodeEditor
 {
+    class CharAddedEventArgsWin : CharAddedEventArgs
+    {
+    }
+
     public class ScriptEditorControlHandlerWin : Eto.Wpf.Forms.WpfFrameworkElement<System.Windows.Forms.Integration.WindowsFormsHost, ScriptEditorControl, ScriptEditorControl.ICallback>, ScriptEditorControl.IScriptEditorControlHandler
     {
         Scintilla _control;
@@ -22,8 +22,10 @@ namespace CodeEditor
             SetupTheme();
         }
 
-        private void OnCharAdded(object sender, CharAddedEventArgs e)
+        private void OnCharAdded(object sender, ScintillaNET.CharAddedEventArgs e)
         {
+            CharAdded?.Invoke(this, new CharAddedEventArgsWin());
+            /*
             if (_control.AutoCActive && _keywords0!=null)
                 return;
             var currentPos = _control.CurrentPosition;
@@ -56,6 +58,7 @@ namespace CodeEditor
                 if( items.Length>0 )
                   _control.AutoCShow(lenEntered, items);
             }
+            */
         }
 
         public override void Focus()
@@ -90,6 +93,22 @@ namespace CodeEditor
                 }
             }
         }
+
+        public bool AutoCActive { get { return _control.AutoCActive; } }
+        public int CurrentPosition { get { return _control.CurrentPosition; } }
+        public int WordStartPosition(int position, bool onlyWordCharacters)
+        {
+            return _control.WordStartPosition(position, onlyWordCharacters);
+        }
+        public string GetTextRange(int position, int length)
+        {
+            return _control.GetTextRange(position, length);
+        }
+        public void AutoCShow(int lenEntered, string list)
+        {
+            _control.AutoCShow(lenEntered, list);
+        }
+        public event EventHandler<CodeEditor.CharAddedEventArgs> CharAdded;
 
         void SetupLanguageSpecificStyles()
         {
