@@ -19,6 +19,7 @@ namespace ghgl
         static uint _viewSerialNumber;
         static IntPtr _hglrc;
         static bool _initializeCallbackSet;
+        static System.Windows.Forms.Timer _timer;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -31,6 +32,17 @@ namespace ghgl
                 doc?.Views.Redraw();
             }
             _model.PropertyChanged += ModelPropertyChanged;
+            if( _timer == null )
+            {
+                _timer = new System.Windows.Forms.Timer();
+                _timer.Interval = 55;
+                _timer.Tick += (s, e) =>
+                {
+                    var doc = Rhino.RhinoDoc.ActiveDoc;
+                    if (doc != null)
+                        doc.Views.Redraw();
+                };
+            }
         }
 
         private void ModelPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -334,6 +346,13 @@ namespace ghgl
 
             var tsi = new System.Windows.Forms.ToolStripMenuItem("&Edit code...", null, (sender, e) => { OpenEditor(); });
             tsi.Font = new System.Drawing.Font(tsi.Font, System.Drawing.FontStyle.Bold);
+            menu.Items.Add(tsi);
+
+            tsi = new System.Windows.Forms.ToolStripMenuItem("Animate", null, (sender, e) =>
+            {
+                _timer.Enabled = !_timer.Enabled;
+            });
+            tsi.Checked = _timer.Enabled;
             menu.Items.Add(tsi);
 
             tsi = new System.Windows.Forms.ToolStripMenuItem("Draw Mode");
