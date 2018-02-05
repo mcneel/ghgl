@@ -9,6 +9,7 @@ namespace CodeEditor
 
     public class ScriptEditorControlHandlerWin : Eto.Wpf.Forms.WpfFrameworkElement<System.Windows.Forms.Integration.WindowsFormsHost, ScriptEditorControl, ScriptEditorControl.ICallback>, ScriptEditorControl.IScriptEditorControlHandler
     {
+        const int ERROR_MARKER = 8;
         Scintilla _control;
         ScriptEditorLanguage _language = ScriptEditorLanguage.None;
         string[] _keywords0;
@@ -18,47 +19,19 @@ namespace CodeEditor
             Control = new System.Windows.Forms.Integration.WindowsFormsHost();
             Control.Child = _control = new ScintillaNET.Scintilla();
             _control.CharAdded += OnCharAdded;
+            _control.TextChanged += OnTextChanged;
             
             SetupTheme();
         }
 
+        private void OnTextChanged(object sender, EventArgs e)
+        {
+            TextChanged?.Invoke(Widget, new EventArgs());
+        }
+
         private void OnCharAdded(object sender, ScintillaNET.CharAddedEventArgs e)
         {
-            CharAdded?.Invoke(this, new CharAddedEventArgsWin());
-            /*
-            if (_control.AutoCActive && _keywords0!=null)
-                return;
-            var currentPos = _control.CurrentPosition;
-            var wordStartPos = _control.WordStartPosition(currentPos, true);
-            var lenEntered = currentPos - wordStartPos;
-            if (lenEntered <= 0)
-                return;
-
-            if (lenEntered > 0)
-            {
-                string word = _control.GetTextRange(wordStartPos, lenEntered);
-                string items = "";
-                foreach(var kw in _keywords0)
-                {
-                    int startIndex = 0;
-                    bool add = true;
-                    foreach(var c in word)
-                    {
-                        startIndex = kw.IndexOf(c, startIndex);
-                        if (startIndex < 0)
-                        {
-                            add = false;
-                            break;
-                        }
-                    }
-                    if (add)
-                        items += kw + " ";
-                }
-                items = items.Trim();
-                if( items.Length>0 )
-                  _control.AutoCShow(lenEntered, items);
-            }
-            */
+            CharAdded?.Invoke(Widget, new CharAddedEventArgsWin());
         }
 
         public override void Focus()
@@ -109,6 +82,20 @@ namespace CodeEditor
             _control.AutoCShow(lenEntered, list);
         }
         public event EventHandler<CodeEditor.CharAddedEventArgs> CharAdded;
+        public event EventHandler TextChanged;
+
+        public void ClearErrors()
+        {
+            int count = _control.Lines.Count;
+            for( int i=0; i<count; i++)
+                _control.Lines[i].MarkerDelete(ERROR_MARKER);
+        }
+        public void MarkError(int line)
+        {
+            if( line>0 && line<=_control.Lines.Count)
+                _control.Lines[line-1].MarkerAdd(ERROR_MARKER);
+        }
+
 
         void SetupLanguageSpecificStyles()
         {
@@ -166,11 +153,15 @@ namespace CodeEditor
 
             // Configure a margin to display folding symbols
             _control.Margins[1].Type = MarginType.Symbol;
-            _control.Margins[1].Mask = Marker.MaskFolders;
+            _control.Margins[1].Mask = Marker.MaskAll;
             _control.Margins[1].Sensitive = true;
             _control.Margins[1].Width = 20;
 //            control.Margins[1].BackColor = System.Drawing.Color.White;
 
+            var marker = _control.Markers[ERROR_MARKER];
+            marker.Symbol = MarkerSymbol.ShortArrow;
+            marker.SetForeColor(System.Drawing.Color.DarkRed);
+            marker.SetBackColor(System.Drawing.Color.Red);
             // Set colors for all folding markers
             for (int i = 25; i <= 31; i++)
             {

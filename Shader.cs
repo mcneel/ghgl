@@ -56,13 +56,22 @@ namespace ghgl
                     _code = value;
                     _uniforms = null;
                     _vertexAttributes = null;
+                    ShaderId = 0;
                     OnPropertyChanged();
                 }
             }
         }
 
-        public bool Compile(List<string> errors)
+        List<CompileError> _compileErrors = new List<CompileError>();
+        public List<CompileError> CompileErrors {  get => _compileErrors; }
+
+        public bool Compile()
         {
+            if (ShaderId != 0)
+                return _compileErrors.Count == 0;
+
+            _compileErrors.Clear();
+
             // an empty string is considered fine
             if (string.IsNullOrWhiteSpace(Code))
                 return true;
@@ -104,13 +113,12 @@ namespace ghgl
                         int length;
                         var infolog = new StringBuilder(maxLength + 16);
                         OpenGL.glGetShaderInfoLog(hShader, maxLength, out length, infolog);
-                        string prefix = $"({ShaderType} shader)";
 
                         foreach (var line in infolog.ToString().Split('\n'))
                         {
                             if (string.IsNullOrWhiteSpace(line))
                                 continue;
-                            errors.Add(prefix + line);
+                            _compileErrors.Add(new CompileError(line, this));
                         }
                     }
                     OpenGL.glDeleteShader(hShader);

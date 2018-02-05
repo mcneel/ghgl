@@ -21,7 +21,16 @@ namespace ghgl
         public GLSLViewModel()
         {
             for (int i = 0; i < 5; i++)
+            {
                 _shaders[i] = new Shader((ShaderType)i, this);
+                _shaders[i].PropertyChanged += OnShaderChanged;
+            }
+        }
+
+        private void OnShaderChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "Code")
+                ProgramId = 0;
         }
 
         void SetCode(int which, string v, [System.Runtime.CompilerServices.CallerMemberName] string memberName = null)
@@ -57,6 +66,51 @@ namespace ghgl
         {
             get => _shaders[(int)ShaderType.Geometry].Code;
             set => SetCode((int)ShaderType.Geometry, value);
+        }
+
+        public Shader GetShader(ShaderType which)
+        {
+            return _shaders[(int)which];
+        }
+
+        public string GetCode(ShaderType type)
+        {
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    return VertexShaderCode;
+                case ShaderType.Geometry:
+                    return GeometryShaderCode;
+                case ShaderType.TessellationControl:
+                    return TessellationControlCode;
+                case ShaderType.TessellationEval:
+                    return TessellationEvalualtionCode;
+                case ShaderType.Fragment:
+                    return FragmentShaderCode;
+            }
+            return "";
+        }
+
+        public void SetCode(ShaderType type, string code)
+        {
+            switch (type)
+            {
+                case ShaderType.Vertex:
+                    VertexShaderCode = code;
+                    break;
+                case ShaderType.Geometry:
+                    GeometryShaderCode = code;
+                    break;
+                case ShaderType.TessellationControl:
+                    TessellationControlCode = code;
+                    break;
+                case ShaderType.TessellationEval:
+                    TessellationEvalualtionCode = code;
+                    break;
+                case ShaderType.Fragment:
+                    FragmentShaderCode = code;
+                    break;
+            }
         }
 
         public uint ProgramId
@@ -125,31 +179,41 @@ namespace ghgl
         }
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
+        List<CompileError> _compileErrors = new List<CompileError>();
+        public CompileError[] AllCompileErrors()
+        {
+            List<CompileError> errors = new List<CompileError>(_compileErrors);
+            foreach (var shader in _shaders)
+                errors.AddRange(shader.CompileErrors);
+            return errors.ToArray();
+        }
 
-
-        public bool CompileProgram(List<string> errors)
+        public bool CompileProgram()
         {
             if (ProgramId != 0)
                 return true;
             if (_compileFailed)
                 return false;
 
+            GLShaderComponentBase.ActivateGlContext();
+
             GLRecycleBin.Recycle();
 
+            _compileErrors.Clear();
             bool compileSuccess = true;
             foreach (var shader in _shaders)
-                compileSuccess = shader.Compile(errors) && compileSuccess;
+                compileSuccess = shader.Compile() && compileSuccess;
 
             // we want to make sure that at least a vertex and fragment shader
             // exist before making a program
             if (string.IsNullOrWhiteSpace(_shaders[(int)ShaderType.Vertex].Code))
             {
-                errors.Add("A vertex shader is required to create a GL program");
+                _compileErrors.Add(new CompileError("A vertex shader is required to create a GL program"));
                 compileSuccess = false;
             }
             if (string.IsNullOrWhiteSpace(_shaders[(int)ShaderType.Fragment].Code))
             {
-                errors.Add("A fragment shader is required to create a GL program");
+                _compileErrors.Add(new CompileError("A fragment shader is required to create a GL program"));
                 compileSuccess = false;
             }
 
@@ -169,7 +233,7 @@ namespace ghgl
                 {
                     OpenGL.glDeleteProgram(_programId);
                     ProgramId = 0;
-                    errors.Add(errorMsg);
+                    _compileErrors.Add(new CompileError(errorMsg));
                 }
             }
             _compileFailed = (ProgramId == 0);

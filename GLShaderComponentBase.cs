@@ -19,7 +19,7 @@ namespace ghgl
         static uint _viewSerialNumber;
         static IntPtr _hglrc;
         static bool _initializeCallbackSet;
-        static System.Windows.Forms.Timer _timer;
+        static Eto.Forms.UITimer _animationTimer;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -32,16 +32,40 @@ namespace ghgl
                 doc?.Views.Redraw();
             }
             _model.PropertyChanged += ModelPropertyChanged;
-            if( _timer == null )
+        }
+
+        public static bool AnimationTimerEnabled
+        {
+            get
             {
-                _timer = new System.Windows.Forms.Timer();
-                _timer.Interval = 55;
-                _timer.Tick += (s, e) =>
+                return _animationTimer != null;
+            }
+            set
+            {
+                if( value )
                 {
-                    var doc = Rhino.RhinoDoc.ActiveDoc;
-                    if (doc != null)
-                        doc.Views.Redraw();
-                };
+                    if (_animationTimer == null)
+                    {
+                        _animationTimer = new Eto.Forms.UITimer();
+                        _animationTimer.Interval = 0.05;
+                        _animationTimer.Elapsed += (s, e) =>
+                        {
+                            var doc = Rhino.RhinoDoc.ActiveDoc;
+                            if (doc != null)
+                                doc.Views.Redraw();
+                        };
+                        _animationTimer.Start();
+                    }
+                }
+                else
+                {
+                    if(_animationTimer!=null)
+                    {
+                        _animationTimer.Stop();
+                        _animationTimer.Dispose();
+                        _animationTimer = null;
+                    }
+                }
             }
         }
 
@@ -96,7 +120,7 @@ namespace ghgl
             return rc;
         }
 
-        static bool ActivateGlContext()
+        public static bool ActivateGlContext()
         {
             if (OpenGL.wglGetCurrentContext() != IntPtr.Zero)
                 return true;
@@ -126,11 +150,12 @@ namespace ghgl
             if (!ActivateGlContext())
                 return;
 
-            var errors = new List<string>();
-            if (!_model.CompileProgram(errors))
+            if (!_model.CompileProgram())
             {
-                foreach (var err in errors)
-                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, err.Trim());
+                foreach (var err in _model.AllCompileErrors())
+                {
+                    AddRuntimeMessage(GH_RuntimeMessageLevel.Error, err.ToString());
+                }
             }
 
             _model.ClearData();
@@ -350,9 +375,9 @@ namespace ghgl
 
             tsi = new System.Windows.Forms.ToolStripMenuItem("Animate", null, (sender, e) =>
             {
-                _timer.Enabled = !_timer.Enabled;
+                AnimationTimerEnabled = !AnimationTimerEnabled;
             });
-            tsi.Checked = _timer.Enabled;
+            tsi.Checked = AnimationTimerEnabled;
             menu.Items.Add(tsi);
 
             tsi = new System.Windows.Forms.ToolStripMenuItem("Draw Mode");
@@ -431,27 +456,28 @@ namespace ghgl
 
         void OpenEditor()
         {
-            var vm = new GLSLViewModel()
-            {
-                VertexShaderCode = _model.VertexShaderCode,
-                GeometryShaderCode = _model.GeometryShaderCode,
-                FragmentShaderCode = _model.FragmentShaderCode,
-                TessellationControlCode = _model.TessellationControlCode,
-                TessellationEvalualtionCode = _model.TessellationEvalualtionCode
-            };
-            var dlg = new GLSLEditorDialog(vm);
+            bool animationEnabled = AnimationTimerEnabled;
+            string savedVS = _model.VertexShaderCode;
+            string savedGS = _model.GeometryShaderCode;
+            string savedTC = _model.TessellationControlCode;
+            string savedTE = _model.TessellationEvalualtionCode;
+            string savedFS = _model.FragmentShaderCode;
+
+            var dlg = new GLSLEditorDialog(_model);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
-            if (dlg.ShowModal(parent))
+
+            if (!dlg.ShowModal(parent))
             {
-                _model.VertexShaderCode = vm.VertexShaderCode;
-                _model.GeometryShaderCode = vm.GeometryShaderCode;
-                _model.FragmentShaderCode = vm.FragmentShaderCode;
-                _model.TessellationControlCode = vm.TessellationControlCode;
-                _model.TessellationEvalualtionCode = vm.TessellationEvalualtionCode;
-                //recompile shader if necessary
-                if (_model.ProgramId == 0)
-                    ExpireSolution(true);
+                _model.VertexShaderCode = savedVS;
+                _model.GeometryShaderCode = savedGS;
+                _model.FragmentShaderCode = savedFS;
+                _model.TessellationControlCode = savedTC;
+                _model.TessellationEvalualtionCode = savedTE;
             }
+            //recompile shader if necessary
+            if (_model.ProgramId == 0)
+                ExpireSolution(true);
+            AnimationTimerEnabled = animationEnabled;
         }
 
         public override void DrawViewportWires(IGH_PreviewArgs args)
