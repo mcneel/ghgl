@@ -28,7 +28,10 @@ namespace ghgl
             _model.CompileProgram();
             GLShaderComponentBase.AnimationTimerEnabled = true;
             MarkErrors();
+            ShaderCompiled?.Invoke(this, new EventArgs());
         }
+
+        public event EventHandler ShaderCompiled;
 
         public string Title
         {

@@ -65,22 +65,21 @@ namespace ghgl
                 Items = { null, DefaultButton, AbortButton }
             };
 
-            var errors = model.AllCompileErrors();
-
             var tabarea = new TabControl();
             _vertexShaderControl = new ShaderEditorControl(ShaderType.Vertex, model);
+            _vertexShaderControl.ShaderCompiled += OnShadersCompiled;
             tabarea.Pages.Add(new TabPage() { Text = _vertexShaderControl.Title, Content = _vertexShaderControl });
 
             _geometryShaderControl = new ShaderEditorControl(ShaderType.Geometry, model);
+            _geometryShaderControl.ShaderCompiled += OnShadersCompiled;
             tabarea.Pages.Add(new TabPage() { Text = _geometryShaderControl.Title, Content = _geometryShaderControl });
 
             _fragmentShaderControl = new ShaderEditorControl(ShaderType.Fragment, model);
+            _fragmentShaderControl.ShaderCompiled += OnShadersCompiled;
             tabarea.Pages.Add(new TabPage() { Text = _fragmentShaderControl.Title, Content = _fragmentShaderControl });
 
             _errorList = new ListBox();
             _errorList.Height = 40;
-            _errorList.Items.Add("Compile output (no errors)");
-            _errorList.TextColor = Eto.Drawing.Colors.Gray;
 
             Content = new StackLayout
             {
@@ -89,11 +88,33 @@ namespace ghgl
                 Spacing = 5,
                 Items = {
                     new StackLayoutItem(tabarea, HorizontalAlignment.Stretch, true),
-                    //new StackLayoutItem(_errorList, HorizontalAlignment.Stretch),
+                    new StackLayoutItem(_errorList, HorizontalAlignment.Stretch),
                     new StackLayoutItem(button_stack, HorizontalAlignment.Stretch)
                 },
             };
             GLShaderComponentBase.AnimationTimerEnabled = true;
+            OnShadersCompiled(null, EventArgs.Empty);
+        }
+
+        private void OnShadersCompiled(object sender, EventArgs e)
+        {
+            GLSLViewModel model = DataContext as GLSLViewModel;
+            if (model != null)
+            {
+                var errors = model.AllCompileErrors();
+                _errorList.Items.Clear();
+                if(errors.Length==0)
+                {
+                    _errorList.Items.Add("Compile output (no errors)");
+                    _errorList.TextColor = Eto.Drawing.Colors.Gray;
+                }
+                else
+                {
+                    _errorList.TextColor = Eto.Drawing.Colors.Red;
+                    foreach(var err in errors)
+                        _errorList.Items.Add(err.ToString());
+                }
+            }
         }
 
         void SaveGLSL()
