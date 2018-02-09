@@ -1,7 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using Eto.Forms;
 using CodeEditor;
+using System.ComponentModel;
 
 namespace ghgl
 {
@@ -22,25 +22,112 @@ namespace ghgl
             }
         }
 
-        ShaderEditorControl _vertexShaderControl;
-        ShaderEditorControl _fragmentShaderControl;
-        ShaderEditorControl _geometryShaderControl;
+        class EditorPage : System.ComponentModel.INotifyPropertyChanged
+        {
+            readonly TabControl _tabControl;
+            public EditorPage(TabControl tab)
+            {
+                _tabControl = tab;
+            }
+            bool _visible;
+            public bool Visible
+            {
+                get { return _visible; }
+                set
+                {
+                    if(_visible!=value)
+                    {
+                        _visible = value;
+                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Visible"));
+                    }
+                }
+            }
+            public ShaderEditorControl Control { get; set; }
+            public CheckCommand CheckCommand { get; set; }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+        }
+
+        EditorPage[] _shaderControls;
+        TabControl _tabarea;
         ListBox _errorList;
 
-        protected override void OnClosing(CancelEventArgs e)
+        void ShowTab(ShaderType type)
         {
-            if( !e.Cancel )
+            var sc = _shaderControls[(int)type];
+            if (sc.Control == null)
             {
                 var model = DataContext as GLSLViewModel;
-                model.VertexShaderCode = _vertexShaderControl.Text;
-                model.GeometryShaderCode = _geometryShaderControl.Text;
-                model.FragmentShaderCode = _fragmentShaderControl.Text;
+                sc.Control = new ShaderEditorControl(type, model);
+                sc.Control.ShaderCompiled += OnShadersCompiled;
             }
-            base.OnClosing(e);
+
+            int index = -1;
+            for (int i=0; i<_tabarea.Pages.Count; i++)
+            {
+                var ctrl = _tabarea.Pages[i].Content as ShaderEditorControl;
+                if (ctrl.ShaderType == type)
+                    return;
+                if((int)ctrl.ShaderType > (int)type)
+                {
+                    _tabarea.Pages.Insert(i, new TabPage() { Text=sc.Control.Title, Content=sc.Control});
+                    index = i;
+                    break;
+                }
+            }
+            if (-1 == index)
+            {
+                _tabarea.Pages.Add(new TabPage() { Text = sc.Control.Title, Content = sc.Control });
+                index = _tabarea.Pages.Count - 1;
+            }
+            _tabarea.SelectedIndex = index;
+            sc.Visible = true;
+        }
+
+        void HideTab(ShaderType type)
+        {
+            var sc = _shaderControls[(int)type];
+            if (sc.Control == null)
+            {
+                sc.Visible = false;
+                return;
+            }
+
+            for (int i = 0; i < _tabarea.Pages.Count; i++)
+            {
+                var ctrl = _tabarea.Pages[i].Content as ShaderEditorControl;
+                if (ctrl.ShaderType == type)
+                {
+                    _tabarea.Pages.Remove(_tabarea.Pages[i]);
+                    sc.Control = null;
+                    sc.Visible = false;
+                }
+            }
         }
 
         public GLSLEditorDialog(GLSLViewModel model)
         {
+            _tabarea = new TabControl();
+            _shaderControls = new EditorPage[(int)ShaderType.Fragment + 1];
+            var checkCommand = new CheckCommand[_shaderControls.Length];
+            for (int i = 0; i < _shaderControls.Length; i++)
+            {
+                ShaderType st = (ShaderType)i;
+                _shaderControls[i] = new EditorPage(_tabarea);
+                checkCommand[i] = new CheckCommand();
+                checkCommand[i].DataContext = _shaderControls[i];
+                checkCommand[i].MenuText = st.ToString()+" Shader";
+                checkCommand[i].BindDataContext<bool>("Checked", "Visible");
+                int current = i;
+                checkCommand[i].CheckedChanged += (s, e) => {
+                    if (checkCommand[current].Checked)
+                        ShowTab(st);
+                    else
+                        HideTab(st);
+                };
+            }
+
+
             DataContext = model;
             Title = "GLSL Shader";
             Menu = new MenuBar
@@ -48,9 +135,19 @@ namespace ghgl
                 Items = {
                     new ButtonMenuItem
                     {
-                      Text = "&File",
-                      Items = {new SimpleCommand("&Save", SaveGLSL) }
+                        Text = "&File",
+                        Items = {new SimpleCommand("&Save", SaveGLSL) }
                     },
+                    new ButtonMenuItem
+                    {
+                        Text = "&View",
+                        Items =
+                        {
+                            checkCommand[(int)ShaderType.Vertex],
+                            checkCommand[(int)ShaderType.Geometry],
+                            checkCommand[(int)ShaderType.Fragment],
+                        }
+                    }
                 }
             };
             Resizable = true;
@@ -65,18 +162,14 @@ namespace ghgl
                 Items = { null, DefaultButton, AbortButton }
             };
 
-            var tabarea = new TabControl();
-            _vertexShaderControl = new ShaderEditorControl(ShaderType.Vertex, model);
-            _vertexShaderControl.ShaderCompiled += OnShadersCompiled;
-            tabarea.Pages.Add(new TabPage() { Text = _vertexShaderControl.Title, Content = _vertexShaderControl });
-
-            _geometryShaderControl = new ShaderEditorControl(ShaderType.Geometry, model);
-            _geometryShaderControl.ShaderCompiled += OnShadersCompiled;
-            tabarea.Pages.Add(new TabPage() { Text = _geometryShaderControl.Title, Content = _geometryShaderControl });
-
-            _fragmentShaderControl = new ShaderEditorControl(ShaderType.Fragment, model);
-            _fragmentShaderControl.ShaderCompiled += OnShadersCompiled;
-            tabarea.Pages.Add(new TabPage() { Text = _fragmentShaderControl.Title, Content = _fragmentShaderControl });
+            // Just show the common shaders by default
+            ShowTab(ShaderType.Vertex);
+            ShowTab(ShaderType.Geometry);
+            ShowTab(ShaderType.Fragment);
+            //ShowTab(ShaderType.TransformFeedbackVertex);
+            //ShowTab(ShaderType.TessellationControl);
+            //ShowTab(ShaderType.TessellationEval);
+            _tabarea.SelectedIndex = 0;
 
             _errorList = new ListBox();
             _errorList.Height = 40;
@@ -87,7 +180,7 @@ namespace ghgl
                 Orientation = Orientation.Vertical,
                 Spacing = 5,
                 Items = {
-                    new StackLayoutItem(tabarea, HorizontalAlignment.Stretch, true),
+                    new StackLayoutItem(_tabarea, HorizontalAlignment.Stretch, true),
                     new StackLayoutItem(_errorList, HorizontalAlignment.Stretch),
                     new StackLayoutItem(button_stack, HorizontalAlignment.Stretch)
                 },

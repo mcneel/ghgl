@@ -462,6 +462,7 @@ namespace ghgl
             string savedTC = _model.TessellationControlCode;
             string savedTE = _model.TessellationEvalualtionCode;
             string savedFS = _model.FragmentShaderCode;
+            string savedXfrmFeedbackVertex = _model.TransformFeedbackShaderCode;
 
             var dlg = new GLSLEditorDialog(_model);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
@@ -473,6 +474,7 @@ namespace ghgl
                 _model.FragmentShaderCode = savedFS;
                 _model.TessellationControlCode = savedTC;
                 _model.TessellationEvalualtionCode = savedTE;
+                _model.TransformFeedbackShaderCode = savedXfrmFeedbackVertex;
             }
             //recompile shader if necessary
             if (_model.ProgramId == 0)

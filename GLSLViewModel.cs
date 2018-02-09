@@ -10,7 +10,7 @@ namespace ghgl
         const double DefaultLineWidth = 3.0;
         const double DefaultPointSize = 8.0;
 
-        readonly Shader[] _shaders = new Shader[5];
+        readonly Shader[] _shaders = new Shader[(int)ShaderType.Fragment+1];
         bool _compileFailed;
         uint _programId;
         double _glLineWidth = DefaultLineWidth;
@@ -20,7 +20,7 @@ namespace ghgl
 
         public GLSLViewModel()
         {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < (int)ShaderType.Fragment+1; i++)
             {
                 _shaders[i] = new Shader((ShaderType)i, this);
                 _shaders[i].PropertyChanged += OnShaderChanged;
@@ -40,6 +40,12 @@ namespace ghgl
                 _shaders[which].Code = v;
                 OnPropertyChanged(memberName);
             }
+        }
+
+        public string TransformFeedbackShaderCode
+        {
+            get => _shaders[(int)ShaderType.TransformFeedbackVertex].Code;
+            set => SetCode((int)ShaderType.TransformFeedbackVertex, value);
         }
 
         public string VertexShaderCode
@@ -77,6 +83,8 @@ namespace ghgl
         {
             switch (type)
             {
+                case ShaderType.TransformFeedbackVertex:
+                    return TransformFeedbackShaderCode;
                 case ShaderType.Vertex:
                     return VertexShaderCode;
                 case ShaderType.Geometry:
@@ -95,6 +103,9 @@ namespace ghgl
         {
             switch (type)
             {
+                case ShaderType.TransformFeedbackVertex:
+                    TransformFeedbackShaderCode = code;
+                    break;
                 case ShaderType.Vertex:
                     VertexShaderCode = code;
                     break;
@@ -247,6 +258,7 @@ namespace ghgl
             writer.SetString("FragmentShader", FragmentShaderCode);
             writer.SetString("TessCtrlShader", TessellationControlCode);
             writer.SetString("TessEvalShader", TessellationEvalualtionCode);
+            writer.SetString("TransformFeedbackVertexShader", TransformFeedbackShaderCode);
             writer.SetDouble("glLineWidth", glLineWidth);
             writer.SetDouble("glPointSize", glPointSize);
             writer.SetInt32("DrawMode", (int)DrawMode);
@@ -261,7 +273,7 @@ namespace ghgl
             FragmentShaderCode = reader.TryGetString("FragmentShader", ref s) ? s : "";
             TessellationControlCode = reader.TryGetString("TessCtrlShader", ref s) ? s : "";
             TessellationEvalualtionCode = reader.TryGetString("TessEvalShader", ref s) ? s : "";
-
+            TransformFeedbackShaderCode = reader.TryGetString("TransformFeedbackVertexShader", ref s) ? s : "";
             double d = 0;
             if (reader.TryGetDouble("glLineWidth", ref d))
                 glLineWidth = d;
@@ -969,6 +981,12 @@ namespace ghgl
         public void SaveAs(string filename)
         {
             var text = new System.Text.StringBuilder();
+            if( !string.IsNullOrWhiteSpace(TransformFeedbackShaderCode))
+            {
+                text.AppendLine("[transformfeedback vertex shader]");
+                text.AppendLine(TransformFeedbackShaderCode);
+            }
+
             text.AppendLine("[vertex shader]");
             text.AppendLine(VertexShaderCode);
             if( !string.IsNullOrWhiteSpace(GeometryShaderCode) )

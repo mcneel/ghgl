@@ -33,17 +33,20 @@ namespace ghgl
 
         public event EventHandler ShaderCompiled;
 
+        public ShaderType ShaderType { get => _shaderType; }
+
         public string Title
         {
             get
             {
                 switch (_shaderType)
                 {
-                    case ShaderType.Vertex: return "Vertex Shader";
-                    case ShaderType.Geometry: return "Geometry Shader";
-                    case ShaderType.TessellationControl: return "Tessellation Control";
+                    case ShaderType.Vertex: return "Vertex";
+                    case ShaderType.Geometry: return "Geometry";
+                    case ShaderType.TessellationControl: return "Tessellation Ctrl";
                     case ShaderType.TessellationEval: return "Tessellation Eval";
-                    case ShaderType.Fragment: return "Fragment Shader";
+                    case ShaderType.Fragment: return "Fragment";
+                    case ShaderType.TransformFeedbackVertex: return "Transform Feedback Vertex";
                 }
                 return "";
             }

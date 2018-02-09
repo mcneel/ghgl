@@ -6,11 +6,12 @@ namespace ghgl
 {
     enum ShaderType
     {
-        Vertex = 0,
-        Geometry = 1,
-        Fragment = 2,
+        TransformFeedbackVertex = 0,
+        Vertex = 1,
+        Geometry = 2,
         TessellationControl = 3,
-        TessellationEval = 4
+        TessellationEval = 4,
+        Fragment = 5,
     }
 
     /// <summary>
