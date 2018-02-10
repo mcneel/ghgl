@@ -23,6 +23,15 @@ namespace ghgl
             if (uniformLocation >= 0)
                 _setup(uniformLocation, dp);
         }
+
+        static Rhino.Geometry.Light[] GetLightsHelper(Rhino.Display.DisplayPipeline pipeline)
+        {
+            var method = pipeline.GetType().GetMethod("GetLights");
+            if (method == null)
+                return new Rhino.Geometry.Light[0];
+            var lights = method.Invoke(pipeline, null) as Rhino.Geometry.Light[];
+            return lights;
+        }
         
         public static List<BuiltIn> GetUniformBuiltIns()
         {
@@ -61,6 +70,39 @@ namespace ghgl
                     var camLoc = display.Viewport.CameraLocation;
                     OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
                 });
+                Register("_lightCount", (location, display) =>
+                {
+                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                    //var lights = display.GetLights();
+                    var lights = GetLightsHelper(display);
+                    OpenGL.glUniform1i(location, lights.Length);
+                });
+                for (int i = 0; i < 4; i++)
+                {
+                    int current = i;
+                    Register($"_light{current+1}Position", (location, display) =>
+                    {
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        if (lights.Length > current)
+                        {
+                            var lightLocation = lights[current].Location;
+                            OpenGL.glUniform3f(location, (float)lightLocation.X, (float)lightLocation.Y, (float)lightLocation.Z);
+                        }
+                    });
+                    Register($"_light{current + 1}Direction", (location, display) =>
+                    {
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        if (lights.Length > current)
+                        {
+                            var direction = lights[current].Direction;
+                            OpenGL.glUniform3f(location, (float)direction.X, (float)direction.Y, (float)direction.Z);
+                        }
+                    });
+                }
 
                 _uniformBuiltins.Sort((a, b) => (a.Name.CompareTo(b.Name)));
             }
