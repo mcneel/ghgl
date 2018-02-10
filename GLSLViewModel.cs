@@ -409,7 +409,8 @@ namespace ghgl
 
         class MeshData
         {
-            uint _indexBuffer;
+            uint _triangleIndexBuffer;
+            uint _linesIndexBuffer;
             uint _vertexVbo;
             uint _normalVbo;
             uint _textureCoordVbo;
@@ -419,15 +420,28 @@ namespace ghgl
             }
             public Mesh Mesh { get; private set; }
 
-            public uint IndexBuffer
+            public uint TriangleIndexBuffer
             {
-                get { return _indexBuffer; }
+                get { return _triangleIndexBuffer; }
                 set
                 {
-                    if(_indexBuffer!=value)
+                    if(_triangleIndexBuffer!=value)
                     {
-                        GLRecycleBin.AddVboToDeleteList(_indexBuffer);
-                        _indexBuffer = value;
+                        GLRecycleBin.AddVboToDeleteList(_triangleIndexBuffer);
+                        _triangleIndexBuffer = value;
+                    }
+                }
+            }
+
+            public uint LinesIndexBuffer
+            {
+                get { return _linesIndexBuffer; }
+                set
+                {
+                    if (_linesIndexBuffer != value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_linesIndexBuffer);
+                        _linesIndexBuffer = value;
                     }
                 }
             }
@@ -842,7 +856,8 @@ namespace ghgl
         {
             foreach(var data in _meshes)
             {
-                data.IndexBuffer = 0;
+                data.TriangleIndexBuffer = 0;
+                data.LinesIndexBuffer = 0;
                 data.NormalVbo = 0;
                 data.TextureCoordVbo = 0;
                 data.VertexVbo = 0;
@@ -920,12 +935,48 @@ namespace ghgl
                 if( _meshes.Count>i )
                 {
                     var data = _meshes[i];
-                    if(data.IndexBuffer==0)
+                    if (DrawMode == OpenGL.GL_LINES && data.LinesIndexBuffer==0)
                     {
                         uint[] buffers;
                         OpenGL.glGenBuffers(1, out buffers);
-                        data.IndexBuffer = buffers[0];
-                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.IndexBuffer);
+                        data.LinesIndexBuffer = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.LinesIndexBuffer);
+
+                        int[] indices = new int[ 6 * data.Mesh.Faces.TriangleCount + 8 * data.Mesh.Faces.QuadCount];
+                        int current = 0;
+                        foreach (var face in data.Mesh.Faces)
+                        {
+                            indices[current++] = face.A;
+                            indices[current++] = face.B;
+                            indices[current++] = face.B;
+                            indices[current++] = face.C;
+                            if (face.IsTriangle)
+                            {
+                                indices[current++] = face.C;
+                                indices[current++] = face.A;
+                            }
+                            if (face.IsQuad)
+                            {
+                                indices[current++] = face.C;
+                                indices[current++] = face.D;
+                                indices[current++] = face.D;
+                                indices[current++] = face.A;
+                            }
+                        }
+
+                        var handle = GCHandle.Alloc(indices, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        IntPtr size = new IntPtr(sizeof(int) * indices.Length);
+                        OpenGL.glBufferData(OpenGL.GL_ELEMENT_ARRAY_BUFFER, size, pointer, OpenGL.GL_STATIC_DRAW);
+                        handle.Free();
+                    }
+
+                    if (DrawMode != OpenGL.GL_LINES && data.TriangleIndexBuffer==0)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.TriangleIndexBuffer = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.TriangleIndexBuffer);
                         int[] indices = new int[3 * (data.Mesh.Faces.TriangleCount + 2 * data.Mesh.Faces.QuadCount)];
                         int current = 0;
                         foreach(var face in data.Mesh.Faces)
@@ -947,9 +998,17 @@ namespace ghgl
                         OpenGL.glBufferData(OpenGL.GL_ELEMENT_ARRAY_BUFFER, size, pointer, OpenGL.GL_STATIC_DRAW);
                         handle.Free();
                     }
-                    if (data.IndexBuffer != 0)
+
+                    if (DrawMode == OpenGL.GL_LINES && data.LinesIndexBuffer != 0)
                     {
-                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.IndexBuffer);
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.LinesIndexBuffer);
+                        int indexCount = 6 * data.Mesh.Faces.TriangleCount + 8 * data.Mesh.Faces.QuadCount;
+                        OpenGL.glDrawElements(DrawMode, indexCount, OpenGL.GL_UNSIGNED_INT, IntPtr.Zero);
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, 0);
+                    }
+                    if (DrawMode != OpenGL.GL_LINES && data.TriangleIndexBuffer != 0)
+                    {
+                        OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, data.TriangleIndexBuffer);
                         int indexCount = 3*(data.Mesh.Faces.TriangleCount + 2 * data.Mesh.Faces.QuadCount);
                         OpenGL.glDrawElements(DrawMode, indexCount, OpenGL.GL_UNSIGNED_INT, IntPtr.Zero);
                         OpenGL.glBindBuffer(OpenGL.GL_ELEMENT_ARRAY_BUFFER, 0);
