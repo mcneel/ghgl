@@ -61,6 +61,11 @@ namespace ghgl
             _glUniform2i = (glUniform2iProc)GetProc<glUniform2iProc>();
             _glUniform3i = (glUniform3iProc)GetProc<glUniform3iProc>();
             _glUniform4i = (glUniform4iProc)GetProc<glUniform4iProc>();
+            _glUniform1fv = (glUniform1fvProc)GetProc<glUniform1fvProc>();
+            _glUniform2fv = (glUniform2fvProc)GetProc<glUniform2fvProc>();
+            _glUniform3fv = (glUniform3fvProc)GetProc<glUniform3fvProc>();
+            _glUniform4fv = (glUniform4fvProc)GetProc<glUniform4fvProc>();
+
             _glVertexAttribI1i = (glVertexAttribI1iProc)GetProc<glVertexAttribI1iProc>();
             _glVertexAttribI2i = (glVertexAttribI2iProc)GetProc<glVertexAttribI2iProc>();
             _glVertexAttribI3i = (glVertexAttribI3iProc)GetProc<glVertexAttribI3iProc>();
@@ -460,6 +465,34 @@ namespace ghgl
         public static void glUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3)
         {
             _glUniform4i(location, v0, v1, v2, v3);
+        }
+
+        delegate void glUniform1fvProc(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+        static glUniform1fvProc _glUniform1fv;
+        public static void glUniform1fv(GLint location, GLsizei count, GLfloat[] value)
+        {
+            _glUniform1fv(location, count, value);
+        }
+
+        delegate void glUniform2fvProc(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+        static glUniform2fvProc _glUniform2fv;
+        public static void glUniform2fv(GLint location, GLsizei count, GLfloat[] value)
+        {
+            _glUniform2fv(location, count, value);
+        }
+
+        delegate void glUniform3fvProc(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+        static glUniform3fvProc _glUniform3fv;
+        public static void glUniform3fv(GLint location, GLsizei count, GLfloat[] value)
+        {
+            _glUniform3fv(location, count, value);
+        }
+
+        delegate void glUniform4fvProc(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+        static glUniform4fvProc _glUniform4fv;
+        public static void glUniform4fv(GLint location, GLsizei count, GLfloat[] value)
+        {
+            _glUniform4fv(location, count, value);
         }
 
         delegate void glVertexAttribI1iProc(GLuint index, GLint x);

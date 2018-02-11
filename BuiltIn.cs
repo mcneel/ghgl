@@ -19,7 +19,11 @@ namespace ghgl
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
-            int uniformLocation = OpenGL.glGetUniformLocation(program, Name);
+            string glname = Name;
+            int arrayIndex = glname.IndexOf('[');
+            if (arrayIndex > 0)
+                glname = glname.Substring(0, arrayIndex);
+            int uniformLocation = OpenGL.glGetUniformLocation(program, glname);
             if (uniformLocation >= 0)
                 _setup(uniformLocation, dp);
         }
@@ -94,39 +98,50 @@ namespace ghgl
                     var camLoc = display.Viewport.CameraLocation;
                     OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
                 });
+                const int maxlights = 4;
                 Register("_lightCount", (location, display) =>
                 {
                     // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
                     //var lights = display.GetLights();
                     var lights = GetLightsHelper(display);
-                    OpenGL.glUniform1i(location, lights.Length);
+                    int count = lights.Length < maxlights ? lights.Length : 4;
+                    OpenGL.glUniform1i(location, count);
                 });
-                for (int i = 0; i < 4; i++)
+
+                Register($"_lightPosition[{maxlights}]", (location, display) =>
                 {
-                    int current = i;
-                    Register($"_light{current+1}Position", (location, display) =>
+                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                    //var lights = display.GetLights();
+                    var lights = GetLightsHelper(display);
+                    float[] v = new float[3 * maxlights];
+                    for (int i = 0; i < lights.Length; i++)
                     {
-                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                        //var lights = display.GetLights();
-                        var lights = GetLightsHelper(display);
-                        if (lights.Length > current)
-                        {
-                            var lightLocation = lights[current].Location;
-                            OpenGL.glUniform3f(location, (float)lightLocation.X, (float)lightLocation.Y, (float)lightLocation.Z);
-                        }
-                    });
-                    Register($"_light{current + 1}Direction", (location, display) =>
+                        if (i >= maxlights)
+                            break;
+                        var loc = lights[i].Location;
+                        v[i * 3] = (float)loc.X;
+                        v[i * 3 + 1] = (float)loc.Y;
+                        v[i * 3 + 2] = (float)loc.Z;
+                    }
+                    OpenGL.glUniform3fv(location, maxlights, v);
+                });
+                Register($"_lightDirection[{maxlights}]", (location, display) =>
+                {
+                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                    //var lights = display.GetLights();
+                    var lights = GetLightsHelper(display);
+                    float[] v = new float[3 * maxlights];
+                    for(int i=0; i<lights.Length; i++)
                     {
-                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                        //var lights = display.GetLights();
-                        var lights = GetLightsHelper(display);
-                        if (lights.Length > current)
-                        {
-                            var direction = lights[current].Direction;
-                            OpenGL.glUniform3f(location, (float)direction.X, (float)direction.Y, (float)direction.Z);
-                        }
-                    });
-                }
+                        if (i >= maxlights)
+                            break;
+                        var direction = lights[i].Direction;
+                        v[i * 3] = (float)direction.X;
+                        v[i * 3 + 1] = (float)direction.Y;
+                        v[i * 3 + 2] = (float)direction.Z;
+                    }
+                    OpenGL.glUniform3fv(location, maxlights, v);
+                });
 
                 _uniformBuiltins.Sort((a, b) => (a.Name.CompareTo(b.Name)));
             }
