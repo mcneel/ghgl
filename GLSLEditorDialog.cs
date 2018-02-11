@@ -22,7 +22,7 @@ namespace ghgl
             }
         }
 
-        class EditorPage : System.ComponentModel.INotifyPropertyChanged
+        class EditorPage : INotifyPropertyChanged
         {
             readonly TabControl _tabControl;
             public EditorPage(TabControl tab)

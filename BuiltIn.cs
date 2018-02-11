@@ -24,11 +24,23 @@ namespace ghgl
                 _setup(uniformLocation, dp);
         }
 
+        static Rhino.Geometry.Light[] _preSR3Lights;
         static Rhino.Geometry.Light[] GetLightsHelper(Rhino.Display.DisplayPipeline pipeline)
         {
             var method = pipeline.GetType().GetMethod("GetLights");
             if (method == null)
-                return new Rhino.Geometry.Light[0];
+            {
+                if( _preSR3Lights==null )
+                {
+                    // just mimic the default light
+                    var light = new Rhino.Geometry.Light();
+                    light.LightStyle = Rhino.Geometry.LightStyle.CameraDirectional;
+                    light.Direction = new Rhino.Geometry.Vector3d(1, -1, -3);
+                    light.ShadowIntensity = 0.7;
+                    _preSR3Lights = new Rhino.Geometry.Light[] { light };
+                }
+                return _preSR3Lights;
+            }
             var lights = method.Invoke(pipeline, null) as Rhino.Geometry.Light[];
             return lights;
         }
@@ -53,6 +65,18 @@ namespace ghgl
                 {
                     float[] w2c = display.GetOpenGLWorldToCamera(true);
                     OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
+                });
+                Register("_worldToCameraNormal", (location, display) =>
+                {
+                    var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Camera);
+                    xf = xf.Transpose();
+                    Rhino.Geometry.Transform m;
+                    xf.TryGetInverse(out m);
+                    m = m.Transpose();
+                    float[] w2cn = new float[] {(float)m.M00, (float)m.M01, (float)m.M02,
+                      (float)m.M10, (float)m.M11, (float)m.M12,
+                      (float)m.M20, (float)m.M21, (float)m.M22};
+                    OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
                 });
                 Register("_cameraToClip", (location, display) =>
                 {

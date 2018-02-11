@@ -71,6 +71,7 @@ namespace ghgl
             _glVertexAttrib3f = (glVertexAttrib3fProc)GetProc<glVertexAttrib3fProc>();
             _glVertexAttrib4f = (glVertexAttrib4fProc)GetProc<glVertexAttrib4fProc>();
             _glPatchParameteri = (glPatchParameteriProc)GetProc<glPatchParameteriProc>();
+            _glUniformMatrix3fv = (glUniformMatrix3fvProc)GetProc<glUniformMatrix3fvProc>();
             _glUniformMatrix4fv = (glUniformMatrix4fvProc)GetProc<glUniformMatrix4fvProc>();
             _glBindVertexArray = (glBindVertexArrayProc)GetProc<glBindVertexArrayProc>();
             _glDeleteVertexArrays = (glDeleteVertexArraysProc)GetProc<glDeleteVertexArraysProc>();
@@ -529,6 +530,13 @@ namespace ghgl
         public static void glPatchParameteri(GLenum pname, GLint value)
         {
             _glPatchParameteri(pname, value);
+        }
+
+        delegate void glUniformMatrix3fvProc(GLint location, GLsizei count, GLboolean transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+        static glUniformMatrix3fvProc _glUniformMatrix3fv;
+        public static void glUniformMatrix3fv(GLint location, GLsizei count, bool transpose, GLfloat[] value)
+        {
+            _glUniformMatrix3fv(location, count, transpose ? (byte)1 : (byte)0, value);
         }
 
         delegate void glUniformMatrix4fvProc(GLint location, GLsizei count, GLboolean transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);

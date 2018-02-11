@@ -114,7 +114,7 @@ namespace CodeEditor
             _control.Lexer = Lexer.Cpp;
 
             string kw0 = "attribute layout uniform float int bool vec2 vec3 vec4 " +
-                "mat4 in out sampler2D if else return void flat discard";
+                "mat3 mat4 in out sampler2D if else return void flat discard";
             _keywords0 = kw0.Split(new char[] { ' ' });
             Array.Sort(_keywords0);
 
