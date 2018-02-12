@@ -65,6 +65,7 @@ namespace ghgl
             _glUniform2fv = (glUniform2fvProc)GetProc<glUniform2fvProc>();
             _glUniform3fv = (glUniform3fvProc)GetProc<glUniform3fvProc>();
             _glUniform4fv = (glUniform4fvProc)GetProc<glUniform4fvProc>();
+            _glUniform1iv = (glUniform1ivProc)GetProc<glUniform1ivProc>();
 
             _glVertexAttribI1i = (glVertexAttribI1iProc)GetProc<glVertexAttribI1iProc>();
             _glVertexAttribI2i = (glVertexAttribI2iProc)GetProc<glVertexAttribI2iProc>();
@@ -494,6 +495,15 @@ namespace ghgl
         {
             _glUniform4fv(location, count, value);
         }
+
+        delegate void glUniform1ivProc(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLint[] value);
+        static glUniform1ivProc _glUniform1iv;
+        public static void glUniform1iv(GLint location, GLsizei count, GLint[] value)
+        {
+            _glUniform1iv(location, count, value);
+        }
+
+
 
         delegate void glVertexAttribI1iProc(GLuint index, GLint x);
         static glVertexAttribI1iProc _glVertexAttribI1i;

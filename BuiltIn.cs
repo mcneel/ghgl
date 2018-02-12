@@ -142,6 +142,22 @@ namespace ghgl
                     }
                     OpenGL.glUniform3fv(location, maxlights, v);
                 });
+                Register($"_lightInCameraSpace[{maxlights}]", (location, display) =>
+                {
+                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                    //var lights = display.GetLights();
+                    var lights = GetLightsHelper(display);
+                    int[] v = new int[maxlights];
+                    for (int i = 0; i < lights.Length; i++)
+                    {
+                        if (i >= maxlights)
+                            break;
+
+                        bool isCameraLight = lights[i].CoordinateSystem == Rhino.DocObjects.CoordinateSystem.Camera;
+                        v[i] = isCameraLight ? 1 : 0;
+                    }
+                    OpenGL.glUniform1iv(location, maxlights, v);
+                });
 
                 _uniformBuiltins.Sort((a, b) => (a.Name.CompareTo(b.Name)));
             }
