@@ -466,8 +466,16 @@ namespace ghgl
 
             var dlg = new GLSLEditorDialog(_model);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
-
-            if (!dlg.ShowModal(parent))
+            _model.Modified = false;
+            if (dlg.ShowModal(parent))
+            {
+                if (_model.Modified)
+                {
+                    var doc = OnPingDocument();
+                    doc?.Modified();
+                }
+            }
+            else
             {
                 _model.VertexShaderCode = savedVS;
                 _model.GeometryShaderCode = savedGS;
@@ -476,6 +484,7 @@ namespace ghgl
                 _model.TessellationEvalualtionCode = savedTE;
                 _model.TransformFeedbackShaderCode = savedXfrmFeedbackVertex;
             }
+            _model.Modified = false;
             //recompile shader if necessary
             if (_model.ProgramId == 0)
                 ExpireSolution(true);

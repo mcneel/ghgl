@@ -27,10 +27,18 @@ namespace ghgl
             }
         }
 
+        public bool Modified
+        {
+            get; set;
+        }
+
         private void OnShaderChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if(e.PropertyName == "Code")
+            if (e.PropertyName == "Code")
+            {
+                Modified = true;
                 ProgramId = 0;
+            }
         }
 
         void SetCode(int which, string v, [System.Runtime.CompilerServices.CallerMemberName] string memberName = null)
