@@ -16,11 +16,11 @@ layout(location = 0) in vec3 _meshVertex;
 layout(location = 1) in vec3 _meshNormal;
 
 uniform mat4 _worldToClip;
-out vec4 color;
+out vec3 normal;
 
 void main() 
 {
-  color = vec4(_meshNormal, 1);
+  normal = _meshNormal;
   gl_Position = _worldToClip * vec4(_meshVertex,1);
 }
 ";
@@ -28,10 +28,21 @@ void main()
                 _model.FragmentShaderCode =
 @"#version 330
 
-in vec4 color;
+uniform vec3 _lightDirection[4];
+uniform mat3 _worldToCameraNormal;
+
+in vec3 normal;
+
 void main()
 {
-  gl_FragColor = color;
+  vec3 l = normalize(_lightDirection[0]);
+  vec3 camNormal = _worldToCameraNormal * normal;
+  float intensity = dot(l,normalize(camNormal.xyz));
+  vec4 diffuse = vec4(1,0,1,1);
+
+  vec3 ambient = vec3(0.1,0.1,0.1) * diffuse.rgb;
+  vec3 c = ambient + diffuse.rgb * abs(intensity);
+  gl_FragColor = vec4(c, diffuse.a);
 }
 ";
         }
