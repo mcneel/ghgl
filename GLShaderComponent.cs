@@ -33,6 +33,16 @@ void main()
 ";
         }
 
+        protected override System.Drawing.Bitmap Icon
+        {
+            get
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var stream = assembly.GetManifestResourceStream("ghgl.resources.GLSL_Component_24x24.png");
+                return new System.Drawing.Bitmap(stream);
+            }
+        }
+
         protected override void RegisterInputParams(GH_InputParamManager pManager)
         {
             pManager.AddScriptVariableParameter("vertex", "vertex", "", Grasshopper.Kernel.GH_ParamAccess.list);

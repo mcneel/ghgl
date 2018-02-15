@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using Grasshopper.Kernel;
 
 namespace ghgl
@@ -45,6 +46,16 @@ void main()
   gl_FragColor = vec4(c, diffuse.a);
 }
 ";
+        }
+
+        protected override Bitmap Icon
+        {
+            get
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var stream = assembly.GetManifestResourceStream("ghgl.resources.GLSL_MeshComponent_24x24.png");
+                return new Bitmap(stream);
+            }
         }
 
         protected override void RegisterInputParams(GH_InputParamManager pManager)
