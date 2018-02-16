@@ -53,6 +53,16 @@ namespace ghgl
                             var doc = Rhino.RhinoDoc.ActiveDoc;
                             if (doc != null)
                                 doc.Views.Redraw();
+                            if (Grasshopper.Instances.ActiveCanvas != null)
+                            {
+                                var ctrls = Grasshopper.Instances.ActiveCanvas.Controls;
+                                if (ctrls != null)
+                                {
+                                    for (int i = 0; i < ctrls.Count; i++)
+                                        ctrls[i].Refresh();
+                                }
+
+                            }
                         };
                         _animationTimer.Start();
                     }
@@ -88,7 +98,10 @@ namespace ghgl
                 OpenGL.Initialize();
 
             _hglrc = OpenGL.wglGetCurrentContext();
-            _viewSerialNumber = e.Display.Viewport.ParentView.RuntimeSerialNumber;
+            var view = e.Display.Viewport.ParentView;
+            if (view == null)
+                view = e.RhinoDoc.Views.ActiveView;
+            _viewSerialNumber = view.RuntimeSerialNumber;
         }
 
         public override Guid ComponentGuid => GetType().GUID;
@@ -496,8 +509,11 @@ namespace ghgl
             if (!OpenGL.Initialized)
                 OpenGL.Initialize();
 
-            _hglrc = OpenGL.wglGetCurrentContext();
-            _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
+            if (args.Display.Viewport.ParentView != null)
+            {
+                _hglrc = OpenGL.wglGetCurrentContext();
+                _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
+            }
             _model.Draw(args.Display);
         }
 
