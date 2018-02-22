@@ -83,6 +83,8 @@ namespace ghgl
             _glDeleteVertexArrays = (glDeleteVertexArraysProc)GetProc<glDeleteVertexArraysProc>();
             _glGenVertexArrays = (glGenVertexArraysProc)GetProc<glGenVertexArraysProc>();
             _glActiveTexture = (glActiveTextureProc)GetProc<glActiveTextureProc>();
+            _glGenerateMipmap = (glGenerateMipmapProc)GetProc<glGenerateMipmapProc>();
+            _glTexStorage2D = (glTexStorage2DProc)GetProc<glTexStorage2DProc>();
         }
 
         static Delegate GetProc<T>()
@@ -211,6 +213,8 @@ namespace ghgl
         public const uint GL_RGBA = 0x1908;
         public const uint GL_BGR = 0x80E0;
         public const uint GL_BGRA = 0x80E1;
+        public const uint GL_RGB8 = 0x8051;
+        public const uint GL_RGBA8 = 0x8058;
 
         public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
         public const uint GL_TEXTURE_MIN_FILTER = 0x2801;
@@ -218,6 +222,10 @@ namespace ghgl
         public const uint GL_TEXTURE_WRAP_T = 0x2803;
         public const uint GL_NEAREST = 0x2600;
         public const uint GL_LINEAR = 0x2601;
+        public const uint GL_NEAREST_MIPMAP_NEAREST = 0x2700;
+        public const uint GL_LINEAR_MIPMAP_NEAREST  = 0x2701;
+        public const uint GL_NEAREST_MIPMAP_LINEAR  = 0x2702;
+        public const uint GL_LINEAR_MIPMAP_LINEAR   = 0x2703;
         public const uint GL_CLAMP = 0x2900;
         public const uint GL_REPEAT = 0x2901;
 
@@ -262,6 +270,8 @@ namespace ghgl
         [DllImport(OPENGL_LIB)]
         public static extern void glTexParameteri(GLenum target, GLenum pname, GLint param);
 
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenerateTextureMipmap(GLuint texture);
 
         [DllImport(OPENGL_LIB)]
         public static extern HGLRC wglGetCurrentContext();
@@ -616,6 +626,28 @@ namespace ghgl
         public static void glActiveTexture(GLenum id)
         {
             _glActiveTexture(id);
+        }
+
+        delegate void glGenerateMipmapProc(GLenum id);
+        static glGenerateMipmapProc _glGenerateMipmap;
+        public static void glGenerateMipmap(GLenum id)
+        {
+            _glGenerateMipmap(id);
+        }
+
+        delegate void glTexStorage2DProc(GLenum target,
+                                         GLsizei levels,
+                                         GLenum internalformat,
+                                         GLsizei width,
+                                         GLsizei height);
+        static glTexStorage2DProc _glTexStorage2D;
+        public static void glTexStorage2D(GLenum target,
+                                         GLsizei levels,
+                                         GLenum internalformat,
+                                         GLsizei width,
+                                         GLsizei height)
+        {
+            _glTexStorage2D(target, levels, internalformat, width, height);
         }
 
 

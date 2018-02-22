@@ -32,7 +32,8 @@ void main()
 uniform vec3 _lightDirection[4];
 uniform mat3 _worldToCameraNormal;
 
-in vec3 normal;
+in  vec3 normal;
+out vec4 FragColor;
 
 void main()
 {
@@ -43,7 +44,7 @@ void main()
 
   vec3 ambient = vec3(0.1,0.1,0.1) * diffuse.rgb;
   vec3 c = ambient + diffuse.rgb * abs(intensity);
-  gl_FragColor = vec4(c, diffuse.a);
+  FragColor = vec4(c, diffuse.a);
 }
 ";
         }
