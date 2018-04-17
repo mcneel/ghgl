@@ -29,62 +29,71 @@ namespace ghgl
     class OpenGL
     {
         public static bool Initialized { get; set; }
+        public static bool IsAvailable { get; set; }
 
         public static void Initialize()
         {
             Initialized = true;
-            _glBindBuffer = (glBindBufferProc)GetProc<glBindBufferProc>();
-            _glDeleteBuffers = (glDeleteBuffersProc)GetProc<glDeleteBuffersProc>();
-            _glGenBuffers = (glGenBuffersProc)GetProc<glGenBuffersProc>();
-            _glBufferData = (glBufferDataProc)GetProc<glBufferDataProc>();
+            IsAvailable = true;
+            try
+            {
+                _glBindBuffer = (glBindBufferProc)GetProc<glBindBufferProc>();
+                _glDeleteBuffers = (glDeleteBuffersProc)GetProc<glDeleteBuffersProc>();
+                _glGenBuffers = (glGenBuffersProc)GetProc<glGenBuffersProc>();
+                _glBufferData = (glBufferDataProc)GetProc<glBufferDataProc>();
 
-            _glAttachShader = (glAttachShaderProc)GetProc<glAttachShaderProc>();
-            _glCompileShader = (glCompileShaderProc)GetProc<glCompileShaderProc>();
-            _glDeleteShader = (glDeleteShaderProc)GetProc<glDeleteShaderProc>();
-            _glDeleteProgram = (glDeleteProgramProc)GetProc<glDeleteProgramProc>();
-            _glCreateShader = (glCreateShaderProc)GetProc<glCreateShaderProc>();
-            _glCreateProgram = (glCreateProgramProc)GetProc<glCreateProgramProc>();
-            _glShaderSource = (glShaderSourceProc)GetProc<glShaderSourceProc>();
-            _glUseProgram = (glUseProgramProc)GetProc<glUseProgramProc>();
-            _glGetShaderiv = (glGetShaderivProc)GetProc<glGetShaderivProc>();
-            _glGetShaderInfoLog = (glGetShaderInfoLogProc)GetProc<glGetShaderInfoLogProc>();
-            _glLinkProgram = (glLinkProgramProc)GetProc<glLinkProgramProc>();
-            _glGetAttribLocation = (glGetAttribLocationProc)GetProc<glGetAttribLocationProc>();
-            _glGetUniformLocation = (glGetUniformLocationProc)GetProc<glGetUniformLocationProc>();
-            _glDisableVertexAttribArray = (glDisableVertexAttribArrayProc)GetProc<glDisableVertexAttribArrayProc>();
-            _glEnableVertexAttribArray = (glEnableVertexAttribArrayProc)GetProc<glEnableVertexAttribArrayProc>();
-            _glUniform1f = (glUniform1fProc)GetProc<glUniform1fProc>();
-            _glUniform2f = (glUniform2fProc)GetProc<glUniform2fProc>();
-            _glUniform3f = (glUniform3fProc)GetProc<glUniform3fProc>();
-            _glUniform4f = (glUniform4fProc)GetProc<glUniform4fProc>();
-            _glUniform1i = (glUniform1iProc)GetProc<glUniform1iProc>();
-            _glUniform2i = (glUniform2iProc)GetProc<glUniform2iProc>();
-            _glUniform3i = (glUniform3iProc)GetProc<glUniform3iProc>();
-            _glUniform4i = (glUniform4iProc)GetProc<glUniform4iProc>();
-            _glUniform1fv = (glUniform1fvProc)GetProc<glUniform1fvProc>();
-            _glUniform2fv = (glUniform2fvProc)GetProc<glUniform2fvProc>();
-            _glUniform3fv = (glUniform3fvProc)GetProc<glUniform3fvProc>();
-            _glUniform4fv = (glUniform4fvProc)GetProc<glUniform4fvProc>();
-            _glUniform1iv = (glUniform1ivProc)GetProc<glUniform1ivProc>();
+                _glAttachShader = (glAttachShaderProc)GetProc<glAttachShaderProc>();
+                _glCompileShader = (glCompileShaderProc)GetProc<glCompileShaderProc>();
+                _glDeleteShader = (glDeleteShaderProc)GetProc<glDeleteShaderProc>();
+                _glDeleteProgram = (glDeleteProgramProc)GetProc<glDeleteProgramProc>();
+                _glCreateShader = (glCreateShaderProc)GetProc<glCreateShaderProc>();
+                _glCreateProgram = (glCreateProgramProc)GetProc<glCreateProgramProc>();
+                _glShaderSource = (glShaderSourceProc)GetProc<glShaderSourceProc>();
+                _glUseProgram = (glUseProgramProc)GetProc<glUseProgramProc>();
+                _glGetShaderiv = (glGetShaderivProc)GetProc<glGetShaderivProc>();
+                _glGetShaderInfoLog = (glGetShaderInfoLogProc)GetProc<glGetShaderInfoLogProc>();
+                _glLinkProgram = (glLinkProgramProc)GetProc<glLinkProgramProc>();
+                _glGetAttribLocation = (glGetAttribLocationProc)GetProc<glGetAttribLocationProc>();
+                _glGetUniformLocation = (glGetUniformLocationProc)GetProc<glGetUniformLocationProc>();
+                _glDisableVertexAttribArray = (glDisableVertexAttribArrayProc)GetProc<glDisableVertexAttribArrayProc>();
+                _glEnableVertexAttribArray = (glEnableVertexAttribArrayProc)GetProc<glEnableVertexAttribArrayProc>();
+                _glUniform1f = (glUniform1fProc)GetProc<glUniform1fProc>();
+                _glUniform2f = (glUniform2fProc)GetProc<glUniform2fProc>();
+                _glUniform3f = (glUniform3fProc)GetProc<glUniform3fProc>();
+                _glUniform4f = (glUniform4fProc)GetProc<glUniform4fProc>();
+                _glUniform1i = (glUniform1iProc)GetProc<glUniform1iProc>();
+                _glUniform2i = (glUniform2iProc)GetProc<glUniform2iProc>();
+                _glUniform3i = (glUniform3iProc)GetProc<glUniform3iProc>();
+                _glUniform4i = (glUniform4iProc)GetProc<glUniform4iProc>();
+                _glUniform1fv = (glUniform1fvProc)GetProc<glUniform1fvProc>();
+                _glUniform2fv = (glUniform2fvProc)GetProc<glUniform2fvProc>();
+                _glUniform3fv = (glUniform3fvProc)GetProc<glUniform3fvProc>();
+                _glUniform4fv = (glUniform4fvProc)GetProc<glUniform4fvProc>();
+                _glUniform1iv = (glUniform1ivProc)GetProc<glUniform1ivProc>();
 
-            _glVertexAttribI1i = (glVertexAttribI1iProc)GetProc<glVertexAttribI1iProc>();
-            _glVertexAttribI2i = (glVertexAttribI2iProc)GetProc<glVertexAttribI2iProc>();
-            _glVertexAttribI3i = (glVertexAttribI3iProc)GetProc<glVertexAttribI3iProc>();
-            _glVertexAttribI4i = (glVertexAttribI4iProc)GetProc<glVertexAttribI4iProc>();
-            _glVertexAttribPointer = (glVertexAttribPointerProc)GetProc<glVertexAttribPointerProc>();
-            _glVertexAttrib1f = (glVertexAttrib1fProc)GetProc<glVertexAttrib1fProc>();
-            _glVertexAttrib2f = (glVertexAttrib2fProc)GetProc<glVertexAttrib2fProc>();
-            _glVertexAttrib3f = (glVertexAttrib3fProc)GetProc<glVertexAttrib3fProc>();
-            _glVertexAttrib4f = (glVertexAttrib4fProc)GetProc<glVertexAttrib4fProc>();
-            _glPatchParameteri = (glPatchParameteriProc)GetProc<glPatchParameteriProc>();
-            _glUniformMatrix3fv = (glUniformMatrix3fvProc)GetProc<glUniformMatrix3fvProc>();
-            _glUniformMatrix4fv = (glUniformMatrix4fvProc)GetProc<glUniformMatrix4fvProc>();
-            _glBindVertexArray = (glBindVertexArrayProc)GetProc<glBindVertexArrayProc>();
-            _glDeleteVertexArrays = (glDeleteVertexArraysProc)GetProc<glDeleteVertexArraysProc>();
-            _glGenVertexArrays = (glGenVertexArraysProc)GetProc<glGenVertexArraysProc>();
-            _glActiveTexture = (glActiveTextureProc)GetProc<glActiveTextureProc>();
-            _glGenerateMipmap = (glGenerateMipmapProc)GetProc<glGenerateMipmapProc>();
-            _glTexStorage2D = (glTexStorage2DProc)GetProc<glTexStorage2DProc>();
+                _glVertexAttribI1i = (glVertexAttribI1iProc)GetProc<glVertexAttribI1iProc>();
+                _glVertexAttribI2i = (glVertexAttribI2iProc)GetProc<glVertexAttribI2iProc>();
+                _glVertexAttribI3i = (glVertexAttribI3iProc)GetProc<glVertexAttribI3iProc>();
+                _glVertexAttribI4i = (glVertexAttribI4iProc)GetProc<glVertexAttribI4iProc>();
+                _glVertexAttribPointer = (glVertexAttribPointerProc)GetProc<glVertexAttribPointerProc>();
+                _glVertexAttrib1f = (glVertexAttrib1fProc)GetProc<glVertexAttrib1fProc>();
+                _glVertexAttrib2f = (glVertexAttrib2fProc)GetProc<glVertexAttrib2fProc>();
+                _glVertexAttrib3f = (glVertexAttrib3fProc)GetProc<glVertexAttrib3fProc>();
+                _glVertexAttrib4f = (glVertexAttrib4fProc)GetProc<glVertexAttrib4fProc>();
+                _glPatchParameteri = (glPatchParameteriProc)GetProc<glPatchParameteriProc>();
+                _glUniformMatrix3fv = (glUniformMatrix3fvProc)GetProc<glUniformMatrix3fvProc>();
+                _glUniformMatrix4fv = (glUniformMatrix4fvProc)GetProc<glUniformMatrix4fvProc>();
+                _glBindVertexArray = (glBindVertexArrayProc)GetProc<glBindVertexArrayProc>();
+                _glDeleteVertexArrays = (glDeleteVertexArraysProc)GetProc<glDeleteVertexArraysProc>();
+                _glGenVertexArrays = (glGenVertexArraysProc)GetProc<glGenVertexArraysProc>();
+                _glActiveTexture = (glActiveTextureProc)GetProc<glActiveTextureProc>();
+                _glGenerateMipmap = (glGenerateMipmapProc)GetProc<glGenerateMipmapProc>();
+                _glTexStorage2D = (glTexStorage2DProc)GetProc<glTexStorage2DProc>();
+            }
+            catch(Exception)
+            {
+                IsAvailable = false;
+            }
         }
 
         static Delegate GetProc<T>()

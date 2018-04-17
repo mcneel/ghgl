@@ -12,6 +12,10 @@ using Rhino.Geometry;
 
 namespace ghgl
 {
+    /// <summary>
+    /// Base class for the GL Shader components. Most of the heavy lifting is done in this class
+    /// and the subclasses just specialize a little bit
+    /// </summary>
     public abstract class GLShaderComponentBase : GH_Component, IGH_VariableParameterComponent
     {
         internal GLSLViewModel _model = new GLSLViewModel();
@@ -26,12 +30,28 @@ namespace ghgl
         {
             if (!_initializeCallbackSet)
             {
+                // set up callback to perform one time OpenGL initialization during the
+                // next draw function
                 _initializeCallbackSet = true;
                 DisplayPipeline.DrawForeground += DisplayPipeline_DrawForeground;
                 var doc = Rhino.RhinoDoc.ActiveDoc;
                 doc?.Views.Redraw();
             }
             _model.PropertyChanged += ModelPropertyChanged;
+        }
+
+        static void RedrawViewportControl()
+        {
+            if (Grasshopper.Instances.ActiveCanvas != null)
+            {
+                var ctrls = Grasshopper.Instances.ActiveCanvas.Controls;
+                if (ctrls != null)
+                {
+                    for (int i = 0; i < ctrls.Count; i++)
+                        ctrls[i].Refresh();
+                }
+
+            }
         }
 
         public static bool AnimationTimerEnabled
@@ -53,16 +73,7 @@ namespace ghgl
                             var doc = Rhino.RhinoDoc.ActiveDoc;
                             if (doc != null)
                                 doc.Views.Redraw();
-                            if (Grasshopper.Instances.ActiveCanvas != null)
-                            {
-                                var ctrls = Grasshopper.Instances.ActiveCanvas.Controls;
-                                if (ctrls != null)
-                                {
-                                    for (int i = 0; i < ctrls.Count; i++)
-                                        ctrls[i].Refresh();
-                                }
-
-                            }
+                            RedrawViewportControl();
                         };
                         _animationTimer.Start();
                     }
@@ -91,6 +102,7 @@ namespace ghgl
             }
         }
 
+        // One time setup function to get the OpenGL functions initialized for use
         private void DisplayPipeline_DrawForeground(object sender, DrawEventArgs e)
         {
             DisplayPipeline.DrawForeground -= DisplayPipeline_DrawForeground;
@@ -135,6 +147,9 @@ namespace ghgl
 
         public static bool ActivateGlContext()
         {
+            if (!OpenGL.IsAvailable)
+                return false;
+
             if (OpenGL.wglGetCurrentContext() != IntPtr.Zero)
                 return true;
 
@@ -156,6 +171,9 @@ namespace ghgl
         protected override void SolveInstance(IGH_DataAccess data)
         {
             SolveInstanceHelper(data, 0);
+
+            if (!OpenGL.IsAvailable)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to access required OpenGL features");
         }
 
         protected void SolveInstanceHelper(IGH_DataAccess data, int startIndex)
@@ -373,7 +391,10 @@ namespace ghgl
 
         void AppendModeHelper(System.Windows.Forms.ToolStripMenuItem parent, string name, uint mode)
         {
-            var tsi_sub = new System.Windows.Forms.ToolStripMenuItem(name, null, (s, e) => _model.DrawMode = mode);
+            var tsi_sub = new System.Windows.Forms.ToolStripMenuItem(name, null, (s, e) => {
+                _model.DrawMode = mode;
+                RedrawViewportControl();
+            });
             tsi_sub.Checked = (_model.DrawMode == mode);
             parent.DropDown.Items.Add(tsi_sub);
         }
@@ -465,6 +486,7 @@ namespace ghgl
                     sender.CloseEntireMenuStructure();
                     break;
             }
+            RedrawViewportControl();
         }
 
         void OpenEditor()
@@ -508,6 +530,8 @@ namespace ghgl
         {
             if (!OpenGL.Initialized)
                 OpenGL.Initialize();
+            if (!OpenGL.IsAvailable)
+                return;
 
             if (args.Display.Viewport.ParentView != null)
             {
