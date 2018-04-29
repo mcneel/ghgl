@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace ghgl
 {
+    /// <summary>
+    /// Built In Uniforms and Attributes that people typically need (matrices, lights, viewport info, time)
+    /// Always use an underscore as the first character to help differentiate that the uniform really is a
+    /// built in one and not a custom uniform that the user has specified
+    /// </summary>
     class BuiltIn
     {
         static List<BuiltIn> _uniformBuiltins;
@@ -19,6 +24,8 @@ namespace ghgl
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
+            if (_setup == null)
+                return;
             string glname = Name;
             int arrayIndex = glname.IndexOf('[');
             if (arrayIndex > 0)
@@ -81,6 +88,18 @@ namespace ghgl
                       (float)m.M10, (float)m.M11, (float)m.M12,
                       (float)m.M20, (float)m.M21, (float)m.M22};
                     OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
+                });
+                Register("_worldToScreen", (location, display) =>
+                {
+                    var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
+                    xf = xf.Transpose();
+                    Rhino.Geometry.Transform m;
+                    xf.TryGetInverse(out m);
+                    m = m.Transpose();
+                    float[] w2cn = new float[] {(float)m.M00, (float)m.M01, (float)m.M02, (float)m.M03,
+                      (float)m.M10, (float)m.M11, (float)m.M12, (float)m.M13,
+                      (float)m.M20, (float)m.M21, (float)m.M22, (float)m.M23};
+                    OpenGL.glUniformMatrix4fv(location, 1, false, w2cn);
                 });
                 Register("_cameraToClip", (location, display) =>
                 {
@@ -162,6 +181,15 @@ namespace ghgl
                 _uniformBuiltins.Sort((a, b) => (a.Name.CompareTo(b.Name)));
             }
             return _uniformBuiltins;
+        }
+
+        public static List<BuiltIn> GetAttributeBuiltIns()
+        {
+            List<BuiltIn> rc = new List<BuiltIn>();
+            rc.Add(new BuiltIn("_meshVertex", null));
+            rc.Add(new BuiltIn("_meshNormal", null));
+            rc.Add(new BuiltIn("_meshTextureCoordinate", null));
+            return rc;
         }
 
         static void Register(string name, Action<int, Rhino.Display.DisplayPipeline> setup)

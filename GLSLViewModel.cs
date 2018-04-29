@@ -340,14 +340,14 @@ namespace ghgl
 
         class UniformData<T>
         {
-            public UniformData(string name, T value)
+            public UniformData(string name, T[] value)
             {
                 Name = name;
                 Data = value;
             }
 
             public string Name { get; private set; }
-            public T Data { get; private set; }
+            public T[] Data { get; private set; }
         }
 
         class SamplerUniformData
@@ -507,21 +507,21 @@ namespace ghgl
             _meshes.Add(new MeshData(mesh));
         }
 
-        public void AddUniform(string name, int value)
+        public void AddUniform(string name, int[] values)
         {
-            _intUniforms.Add(new UniformData<int>(name, value));
+            _intUniforms.Add(new UniformData<int>(name, values));
         }
-        public void AddUniform(string name, float value)
+        public void AddUniform(string name, float[] values)
         {
-            _floatUniforms.Add(new UniformData<float>(name, value));
+            _floatUniforms.Add(new UniformData<float>(name, values));
         }
-        public void AddUniform(string name, Point3f value)
+        public void AddUniform(string name, Point3f[] values)
         {
-            _vec3Uniforms.Add(new UniformData<Point3f>(name, value));
+            _vec3Uniforms.Add(new UniformData<Point3f>(name, values));
         }
-        public void AddUniform(string name, Vec4 value)
+        public void AddUniform(string name, Vec4[] values)
         {
-            _vec4Uniforms.Add(new UniformData<Vec4>(name, value));
+            _vec4Uniforms.Add(new UniformData<Vec4>(name, values));
         }
         public void AddSampler2DUniform(string name, string path)
         {
@@ -557,31 +557,88 @@ namespace ghgl
             _vec4Attribs.Add(new GLAttribute<Vec4>(name, location, value));
         }
 
+        static int UniformLocation(uint programId, string name, out int arrayLength)
+        {
+            arrayLength = 0;
+            int index = name.IndexOf("[", StringComparison.Ordinal);
+            int index2 = index < 0 ? -1 : name.IndexOf("]", index, StringComparison.Ordinal);
+            if (index > 0 && index2>index)
+            {
+                string count = name.Substring(index + 1, index2 - index - 1);
+                int.TryParse(count, out arrayLength);
+                name = name.Substring(0, index);
+            }
+            return OpenGL.glGetUniformLocation(programId, name);
+        }
+
         void SetupGLUniforms()
         {
             foreach (var uniform in _intUniforms)
             {
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int arrayLength;
+                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
                 if (-1 != location)
-                    OpenGL.glUniform1i(location, uniform.Data);
+                {
+                    if (arrayLength < 1)
+                        OpenGL.glUniform1i(location, uniform.Data[0]);
+                    else if (uniform.Data.Length >= arrayLength)
+                        OpenGL.glUniform1iv(location, arrayLength, uniform.Data);
+                }
             }
             foreach (var uniform in _floatUniforms)
             {
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int arrayLength;
+                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
                 if (-1 != location)
-                    OpenGL.glUniform1f(location, uniform.Data);
+                {
+                    if (arrayLength < 1)
+                        OpenGL.glUniform1f(location, uniform.Data[0]);
+                    else if (uniform.Data.Length >= arrayLength)
+                        OpenGL.glUniform1fv(location, arrayLength, uniform.Data);
+                }
             }
             foreach (var uniform in _vec3Uniforms)
             {
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int arrayLength;
+                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
                 if (-1 != location)
-                    OpenGL.glUniform3f(location, uniform.Data.X, uniform.Data.Y, uniform.Data.Z);
+                {
+                    if (arrayLength < 1)
+                        OpenGL.glUniform3f(location, uniform.Data[0].X, uniform.Data[0].Y, uniform.Data[0].Z);
+                    else if (uniform.Data.Length >= arrayLength)
+                    {
+                        float[] data = new float[arrayLength * 3];
+                        for(int i=0; i<arrayLength; i++)
+                        {
+                            data[i * 3] = uniform.Data[i].X;
+                            data[i * 3 + 1] = uniform.Data[i].Y;
+                            data[i * 3 + 2] = uniform.Data[i].Z;
+                        }
+                        OpenGL.glUniform3fv(location, arrayLength, data);
+                    }
+                }
             }
             foreach (var uniform in _vec4Uniforms)
             {
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int arrayLength;
+                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
                 if (-1 != location)
-                    OpenGL.glUniform4f(location, uniform.Data._x, uniform.Data._y, uniform.Data._z, uniform.Data._w);
+                {
+                    if (arrayLength < 1)
+                        OpenGL.glUniform4f(location, uniform.Data[0]._x, uniform.Data[0]._y, uniform.Data[0]._z, uniform.Data[0]._w);
+                    else if (uniform.Data.Length >= arrayLength)
+                    {
+                        float[] data = new float[arrayLength * 4];
+                        for (int i = 0; i < arrayLength; i++)
+                        {
+                            data[i * 4] = uniform.Data[i]._x;
+                            data[i * 4 + 1] = uniform.Data[i]._y;
+                            data[i * 4 + 2] = uniform.Data[i]._z;
+                            data[i * 4 + 3] = uniform.Data[i]._w;
+                        }
+                        OpenGL.glUniform4fv(location, arrayLength, data);
+                    }
+                }
             }
 
             int currentTexture = 0;

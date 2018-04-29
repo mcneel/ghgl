@@ -91,6 +91,7 @@ namespace ghgl
                 if (_builtins == null)
                 {
                     var bis = BuiltIn.GetUniformBuiltIns();
+                    bis.AddRange(BuiltIn.GetAttributeBuiltIns());
                     _builtins = new string[bis.Count];
                     for (int i = 0; i < bis.Count; i++)
                         _builtins[i] = bis[i].Name;

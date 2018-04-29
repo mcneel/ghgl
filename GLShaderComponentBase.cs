@@ -197,87 +197,121 @@ namespace ghgl
                 string datatype;
                 if (_model.TryGetUniformType(varname, out datatype))
                 {
-                    IGH_Goo destination = null;
+                    List<IGH_Goo> destinationList = null;
                     if (Params.Input[i].Access == GH_ParamAccess.item)
+                    {
+                        IGH_Goo destination = null;
                         data.GetData(i, ref destination);
+                        destinationList = new List<IGH_Goo>(new []{destination});
+                    }
                     else
                     {
-                        List<IGH_Goo> list = new List<IGH_Goo>();
-                        data.GetDataList(i, list);
-                        destination = list[0];
+                        destinationList = new List<IGH_Goo>();
+                        data.GetDataList(i, destinationList);
                     }
+
                     switch (datatype)
                     {
                         case "int":
                             {
-                                int value;
-                                if (!destination.CastTo(out value))
+                                int[] values = new int[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
                                 {
-                                    double dvalue;
-                                    if (destination.CastTo(out dvalue))
-                                        value = (int)dvalue;
-                                    else
+                                    IGH_Goo destination = destinationList[j];
+                                    int value;
+                                    if (!destination.CastTo(out value))
                                     {
-                                        bool bvalue;
-                                        if (destination.CastTo(out bvalue))
-                                            value = bvalue ? 1 : 0;
+                                        double dvalue;
+                                        if (destination.CastTo(out dvalue))
+                                            value = (int)dvalue;
+                                        else
+                                        {
+                                            bool bvalue;
+                                            if (destination.CastTo(out bvalue))
+                                                value = bvalue ? 1 : 0;
+                                        }
                                     }
+                                    values[j] = value;
                                 }
-                                _model.AddUniform(varname, value);
+                                _model.AddUniform(varname, values);
                                 break;
                             }
                         case "float":
                             {
-                                double value;
-                                destination.CastTo(out value);
-                                if (!destination.CastTo(out value))
+                                float[] values = new float[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
                                 {
-                                    int ival;
-                                    if (destination.CastTo(out ival))
-                                        value = ival;
+                                    IGH_Goo destination = destinationList[j];
+                                    double value;
+                                    destination.CastTo(out value);
+                                    if (!destination.CastTo(out value))
+                                    {
+                                        int ival;
+                                        if (destination.CastTo(out ival))
+                                            value = ival;
+                                    }
+                                    values[j] = (float)value;
                                 }
-                                _model.AddUniform(varname, (float)value);
+                                _model.AddUniform(varname, values);
                                 break;
                             }
                         case "vec3":
                             {
-                                Point3d point;
-                                if (destination.CastTo(out point))
+                                Point3f[] values = new Point3f[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
                                 {
-                                    float x = (float)point.X;
-                                    float y = (float)point.Y;
-                                    float z = (float)point.Z;
-                                    _model.AddUniform(varname, new Point3f(x, y, z));
+                                    IGH_Goo destination = destinationList[j];
+                                    Point3d point;
+                                    if (destination.CastTo(out point))
+                                    {
+                                        float x = (float)point.X;
+                                        float y = (float)point.Y;
+                                        float z = (float)point.Z;
+                                        values[j] = new Point3f(x, y, z);
+                                    }
                                 }
+                                _model.AddUniform(varname, values);
                                 break;
                             }
                         case "vec4":
                             {
-                                if (destination.TypeName == "Colour")
+                                Vec4[] values = new Vec4[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
                                 {
-                                    System.Drawing.Color color;
-                                    if (destination.CastTo(out color))
+                                    IGH_Goo destination = destinationList[j];
+                                    if (destination.TypeName == "Colour")
                                     {
-                                        Vec4 v4 = new Vec4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
-                                        _model.AddUniform(varname, v4);
+                                        System.Drawing.Color color;
+                                        if (destination.CastTo(out color))
+                                        {
+                                            values[j] = new Vec4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                                        }
                                     }
                                 }
+                                _model.AddUniform(varname, values);
                                 break;
                             }
                         case "bool":
                             {
-                                bool value;
-                                if (!destination.CastTo(out value))
+                                int[] values = new int[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
                                 {
-                                    int ivalue;
-                                    if (destination.CastTo(out ivalue))
-                                        value = ivalue != 0;
+                                    IGH_Goo destination = destinationList[j];
+                                    bool value;
+                                    if (!destination.CastTo(out value))
+                                    {
+                                        int ivalue;
+                                        if (destination.CastTo(out ivalue))
+                                            value = ivalue != 0;
+                                    }
+                                    values[j] = value ? 1 : 0;
                                 }
-                                _model.AddUniform(varname, value ? 1 : 0);
+                                _model.AddUniform(varname, values);
                                 break;
                             }
                         case "sampler2D":
                             {
+                                IGH_Goo destination = destinationList[0];
                                 //Try casting to a string first. This will be interpreted as a path to an image file
                                 string path;
                                 if (destination.CastTo(out path))
@@ -571,6 +605,8 @@ namespace ghgl
 
         void IGH_VariableParameterComponent.VariableParameterMaintenance()
         {
+            foreach (IGH_Param param in Params.Input)
+                param.Name = param.NickName;
         }
     }
 }
