@@ -204,7 +204,7 @@ namespace ghgl
                 GLShaderComponentBase.AnimationTimerEnabled = animationEnabled;
                 Rhino.Display.DisplayPipeline.PreDrawObjects -= DisplayPipeline_PreDrawObjects;
             };
-            dlg.Title += $" ({_resourceName})";
+            dlg.Title = this.NickName;
             dlg.Owner = parent;
             dlg.Show();
         }
