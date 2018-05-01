@@ -176,29 +176,36 @@ namespace ghgl
             var dlg = new GLSLEditorDialog(_model, containsTessShaders);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             _model.Modified = false;
-            if (dlg.ShowModal(parent))
+
+            dlg.Closed += (s, e) =>
             {
-                if (_model.Modified)
+
+                if (!dlg.Canceled)
                 {
-                    var doc = OnPingDocument();
-                    doc?.Modified();
+                    if (_model.Modified)
+                    {
+                        var doc = OnPingDocument();
+                        doc?.Modified();
+                    }
                 }
-            }
-            else
-            {
-                _model.VertexShaderCode = savedVS;
-                _model.GeometryShaderCode = savedGS;
-                _model.FragmentShaderCode = savedFS;
-                _model.TessellationControlCode = savedTC;
-                _model.TessellationEvalualtionCode = savedTE;
-                _model.TransformFeedbackShaderCode = savedXfrmFeedbackVertex;
-            }
-            _model.Modified = false;
-            //recompile shader if necessary
-            if (_model.ProgramId == 0)
-                ExpireSolution(true);
-            GLShaderComponentBase.AnimationTimerEnabled = animationEnabled;
-            Rhino.Display.DisplayPipeline.PreDrawObjects -= DisplayPipeline_PreDrawObjects;
+                else
+                {
+                    _model.VertexShaderCode = savedVS;
+                    _model.GeometryShaderCode = savedGS;
+                    _model.FragmentShaderCode = savedFS;
+                    _model.TessellationControlCode = savedTC;
+                    _model.TessellationEvalualtionCode = savedTE;
+                    _model.TransformFeedbackShaderCode = savedXfrmFeedbackVertex;
+                }
+                _model.Modified = false;
+                //recompile shader if necessary
+                if (_model.ProgramId == 0)
+                    ExpireSolution(true);
+                GLShaderComponentBase.AnimationTimerEnabled = animationEnabled;
+                Rhino.Display.DisplayPipeline.PreDrawObjects -= DisplayPipeline_PreDrawObjects;
+            };
+            dlg.Owner = parent;
+            dlg.Show();
         }
 
         private void DisplayPipeline_PreDrawObjects(object sender, Rhino.Display.DrawEventArgs e)

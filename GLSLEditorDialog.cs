@@ -5,8 +5,7 @@ using System.ComponentModel;
 
 namespace ghgl
 {
-
-    class GLSLEditorDialog : Dialog<bool>
+    class GLSLEditorDialog : Form
     {
         static GLSLEditorDialog()
         {
@@ -105,6 +104,8 @@ namespace ghgl
             }
         }
 
+        public bool Canceled { get; set; }
+
         public GLSLEditorDialog(GLSLViewModel model, bool includeTessellationShaders)
         {
             _tabarea = new TabControl();
@@ -153,8 +154,12 @@ namespace ghgl
             Resizable = true;
             Size = new Eto.Drawing.Size(600, 600);
 
-            DefaultButton = new Button() { Text = "OK", Command = new SimpleCommand("OK", () => Close(true)) };
-            AbortButton = new Button() { Text = "Cancel", Command = new SimpleCommand("Cancel", () => Close(false)) };
+            var DefaultButton = new Button() { Text = "OK", Command = new SimpleCommand("OK", () => Close()) };
+            var AbortButton = new Button() { Text = "Cancel", Command = new SimpleCommand("Cancel", () =>
+            {
+                Canceled = true;
+                Close();
+            }) };
             var button_stack = new StackLayout
             {
                 Padding = 5,
