@@ -75,6 +75,7 @@
     <Compile Include="CodeEditor\ScriptEditorControlHandlerWin.cs" />
     <Compile Include="CompileError.cs" />
     <Compile Include="GLAttribute.cs" />
+    <Compile Include="GLBuiltInShader.cs" />
     <Compile Include="GLMeshShaderComponent.cs" />
     <Compile Include="GLRecycleBin.cs" />
     <Compile Include="GLShaderComponent.cs" />

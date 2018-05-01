@@ -40,7 +40,7 @@ namespace ghgl
             _model.PropertyChanged += ModelPropertyChanged;
         }
 
-        static void RedrawViewportControl()
+        public static void RedrawViewportControl()
         {
             if (Grasshopper.Instances.ActiveCanvas != null)
             {
@@ -533,7 +533,7 @@ namespace ghgl
             string savedFS = _model.FragmentShaderCode;
             string savedXfrmFeedbackVertex = _model.TransformFeedbackShaderCode;
 
-            var dlg = new GLSLEditorDialog(_model);
+            var dlg = new GLSLEditorDialog(_model, false);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             _model.Modified = false;
             if (dlg.ShowModal(parent))

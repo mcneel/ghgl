@@ -139,12 +139,16 @@ namespace ghgl
             {
                 if (_programId != value)
                 {
-                    GLRecycleBin.AddProgramToDeleteList(_programId);
+                    if(RecycleCurrentProgram)
+                      GLRecycleBin.AddProgramToDeleteList(_programId);
                     _programId = value;
+                    RecycleCurrentProgram = true;
                     OnPropertyChanged();
                 }
             }
         }
+
+        public bool RecycleCurrentProgram { get; set; } = true;
 
         public double glLineWidth
         {

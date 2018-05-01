@@ -105,7 +105,7 @@ namespace ghgl
             }
         }
 
-        public GLSLEditorDialog(GLSLViewModel model)
+        public GLSLEditorDialog(GLSLViewModel model, bool includeTessellationShaders)
         {
             _tabarea = new TabControl();
             _shaderControls = new EditorPage[(int)ShaderType.Fragment + 1];
@@ -164,11 +164,14 @@ namespace ghgl
 
             // Just show the common shaders by default
             ShowTab(ShaderType.Vertex);
+            if (includeTessellationShaders)
+            {
+                ShowTab(ShaderType.TessellationControl);
+                ShowTab(ShaderType.TessellationEval);
+            }
             ShowTab(ShaderType.Geometry);
             ShowTab(ShaderType.Fragment);
             //ShowTab(ShaderType.TransformFeedbackVertex);
-            //ShowTab(ShaderType.TessellationControl);
-            //ShowTab(ShaderType.TessellationEval);
             _tabarea.SelectedIndex = 0;
 
             _errorList = new ListBox();

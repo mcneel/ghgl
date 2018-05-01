@@ -18,7 +18,7 @@ namespace ghgl
             TextChanged += ShaderControlTextChanged;
             MarkErrors();
             _compileTimer.Elapsed += CompileTimerTick;
-            _compileTimer.Interval = 0.25; //every quarter second
+            _compileTimer.Interval = 1; //every second
 
         }
 
