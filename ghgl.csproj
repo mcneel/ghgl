@@ -55,6 +55,7 @@
     </Reference>
     <Reference Include="RhinoWindows, Version=6.0.18016.23451, Culture=neutral, PublicKeyToken=552281e97c755530, processorArchitecture=MSIL">
       <HintPath>packages\RhinoWindows.6.0.18016.23451-test3\lib\net45\RhinoWindows.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
