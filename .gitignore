@@ -1,5 +1,5 @@
-/obj
-/packages
-/.vs
-/bin
-/ghgl.csproj.user
+/src/obj
+/src/packages
+/src/.vs
+/src/ghgl.csproj.user
+/src/bin
