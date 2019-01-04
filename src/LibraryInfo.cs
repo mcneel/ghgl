@@ -20,6 +20,6 @@ namespace ghgl
 
         public override string AuthorContact => "https://github.com/mcneel/ghgl";
 
-        public override string AssemblyVersion => "0.1.0";
+        public override string AssemblyVersion => "0.2.0";
     }
 }

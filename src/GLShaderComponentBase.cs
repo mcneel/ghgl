@@ -193,22 +193,23 @@ namespace ghgl
 
             for (int i = startIndex; i < Params.Input.Count; i++)
             {
+                List<IGH_Goo> destinationList = null;
+                if (Params.Input[i].Access == GH_ParamAccess.item)
+                {
+                    IGH_Goo destination = null;
+                    data.GetData(i, ref destination);
+                    destinationList = new List<IGH_Goo>(new[] { destination });
+                }
+                else
+                {
+                    destinationList = new List<IGH_Goo>();
+                    data.GetDataList(i, destinationList);
+                }
+
                 string varname = Params.Input[i].NickName;
                 string datatype;
                 if (_model.TryGetUniformType(varname, out datatype))
                 {
-                    List<IGH_Goo> destinationList = null;
-                    if (Params.Input[i].Access == GH_ParamAccess.item)
-                    {
-                        IGH_Goo destination = null;
-                        data.GetData(i, ref destination);
-                        destinationList = new List<IGH_Goo>(new []{destination});
-                    }
-                    else
-                    {
-                        destinationList = new List<IGH_Goo>();
-                        data.GetDataList(i, destinationList);
-                    }
 
                     switch (datatype)
                     {
@@ -257,20 +258,9 @@ namespace ghgl
                             }
                         case "vec3":
                             {
-                                Point3f[] values = new Point3f[destinationList.Count];
-                                for (int j = 0; j < values.Length; j++)
-                                {
-                                    IGH_Goo destination = destinationList[j];
-                                    Point3d point;
-                                    if (destination.CastTo(out point))
-                                    {
-                                        float x = (float)point.X;
-                                        float y = (float)point.Y;
-                                        float z = (float)point.Z;
-                                        values[j] = new Point3f(x, y, z);
-                                    }
-                                }
-                                _model.AddUniform(varname, values);
+                                Point3f[] values = GooListToPoint3fArray(destinationList);
+                                if( values != null )
+                                    _model.AddUniform(varname, values);
                                 break;
                             }
                         case "vec4":
@@ -362,19 +352,9 @@ namespace ghgl
                     if (datatype == "vec3")
                     {
                         //vec3 -> point3d
-                        List<Point3d> destination = new List<Point3d>();
-                        if (data.GetDataList(i, destination))
-                        {
-                            Point3f[] vec3_array = new Point3f[destination.Count];
-                            for (int index = 0; index < destination.Count; index++)
-                            {
-                                float x = (float)destination[index].X;
-                                float y = (float)destination[index].Y;
-                                float z = (float)destination[index].Z;
-                                vec3_array[index] = new Point3f(x, y, z);
-                            }
+                        Point3f[] vec3_array = GooListToPoint3fArray(destinationList);
+                        if( vec3_array!=null )
                             _model.AddAttribute(varname, location, vec3_array);
-                        }
                     }
                     if (datatype == "vec4")
                     {
@@ -392,6 +372,48 @@ namespace ghgl
                     }
                 }
             }
+        }
+
+        static Point3f[] GooListToPoint3fArray(List<IGH_Goo> list)
+        {
+            int count = list.Count;
+            if (count < 1)
+                return null;
+
+            Point3d point;
+            if( list[0].CastTo(out point) )
+            {
+                Point3f[] vec3_array = new Point3f[count];
+                for( int i=0; i<count; i++ )
+                {
+                    if (list[i].CastTo(out point))
+                    {
+                        float x = (float)point.X;
+                        float y = (float)point.Y;
+                        float z = (float)point.Z;
+                        vec3_array[i] = new Point3f(x, y, z);
+                    }
+                }
+                return vec3_array;
+            }
+
+            Vector3d vector;
+            if( list[0].CastTo(out vector) )
+            {
+                Point3f[] vec3_array = new Point3f[count];
+                for (int i = 0; i < count; i++)
+                {
+                    if (list[i].CastTo(out vector))
+                    {
+                        float x = (float)vector.X;
+                        float y = (float)vector.Y;
+                        float z = (float)vector.Z;
+                        vec3_array[i] = new Point3f(x, y, z);
+                    }
+                }
+                return vec3_array;
+            }
+            return null;
         }
 
         protected void ReportErrors(string errorMessage)
