@@ -671,7 +671,7 @@ namespace ghgl
                 }
             }
 
-            int currentTexture = 0;
+            int currentTexture = 1;
             foreach (var uniform in _sampler2DUniforms)
             {
                 int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
