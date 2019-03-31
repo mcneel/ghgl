@@ -14,13 +14,17 @@ namespace ghgl
         static DateTime _startTime;
         Action<int, Rhino.Display.DisplayPipeline> _setup;
 
-        private BuiltIn(string name, Action<int, Rhino.Display.DisplayPipeline> setup)
+        private BuiltIn(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
         {
             Name = name;
+            Description = description;
+            DataType = datatype;
             _setup = setup;
         }
 
         public string Name { get; private set; }
+        public string Description { get; private set; }
+        public string DataType { get; private set; }
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
@@ -61,23 +65,36 @@ namespace ghgl
             if( _uniformBuiltins==null)
             {
                 _startTime = DateTime.Now;
-                Register("_worldToClip", (location, display) =>
+                Register("_colorBuffer", "sampler2D", "texture representing the current state of the color information in the viewport", (location, display) =>
+                {
+                    var bmp = display.FrameBuffer;
+                    uint textureId = GLSLViewModel.SamplerUniformData.CreateTexture(bmp);
+                    bmp.Dispose();
+
+                    const int currentTexture = 0;
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
+                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
+                    OpenGL.glUniform1i(location, currentTexture);
+                    GLRecycleBin.AddTextureToDeleteList(textureId);
+                });
+
+                Register("_worldToClip", "mat4", "transformation from world to clipping coordinates", (location, display) =>
                 {
                     float[] w2c = display.GetOpenGLWorldToClip(true);
                     OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
 
                 });
-                Register("_viewportSize", (location, display) =>
+                Register("_viewportSize", "vec2", "width and height of viewport in pixels", (location, display) =>
                 {
                     var viewportSize = display.Viewport.Size;
                     OpenGL.glUniform2f(location, (float)viewportSize.Width, (float)viewportSize.Height);
                 });
-                Register("_worldToCamera", (location, display) =>
+                Register("_worldToCamera", "mat4", "transformation from world to camera coordinates", (location, display) =>
                 {
                     float[] w2c = display.GetOpenGLWorldToCamera(true);
                     OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
                 });
-                Register("_worldToCameraNormal", (location, display) =>
+                Register("_worldToCameraNormal", "mat3", "transformation to apply to normals for world to camera", (location, display) =>
                 {
                     var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Camera);
                     xf = xf.Transpose();
@@ -89,7 +106,7 @@ namespace ghgl
                       (float)m.M20, (float)m.M21, (float)m.M22};
                     OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
                 });
-                Register("_worldToScreen", (location, display) =>
+                Register("_worldToScreen", "mat4" ,"transformation from world to screen coordinates", (location, display) =>
                 {
                     var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
                     xf = xf.Transpose();
@@ -101,24 +118,24 @@ namespace ghgl
                       (float)m.M20, (float)m.M21, (float)m.M22, (float)m.M23};
                     OpenGL.glUniformMatrix4fv(location, 1, false, w2cn);
                 });
-                Register("_cameraToClip", (location, display) =>
+                Register("_cameraToClip", "mat4", "transformation from camera to clipping coordinates", (location, display) =>
                 {
                     float[] c2c = display.GetOpenGLCameraToClip();
                     OpenGL.glUniformMatrix4fv(location, 1, false, c2c);
                 });
-                Register("_time", (location, display) =>
+                Register("_time", "float", "elapsed seconds since you starting GL Component", (location, display) =>
                 {
                     var span = DateTime.Now - _startTime;
                     double seconds = span.TotalSeconds;
                     OpenGL.glUniform1f(location, (float)seconds);
                 });
-                Register("_cameraLocation", (location, display) =>
+                Register("_cameraLocation", "vec3", "world location of camera", (location, display) =>
                 {
                     var camLoc = display.Viewport.CameraLocation;
                     OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
                 });
                 const int maxlights = 4;
-                Register("_lightCount", (location, display) =>
+                Register("_lightCount", "int", "number of lights in the scene", (location, display) =>
                 {
                     // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
                     //var lights = display.GetLights();
@@ -127,7 +144,7 @@ namespace ghgl
                     OpenGL.glUniform1i(location, count);
                 });
 
-                Register($"_lightPosition[{maxlights}]", (location, display) =>
+                Register($"_lightPosition[{maxlights}]", "vec3", "array of four light positions", (location, display) =>
                 {
                     // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
                     //var lights = display.GetLights();
@@ -144,7 +161,7 @@ namespace ghgl
                     }
                     OpenGL.glUniform3fv(location, maxlights, v);
                 });
-                Register($"_lightDirection[{maxlights}]", (location, display) =>
+                Register($"_lightDirection[{maxlights}]", "vec3", "array of four light direction vectors", (location, display) =>
                 {
                     // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
                     //var lights = display.GetLights();
@@ -161,7 +178,7 @@ namespace ghgl
                     }
                     OpenGL.glUniform3fv(location, maxlights, v);
                 });
-                Register($"_lightInCameraSpace[{maxlights}]", (location, display) =>
+                Register($"_lightInCameraSpace[{maxlights}]", "vec3", "array of four light posiitons in camera space", (location, display) =>
                 {
                     // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
                     //var lights = display.GetLights();
@@ -186,17 +203,17 @@ namespace ghgl
         public static List<BuiltIn> GetAttributeBuiltIns()
         {
             List<BuiltIn> rc = new List<BuiltIn>();
-            rc.Add(new BuiltIn("_meshVertex", null));
-            rc.Add(new BuiltIn("_meshNormal", null));
-            rc.Add(new BuiltIn("_meshTextureCoordinate", null));
+            rc.Add(new BuiltIn("_meshVertex", "vec3", "mesh vertex location", null));
+            rc.Add(new BuiltIn("_meshNormal", "vec3", "mesh normal", null));
+            rc.Add(new BuiltIn("_meshTextureCoordinate", "vec2", "mesh texture coordinate", null));
             return rc;
         }
 
-        static void Register(string name, Action<int, Rhino.Display.DisplayPipeline> setup)
+        static void Register(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
         {
             if (_uniformBuiltins == null)
                 _uniformBuiltins = new List<BuiltIn>();
-            var builtin = new BuiltIn(name, setup);
+            var builtin = new BuiltIn(name, datatype, description, setup);
             _uniformBuiltins.Add(builtin);
         }
     }

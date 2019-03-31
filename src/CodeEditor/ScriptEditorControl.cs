@@ -45,6 +45,7 @@ namespace CodeEditor
 
         public bool AutoCActive { get => Handler.AutoCActive; }
         public int CurrentPosition { get => Handler.CurrentPosition; }
+        public void InsertText(int position, string text) { Handler.InsertText(position, text); }
         public int WordStartPosition(int position, bool onlyWordCharacters) { return Handler.WordStartPosition(position, onlyWordCharacters); }
         public string GetTextRange(int position, int length) { return Handler.GetTextRange(position, length); }
         public void AutoCShow(int lenEntered, string list) { Handler.AutoCShow(lenEntered, list); }
@@ -60,6 +61,7 @@ namespace CodeEditor
 
             bool AutoCActive { get; }
             int CurrentPosition { get; }
+            void InsertText(int position, string text);
             int WordStartPosition(int position, bool onlyWordCharacters);
             string GetTextRange(int position, int length);
             void AutoCShow(int lenEntered, string list);

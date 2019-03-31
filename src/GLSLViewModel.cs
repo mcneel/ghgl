@@ -354,17 +354,41 @@ namespace ghgl
             public T[] Data { get; private set; }
         }
 
-        class SamplerUniformData
+        public class SamplerUniformData
         {
             uint _textureId;
+            System.Drawing.Bitmap _bitmap;
 
             public SamplerUniformData(string name, string path)
             {
                 Name = name;
                 Path = path;
             }
+
+            public SamplerUniformData(string name, System.Drawing.Bitmap bmp)
+            {
+                Name = name;
+                _bitmap = bmp;
+                Path = "<bitmap>";
+            }
             public string Name { get; private set; }
-            public String Path { get; private set; }
+            public string Path { get; private set; }
+            public System.Drawing.Bitmap GetBitmap()
+            {
+                if (_bitmap == null)
+                {
+                    try
+                    {
+                        var bmp = new System.Drawing.Bitmap(Path);
+                        _bitmap = bmp;
+                    }
+                    catch(Exception)
+                    {
+
+                    }
+                }
+                return _bitmap;
+            }
 
             public uint TextureId
             {
@@ -378,38 +402,35 @@ namespace ghgl
                     }
                 }
             }
-            public static uint CreateTexture(string path)
+            public static uint CreateTexture(System.Drawing.Bitmap bmp)
             {
                 uint textureId;
                 try
                 {
-                    using (var bmp = new System.Drawing.Bitmap(path))
-                    {
-                        var rect = new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height);
-                        uint[] textures = { 0 };
-                        OpenGL.glGenTextures(1, textures);
-                        OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textures[0]);
+                    var rect = new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height);
+                    uint[] textures = { 0 };
+                    OpenGL.glGenTextures(1, textures);
+                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textures[0]);
 
-                        if (bmp.PixelFormat == System.Drawing.Imaging.PixelFormat.Format24bppRgb)
-                        {
-                            var bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-                            OpenGL.glTexImage2D(OpenGL.GL_TEXTURE_2D, 0, (int)OpenGL.GL_RGB, bmpData.Width, bmpData.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, bmpData.Scan0);
-                            bmp.UnlockBits(bmpData);
-                        }
-                        else
-                        {
-                            var bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                            OpenGL.glTexImage2D(OpenGL.GL_TEXTURE_2D, 0, (int)OpenGL.GL_RGBA, bmpData.Width, bmpData.Height, 0, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, bmpData.Scan0);
-                            bmp.UnlockBits(bmpData);
-                        }
-                        textureId = textures[0];
-                        OpenGL.glGenerateMipmap(OpenGL.GL_TEXTURE_2D);
-                        OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, (int)OpenGL.GL_REPEAT);
-                        OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, (int)OpenGL.GL_REPEAT);
-                        OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
-                        OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
-                        OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, 0);
+                    if (bmp.PixelFormat == System.Drawing.Imaging.PixelFormat.Format24bppRgb)
+                    {
+                        var bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        OpenGL.glTexImage2D(OpenGL.GL_TEXTURE_2D, 0, (int)OpenGL.GL_RGB, bmpData.Width, bmpData.Height, 0, OpenGL.GL_BGR, OpenGL.GL_UNSIGNED_BYTE, bmpData.Scan0);
+                        bmp.UnlockBits(bmpData);
                     }
+                    else
+                    {
+                        var bmpData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                        OpenGL.glTexImage2D(OpenGL.GL_TEXTURE_2D, 0, (int)OpenGL.GL_RGBA, bmpData.Width, bmpData.Height, 0, OpenGL.GL_BGRA, OpenGL.GL_UNSIGNED_BYTE, bmpData.Scan0);
+                        bmp.UnlockBits(bmpData);
+                    }
+                    textureId = textures[0];
+                    OpenGL.glGenerateMipmap(OpenGL.GL_TEXTURE_2D);
+                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, (int)OpenGL.GL_REPEAT);
+                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, (int)OpenGL.GL_REPEAT);
+                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
+                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
+                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, 0);
                 }
                 catch (Exception)
                 {
@@ -543,6 +564,11 @@ namespace ghgl
             }
             _sampler2DUniforms.Add(data);
         }
+        public void AddSampler2DUniform(string name, System.Drawing.Bitmap bmp)
+        {
+            var data = new SamplerUniformData(name, bmp);
+            _sampler2DUniforms.Add(data);
+        }
 
         public void AddAttribute(string name, int location, int[] value)
         {
@@ -653,7 +679,7 @@ namespace ghgl
                 {
                     if (0 == uniform.TextureId)
                     {
-                        uniform.TextureId = SamplerUniformData.CreateTexture(uniform.Path);
+                        uniform.TextureId = SamplerUniformData.CreateTexture(uniform.GetBitmap());
                     }
                     if (uniform.TextureId != 0)
                     {

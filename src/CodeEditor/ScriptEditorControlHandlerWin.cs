@@ -20,7 +20,6 @@ namespace CodeEditor
             Control.Child = _control = new ScintillaNET.Scintilla();
             _control.CharAdded += OnCharAdded;
             _control.TextChanged += OnTextChanged;
-            
             SetupTheme();
         }
 
@@ -69,6 +68,7 @@ namespace CodeEditor
 
         public bool AutoCActive { get { return _control.AutoCActive; } }
         public int CurrentPosition { get { return _control.CurrentPosition; } }
+        public void InsertText(int position, string text) { _control.InsertText(position, text); }
         public int WordStartPosition(int position, bool onlyWordCharacters)
         {
             return _control.WordStartPosition(position, onlyWordCharacters);

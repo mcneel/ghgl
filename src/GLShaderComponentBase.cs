@@ -308,6 +308,14 @@ namespace ghgl
                                 {
                                     _model.AddSampler2DUniform(varname, path);
                                 }
+                                else
+                                {
+                                    System.Drawing.Bitmap bmp;
+                                    if( destination.CastTo(out bmp) )
+                                    {
+                                        _model.AddSampler2DUniform(varname, bmp);
+                                    }
+                                }
 
                                 break;
                             }

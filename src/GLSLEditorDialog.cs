@@ -131,6 +131,18 @@ namespace ghgl
 
             DataContext = model;
             Title = "GLSL Shader";
+
+            var builtinsMenu = new ButtonMenuItem { Text = "Insert BuiltIn" };
+            foreach(var bi in BuiltIn.GetUniformBuiltIns())
+            {
+                var menuitem = builtinsMenu.Items.Add(new SimpleCommand(bi.Name, ()=>InsertBuiltIn(bi)));
+                menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
+            }
+            //builtinsMenu.Items.AddSeparator();
+            //foreach (var bi in BuiltIn.GetAttributeBuiltIns())
+            //{
+            //    builtinsMenu.Items.Add(new SimpleCommand(bi.Name, SaveGLSL));
+            //}
             Menu = new MenuBar
             {
                 Items = {
@@ -138,6 +150,13 @@ namespace ghgl
                     {
                         Text = "&File",
                         Items = {new SimpleCommand("&Save", SaveGLSL) }
+                    },
+                    new ButtonMenuItem
+                    {
+                        Text = "&Edit",
+                        Items = {
+                            builtinsMenu
+                        }
                     },
                     new ButtonMenuItem
                     {
@@ -229,6 +248,20 @@ namespace ghgl
             }
         }
 
+        ShaderEditorControl ActiveEditorControl()
+        {
+            return _tabarea.SelectedPage.Content as ShaderEditorControl;
+        }
+
+        void InsertBuiltIn(BuiltIn b)
+        {
+            var shaderCtrl = ActiveEditorControl();
+            if( shaderCtrl != null )
+            {
+                string text = $"uniform {b.DataType} {b.Name};";
+                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+            }
+        }
     }
 
 }
