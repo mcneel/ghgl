@@ -601,13 +601,13 @@ namespace ghgl
                 OpenGL.Initialize();
             if (!OpenGL.IsAvailable)
                 return;
-
             if (args.Display.Viewport.ParentView != null)
             {
                 _hglrc = OpenGL.wglGetCurrentContext();
                 _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
             }
             _model.Draw(args.Display);
+            GLRecycleBin.Recycle();
         }
 
         public IGH_Param CreateParameter(GH_ParameterSide side, int index)
