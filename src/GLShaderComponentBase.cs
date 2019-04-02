@@ -97,6 +97,8 @@ namespace ghgl
                 case "DrawMode":
                 case "glLineWidth":
                 case "glPointSize":
+                case "DepthTestingEnabled":
+                case "DepthWritingEnabled":
                     ExpirePreview(true);
                     break;
             }
@@ -510,6 +512,20 @@ namespace ghgl
             menu.Items.Add(tsi);
             tsi = new System.Windows.Forms.ToolStripMenuItem("glPointSize");
             Menu_AppendTextItem(tsi.DropDown, $"{_model.glPointSize:F2}", (s, e) => MenuKeyDown(s, e, false), Menu_SingleDoubleValueTextChanged, true, 200, true);
+            menu.Items.Add(tsi);
+
+            tsi = new System.Windows.Forms.ToolStripMenuItem("Depth Testing", null, (sender, e) =>
+            {
+                _model.DepthTestingEnabled = !_model.DepthTestingEnabled;
+            });
+            tsi.Checked = _model.DepthTestingEnabled;
+            menu.Items.Add(tsi);
+
+            tsi = new System.Windows.Forms.ToolStripMenuItem("Depth Writing", null, (sender, e) =>
+            {
+                _model.DepthWritingEnabled = !_model.DepthWritingEnabled;
+            });
+            tsi.Checked = _model.DepthWritingEnabled;
             menu.Items.Add(tsi);
         }
 

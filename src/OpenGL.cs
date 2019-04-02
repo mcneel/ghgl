@@ -130,6 +130,7 @@ namespace ghgl
         public const uint GL_4_BYTES = 0x1409;
         public const uint GL_DOUBLE = 0x140A;
 
+        public const uint GL_DEPTH_TEST = 0x0B71;
         public const uint GL_VERTEX_PROGRAM_POINT_SIZE = 0x8642;
         public const uint GL_BLEND = 0x0BE2;
 
@@ -257,6 +258,20 @@ namespace ghgl
 
         [DllImport(OPENGL_LIB)]
         public static extern void glEnable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDisable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLboolean glIsEnabled(GLenum cap);
+
+        public static bool IsEnabled(GLenum cap)
+        {
+            return glIsEnabled(cap) != 0;
+        }
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDepthMask(GLboolean flag);
 
         [DllImport(OPENGL_LIB)]
         public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);

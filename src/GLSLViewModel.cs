@@ -17,6 +17,8 @@ namespace ghgl
         double _glPointSize = DefaultPointSize;
         uint _drawMode;
         readonly DateTime _startTime = DateTime.Now;
+        bool _depthTestingEnabled = true;
+        bool _depthWritingEnabled = true;
 
         public GLSLViewModel()
         {
@@ -189,6 +191,32 @@ namespace ghgl
             }
         }
 
+        public bool DepthTestingEnabled
+        {
+            get { return _depthTestingEnabled; }
+            set
+            {
+                if (_depthTestingEnabled != value)
+                {
+                    _depthTestingEnabled = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool DepthWritingEnabled
+        {
+            get { return _depthWritingEnabled; }
+            set
+            {
+                if (_depthWritingEnabled != value)
+                {
+                    _depthWritingEnabled = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string memberName = null)
         {
             PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(memberName));
@@ -274,6 +302,9 @@ namespace ghgl
             writer.SetDouble("glLineWidth", glLineWidth);
             writer.SetDouble("glPointSize", glPointSize);
             writer.SetInt32("DrawMode", (int)DrawMode);
+
+            writer.SetBoolean("DepthTestingEnabled", DepthTestingEnabled);
+            writer.SetBoolean("DepthWritingEnabled", DepthWritingEnabled);
             return true;
         }
 
@@ -294,6 +325,13 @@ namespace ghgl
             int i = 0;
             if (reader.TryGetInt32("DrawMode", ref i))
                 DrawMode = (uint)i;
+
+            bool b = true;
+            if (reader.TryGetBoolean("DepthTestingEnabled", ref b))
+                DepthTestingEnabled = b;
+            if (reader.TryGetBoolean("DepthWritingEnabled", ref b))
+                DepthWritingEnabled = b;
+
             return true;
         }
 
@@ -429,7 +467,7 @@ namespace ghgl
                     OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, (int)OpenGL.GL_REPEAT);
                     OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, (int)OpenGL.GL_REPEAT);
                     OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MIN_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
-                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, (int)OpenGL.GL_LINEAR_MIPMAP_LINEAR);
+                    OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_MAG_FILTER, (int)OpenGL.GL_LINEAR);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, 0);
                 }
                 catch (Exception)
@@ -552,13 +590,13 @@ namespace ghgl
         {
             var data = new SamplerUniformData(name, path);
             //try to find a cached item first
-            for (int i = 0; i < samplerCache.Count; i++)
+            for (int i = 0; i < _samplerCache.Count; i++)
             {
-                var sampler = samplerCache[i];
+                var sampler = _samplerCache[i];
                 if (string.Equals(sampler.Path, path, StringComparison.OrdinalIgnoreCase))
                 {
                     data.TextureId = sampler.TextureId;
-                    samplerCache.RemoveAt(i);
+                    _samplerCache.RemoveAt(i);
                     break;
                 }
             }
@@ -945,8 +983,7 @@ namespace ghgl
         readonly List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
         readonly List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
         readonly List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
-
-        readonly List<SamplerUniformData> samplerCache = new List<SamplerUniformData>();
+        readonly List<SamplerUniformData> _samplerCache = new List<SamplerUniformData>();
 
         public void ClearData()
         {
@@ -977,12 +1014,12 @@ namespace ghgl
                 GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
             _vec4Attribs.Clear();
 
-            samplerCache.AddRange(_sampler2DUniforms);
-            while (samplerCache.Count > 10)
+            _samplerCache.AddRange(_sampler2DUniforms);
+            while (_samplerCache.Count > 10)
             {
-                var sampler = samplerCache[0];
+                var sampler = _samplerCache[0];
                 GLRecycleBin.AddTextureToDeleteList(sampler.TextureId);
-                samplerCache.RemoveAt(0);
+                _samplerCache.RemoveAt(0);
             }
             _sampler2DUniforms.Clear();
         }
@@ -992,6 +1029,17 @@ namespace ghgl
             uint programId = ProgramId;
             if (programId == 0)
                 return;
+
+            bool currentDepthTestingEnabled = OpenGL.IsEnabled(OpenGL.GL_DEPTH_TEST);
+            if (currentDepthTestingEnabled != _depthTestingEnabled)
+            {
+                if (_depthTestingEnabled)
+                    OpenGL.glEnable(OpenGL.GL_DEPTH_TEST);
+                else
+                    OpenGL.glDisable(OpenGL.GL_DEPTH_TEST);
+            }
+            if (!_depthWritingEnabled)
+                OpenGL.glDepthMask((byte)OpenGL.GL_FALSE);
 
             uint[] vao;
             OpenGL.glGenVertexArrays(1, out vao);
@@ -1125,6 +1173,16 @@ namespace ghgl
             OpenGL.glBindVertexArray(0);
             OpenGL.glDeleteVertexArrays(1, vao);
             OpenGL.glUseProgram(0);
+
+            if (currentDepthTestingEnabled != _depthTestingEnabled)
+            {
+                if( currentDepthTestingEnabled )
+                    OpenGL.glEnable(OpenGL.GL_DEPTH_TEST);
+                else
+                    OpenGL.glDisable(OpenGL.GL_DEPTH_TEST);
+            }
+            if (!_depthWritingEnabled)
+                OpenGL.glDepthMask((byte)OpenGL.GL_TRUE);
         }
 
         static void DisableVertexAttribArray(int location)
