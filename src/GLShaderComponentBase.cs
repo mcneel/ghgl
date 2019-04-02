@@ -308,6 +308,17 @@ namespace ghgl
                                 string path;
                                 if (destination.CastTo(out path))
                                 {
+                                    if(!System.IO.File.Exists(path))
+                                    {
+                                        var ghdoc = OnPingDocument();
+                                        if( ghdoc!=null )
+                                        {
+                                            string workingDirectory = System.IO.Path.GetDirectoryName(ghdoc.FilePath);
+                                            path = System.IO.Path.GetFileName(path);
+                                            path = System.IO.Path.Combine(workingDirectory, path);
+                                        }
+                                    }
+
                                     _model.AddSampler2DUniform(varname, path);
                                 }
                                 else
