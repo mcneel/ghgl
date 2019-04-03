@@ -3,4 +3,8 @@
 /src/.vs
 /src/ghgl.csproj.user
 /src/bin
-/dist
+/dist/*.gha
+/dist/*.pdb
+/dist/*.xml
+/dist/*.yak
+/dist/*.dll

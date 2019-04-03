@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ghgl
 {
@@ -13,7 +14,6 @@ namespace ghgl
         static List<BuiltIn> _uniformBuiltins;
         static DateTime _startTime;
         Action<int, Rhino.Display.DisplayPipeline> _setup;
-
         private BuiltIn(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
         {
             Name = name;
@@ -67,15 +67,46 @@ namespace ghgl
                 _startTime = DateTime.Now;
                 Register("_colorBuffer", "sampler2D", "texture representing the current state of the color information in the viewport", (location, display) =>
                 {
-                    var bmp = display.FrameBuffer;
-                    uint textureId = GLSLViewModel.SamplerUniformData.CreateTexture(bmp);
-                    bmp.Dispose();
+                    uint textureId = 0;
+                    IntPtr texture2dPtr = IntPtr.Zero;
+                    if (Rhino.RhinoApp.ExeVersion == 6)
+                    {
+                        var bmp = display.FrameBuffer;
+                        bmp.RotateFlip(System.Drawing.RotateFlipType.RotateNoneFlipY);
+                        textureId = GLSLViewModel.SamplerUniformData.CreateTexture(bmp);
+                        bmp.Dispose();
+                    } else
+                    {
+                        texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
+                        if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
+                            textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
+                    }
 
-                    const int currentTexture = 0;
+                    const int currentTexture = 40;
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
                     OpenGL.glUniform1i(location, currentTexture);
-                    GLRecycleBin.AddTextureToDeleteList(textureId);
+                    if (texture2dPtr == IntPtr.Zero)
+                        GLRecycleBin.AddTextureToDeleteList(textureId);
+                    else
+                        GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
+                });
+
+                Register("_depthBuffer", "sampler2D", "texture representing the current state of the depth information in the viewport", (location, display) =>
+                {
+                    if (Rhino.RhinoApp.ExeVersion < 7)
+                        throw new Exception("_depthBuffer uniform is only supported in Rhino 7 or above");
+
+                    uint textureId = 0;
+                    IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
+                    if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
+                        textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
+
+                    const int currentTexture = 41;
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
+                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
+                    OpenGL.glUniform1i(location, currentTexture);
+                    GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
                 });
 
                 Register("_worldToClip", "mat4", "transformation from world to clipping coordinates", (location, display) =>
@@ -123,7 +154,7 @@ namespace ghgl
                     float[] c2c = display.GetOpenGLCameraToClip();
                     OpenGL.glUniformMatrix4fv(location, 1, false, c2c);
                 });
-                Register("_time", "float", "elapsed seconds since you starting GL Component", (location, display) =>
+                Register("_time", "float", "total elapsed seconds since starting GL Component", (location, display) =>
                 {
                     var span = DateTime.Now - _startTime;
                     double seconds = span.TotalSeconds;

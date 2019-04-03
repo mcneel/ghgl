@@ -8,6 +8,7 @@ namespace ghgl
         static readonly HashSet<uint> _programsToDelete = new HashSet<uint>();
         static readonly HashSet<uint> _vbosToDelete = new HashSet<uint>();
         static readonly HashSet<uint> _texturesToDelete = new HashSet<uint>();
+        static readonly HashSet<System.IntPtr> _texturePtrsToDelete = new HashSet<System.IntPtr>();
 
         public static void AddShaderToDeleteList(uint shader)
         {
@@ -32,6 +33,13 @@ namespace ghgl
                 _texturesToDelete.Add(textureId);
         }
 
+        public static void AddTextureToDeleteList(System.IntPtr texture2dPtr)
+        {
+            if (texture2dPtr != System.IntPtr.Zero)
+                _texturePtrsToDelete.Add(texture2dPtr);
+
+        }
+
         public static void Recycle()
         {
             foreach (var shader in _shadersToDelete)
@@ -42,11 +50,14 @@ namespace ghgl
                 OpenGL.glDeleteBuffers(1, new[] { vbo });
             foreach (var texture in _texturesToDelete)
                 OpenGL.glDeleteTextures(1, new[] { texture });
+            foreach (var texturePtr in _texturePtrsToDelete)
+                Rhino7NativeMethods.RhTexture2dDelete(texturePtr);
 
             _shadersToDelete.Clear();
             _programsToDelete.Clear();
             _vbosToDelete.Clear();
             _texturesToDelete.Clear();
+            _texturePtrsToDelete.Clear();
         }
     }
 }
