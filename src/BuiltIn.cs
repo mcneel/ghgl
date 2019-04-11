@@ -14,6 +14,8 @@ namespace ghgl
         static List<BuiltIn> _uniformBuiltins;
         static DateTime _startTime;
         Action<int, Rhino.Display.DisplayPipeline> _setup;
+        static Dictionary<uint, DateTime> _drawTimes;
+
         private BuiltIn(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
         {
             Name = name;
@@ -158,6 +160,21 @@ namespace ghgl
                 {
                     var span = DateTime.Now - _startTime;
                     double seconds = span.TotalSeconds;
+                    OpenGL.glUniform1f(location, (float)seconds);
+                });
+                Register("_timeDelta", "float", "seconds since the last time this view was drawn", (location, display) =>
+                {
+                    if (_drawTimes == null)
+                        _drawTimes = new Dictionary<uint, DateTime>();
+                    uint viewSerialNumber = display.Viewport.ParentView.RuntimeSerialNumber;
+                    DateTime previousTime;
+                    double seconds = 0;
+                    if( _drawTimes.TryGetValue(viewSerialNumber, out previousTime))
+                    {
+                        var span = DateTime.Now - previousTime;
+                        seconds = span.TotalSeconds;
+                    }
+                    _drawTimes[viewSerialNumber] = DateTime.Now;
                     OpenGL.glUniform1f(location, (float)seconds);
                 });
                 Register("_cameraLocation", "vec3", "world location of camera", (location, display) =>
