@@ -254,6 +254,7 @@ namespace ghgl
             rc.Add(new BuiltIn("_meshVertex", "vec3", "mesh vertex location", null));
             rc.Add(new BuiltIn("_meshNormal", "vec3", "mesh normal", null));
             rc.Add(new BuiltIn("_meshTextureCoordinate", "vec2", "mesh texture coordinate", null));
+            rc.Add(new BuiltIn("_meshVertexColor", "vec4", "mesh vertex color", null));
             return rc;
         }
 

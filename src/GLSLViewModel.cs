@@ -486,6 +486,7 @@ namespace ghgl
             uint _vertexVbo;
             uint _normalVbo;
             uint _textureCoordVbo;
+            uint _colorVbo;
             public MeshData(Mesh mesh)
             {
                 Mesh = mesh;
@@ -553,6 +554,19 @@ namespace ghgl
                     {
                         GLRecycleBin.AddVboToDeleteList(_textureCoordVbo);
                         _textureCoordVbo = value;
+                    }
+                }
+            }
+
+            public uint ColorVbo
+            {
+                get { return _colorVbo; }
+                set
+                {
+                    if(_colorVbo!=value)
+                    {
+                        GLRecycleBin.AddVboToDeleteList(_colorVbo);
+                        _colorVbo = value;
                     }
                 }
             }
@@ -816,6 +830,44 @@ namespace ghgl
                     }
                 }
 
+                location = OpenGL.glGetAttribLocation(ProgramId, "_meshVertexColor");
+                if (location >= 0)
+                {
+                    if (data.ColorVbo == 0 && mesh.VertexColors.Count == mesh.Vertices.Count)
+                    {
+                        uint[] buffers;
+                        OpenGL.glGenBuffers(1, out buffers);
+                        data.ColorVbo = buffers[0];
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.ColorVbo);
+                        IntPtr size = new IntPtr(4 * sizeof(float) * mesh.VertexColors.Count);
+                        int colorCount = mesh.VertexColors.Count;
+
+                        float[] colors = new float[colorCount * 4];
+                        for( int i=0; i<colorCount; i++ )
+                        {
+                            var color = mesh.VertexColors[i];
+                            colors[4 * i] = color.R / 255.0f;
+                            colors[4 * i + 1] = color.G / 255.0f;
+                            colors[4 * i + 2] = color.B / 255.0f;
+                            colors[4 * i + 3] = color.A / 255.0f;
+                        }
+                        var handle = GCHandle.Alloc(colors, GCHandleType.Pinned);
+                        IntPtr pointer = handle.AddrOfPinnedObject();
+                        OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                        handle.Free();
+                    }
+                    if (data.ColorVbo != 0)
+                    {
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, data.ColorVbo);
+                        OpenGL.glEnableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttribPointer((uint)location, 4, OpenGL.GL_FLOAT, 0, 0, IntPtr.Zero);
+                    }
+                    else
+                    {
+                        OpenGL.glDisableVertexAttribArray((uint)location);
+                        OpenGL.glVertexAttrib2f((uint)location, 0, 0);
+                    }
+                }
             }
 
             foreach (var item in _intAttribs)
