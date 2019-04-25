@@ -85,6 +85,7 @@
     <Compile Include="GLShaderComponent.cs" />
     <Compile Include="GLShaderComponentBase.cs" />
     <Compile Include="GLSLEditorDialog.cs" />
+    <Compile Include="GlslifyPackage.cs" />
     <Compile Include="GLSLViewModel.cs" />
     <Compile Include="LibraryInfo.cs" />
     <Compile Include="OpenGL.cs" />
