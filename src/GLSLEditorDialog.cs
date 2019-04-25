@@ -132,17 +132,27 @@ namespace ghgl
             DataContext = model;
             Title = "GLSL Shader";
 
-            var builtinsMenu = new ButtonMenuItem { Text = "Insert BuiltIn" };
+            var uniformBuiltinMenu = new ButtonMenuItem { Text = "Insert Built-In Uniform" };
             foreach(var bi in BuiltIn.GetUniformBuiltIns())
             {
-                var menuitem = builtinsMenu.Items.Add(new SimpleCommand(bi.Name, ()=>InsertBuiltIn(bi)));
+                var menuitem = uniformBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, ()=>InsertBuiltIn(bi)));
                 menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
             }
-            //builtinsMenu.Items.AddSeparator();
-            //foreach (var bi in BuiltIn.GetAttributeBuiltIns())
-            //{
-            //    builtinsMenu.Items.Add(new SimpleCommand(bi.Name, SaveGLSL));
-            //}
+
+            var attributeBuiltinMenu = new ButtonMenuItem { Text = "Insert Built-In Attribute" };
+            foreach(var bi in BuiltIn.GetAttributeBuiltIns())
+            {
+                var menuitem = attributeBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, () => InsertBuiltIn(bi)));
+                menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
+            }
+
+            var functionBuiltinMenu = new ButtonMenuItem { Text = "Insert Glslify Function" };
+            foreach(var package in GlslifyPackage.AvailablePackages)
+            {
+                var menuitem = functionBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));
+                menuitem.ToolTip = $"{package.Description}\n{package.HomePage}";
+            }
+
             Menu = new MenuBar
             {
                 Items = {
@@ -155,7 +165,11 @@ namespace ghgl
                     {
                         Text = "&Edit",
                         Items = {
-                            builtinsMenu
+                            uniformBuiltinMenu,
+                            attributeBuiltinMenu,
+                            functionBuiltinMenu,
+                            new SeparatorMenuItem(),
+                            new SimpleCommand("glslify code", GlslifyCode)
                         }
                     },
                     new ButtonMenuItem
@@ -248,6 +262,23 @@ namespace ghgl
             }
         }
 
+        void GlslifyCode()
+        {
+            var model = DataContext as GLSLViewModel;
+            var shaderCtrl = ActiveEditorControl();
+            if (shaderCtrl == null || model == null)
+                return;
+
+            string code = model.GetCode(shaderCtrl.ShaderType);
+            if (code.Contains("#pragma glslify:"))
+            {
+                string processedCode = GlslifyPackage.GlslifyCode(code);
+                shaderCtrl.Text = processedCode;
+                //model.SetCode(shaderCtrl.ShaderType, processedCode);
+            }
+
+        }
+
         ShaderEditorControl ActiveEditorControl()
         {
             return _tabarea.SelectedPage.Content as ShaderEditorControl;
@@ -259,6 +290,17 @@ namespace ghgl
             if( shaderCtrl != null )
             {
                 string text = $"uniform {b.DataType} {b.Name};";
+                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+            }
+        }
+
+        void InsertGlslifyFunction(GlslifyPackage package)
+        {
+            var shaderCtrl = ActiveEditorControl();
+            if (shaderCtrl != null)
+            {
+
+                string text = package.PragmaLine(null);
                 shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
             }
         }

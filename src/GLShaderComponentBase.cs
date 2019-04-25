@@ -33,6 +33,7 @@ namespace ghgl
                 // set up callback to perform one time OpenGL initialization during the
                 // next draw function
                 _initializeCallbackSet = true;
+                GlslifyPackage.Initialize();
                 DisplayPipeline.DrawForeground += DisplayPipeline_DrawForeground;
                 var doc = Rhino.RhinoDoc.ActiveDoc;
                 doc?.Views.Redraw();

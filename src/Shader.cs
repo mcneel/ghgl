@@ -63,18 +63,8 @@ namespace ghgl
             }
         }
 
-        static System.Net.Http.HttpClient _glslifyClient;
         List<CompileError> _compileErrors = new List<CompileError>();
         public List<CompileError> CompileErrors {  get => _compileErrors; }
-
-        static string GlslifyUrl
-        {
-            get
-            {
-                //return "http://localhost:8080/process";
-                return "https://ghgl-glslify.herokuapp.com/process";
-            }
-        }
 
         public bool Compile()
         {
@@ -87,29 +77,12 @@ namespace ghgl
             if (string.IsNullOrWhiteSpace(Code))
                 return true;
 
-
             uint rc = 0;
-
             string processedCode = Code;
             if( Code.Contains("#pragma glslify:") )
             {
-                try
-                {
-                    if (null == _glslifyClient)
-                        _glslifyClient = new System.Net.Http.HttpClient();
-
-                    var values = new Dictionary<string, string> { {"code", Code} };
-                    string json = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(values);
-                    var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
-                    var response = _glslifyClient.PostAsync(GlslifyUrl, content);
-                    processedCode = response.Result.Content.ReadAsStringAsync().Result;
-                }
-                catch(Exception)
-                {
-
-                }
+                processedCode = GlslifyPackage.GlslifyCode(Code);
             }
-
 
             if (!string.IsNullOrWhiteSpace(processedCode))
             {

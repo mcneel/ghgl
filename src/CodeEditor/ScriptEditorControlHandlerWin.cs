@@ -327,6 +327,7 @@ groupMemoryBarrier
             _control.Styles[Style.Cpp.CommentLineDoc].ForeColor = System.Drawing.Color.Black;
             _control.Styles[Style.Cpp.Word].ForeColor = System.Drawing.Color.Blue;
             _control.Styles[Style.Cpp.Word2].ForeColor = System.Drawing.Color.CadetBlue;
+            _control.Styles[Style.Cpp.Preprocessor].ForeColor = System.Drawing.Color.Gray;
 
         }
 
