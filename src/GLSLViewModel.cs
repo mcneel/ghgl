@@ -417,8 +417,22 @@ namespace ghgl
                 {
                     try
                     {
-                        var bmp = new System.Drawing.Bitmap(Path);
-                        _bitmap = bmp;
+                        string localPath = Path;
+                        if (Path.StartsWith("http://", StringComparison.InvariantCultureIgnoreCase) ||
+                            Path.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            using (var client = new System.Net.WebClient())
+                            {
+                                var stream = client.OpenRead(Path);
+                                var bmp = new System.Drawing.Bitmap(stream);
+                                _bitmap = bmp;
+                            }
+                        }
+                        else
+                        {
+                            var bmp = new System.Drawing.Bitmap(localPath);
+                            _bitmap = bmp;
+                        }
                     }
                     catch(Exception)
                     {
@@ -463,6 +477,9 @@ namespace ghgl
                         bmp.UnlockBits(bmpData);
                     }
                     textureId = textures[0];
+                    // See warning on
+                    // https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation
+                    OpenGL.glEnable(OpenGL.GL_TEXTURE_2D);
                     OpenGL.glGenerateMipmap(OpenGL.GL_TEXTURE_2D);
                     OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_S, (int)OpenGL.GL_REPEAT);
                     OpenGL.glTexParameteri(OpenGL.GL_TEXTURE_2D, OpenGL.GL_TEXTURE_WRAP_T, (int)OpenGL.GL_REPEAT);

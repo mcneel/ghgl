@@ -309,7 +309,9 @@ namespace ghgl
                                 string path;
                                 if (destination.CastTo(out path))
                                 {
-                                    if(!System.IO.File.Exists(path))
+                                    bool isUrl = path.StartsWith("http:/", StringComparison.InvariantCultureIgnoreCase) ||
+                                        path.StartsWith("https:/", StringComparison.InvariantCultureIgnoreCase);
+                                    if(!isUrl && !System.IO.File.Exists(path))
                                     {
                                         var ghdoc = OnPingDocument();
                                         if( ghdoc!=null )
