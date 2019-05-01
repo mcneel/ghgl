@@ -341,9 +341,10 @@ namespace ghgl
         /// <param name="name">name of uniform to try and get a type for</param>
         /// <param name="dataType"></param>
         /// <returns></returns>
-        public bool TryGetUniformType(string name, out string dataType)
+        public bool TryGetUniformType(string name, out string dataType, out int arrayLength)
         {
             dataType = "";
+            arrayLength = 0;
             foreach (var shader in _shaders)
             {
                 var uniforms = shader.GetUniforms();
@@ -352,6 +353,7 @@ namespace ghgl
                     if (uni.Name == name)
                     {
                         dataType = uni.DataType;
+                        arrayLength = uni.ArrayLength;
                         return true;
                     }
                 }
@@ -382,13 +384,15 @@ namespace ghgl
 
         class UniformData<T>
         {
-            public UniformData(string name, T[] value)
+            public UniformData(string name, int arrayLength, T[] value)
             {
                 Name = name;
+                ArrayLength = arrayLength;
                 Data = value;
             }
 
             public string Name { get; private set; }
+            public int ArrayLength { get; private set; }
             public T[] Data { get; private set; }
         }
 
@@ -601,21 +605,21 @@ namespace ghgl
             _meshes.Add(new MeshData(mesh));
         }
 
-        public void AddUniform(string name, int[] values)
+        public void AddUniform(string name, int[] values, int arrayLength)
         {
-            _intUniforms.Add(new UniformData<int>(name, values));
+            _intUniforms.Add(new UniformData<int>(name, arrayLength, values));
         }
-        public void AddUniform(string name, float[] values)
+        public void AddUniform(string name, float[] values, int arrayLength)
         {
-            _floatUniforms.Add(new UniformData<float>(name, values));
+            _floatUniforms.Add(new UniformData<float>(name, arrayLength, values));
         }
-        public void AddUniform(string name, Point3f[] values)
+        public void AddUniform(string name, Point3f[] values, int arrayLength)
         {
-            _vec3Uniforms.Add(new UniformData<Point3f>(name, values));
+            _vec3Uniforms.Add(new UniformData<Point3f>(name, arrayLength, values));
         }
-        public void AddUniform(string name, Vec4[] values)
+        public void AddUniform(string name, Vec4[] values, int arrayLength)
         {
-            _vec4Uniforms.Add(new UniformData<Vec4>(name, values));
+            _vec4Uniforms.Add(new UniformData<Vec4>(name, arrayLength, values));
         }
         public void AddSampler2DUniform(string name, string path)
         {
@@ -656,26 +660,12 @@ namespace ghgl
             _vec4Attribs.Add(new GLAttribute<Vec4>(name, location, value));
         }
 
-        static int UniformLocation(uint programId, string name, out int arrayLength)
-        {
-            arrayLength = 0;
-            int index = name.IndexOf("[", StringComparison.Ordinal);
-            int index2 = index < 0 ? -1 : name.IndexOf("]", index, StringComparison.Ordinal);
-            if (index > 0 && index2>index)
-            {
-                string count = name.Substring(index + 1, index2 - index - 1);
-                int.TryParse(count, out arrayLength);
-                name = name.Substring(0, index);
-            }
-            return OpenGL.glGetUniformLocation(programId, name);
-        }
-
         void SetupGLUniforms()
         {
             foreach (var uniform in _intUniforms)
             {
-                int arrayLength;
-                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
+                int arrayLength = uniform.ArrayLength;
+                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -686,8 +676,8 @@ namespace ghgl
             }
             foreach (var uniform in _floatUniforms)
             {
-                int arrayLength;
-                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
+                int arrayLength = uniform.ArrayLength;
+                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -698,8 +688,8 @@ namespace ghgl
             }
             foreach (var uniform in _vec3Uniforms)
             {
-                int arrayLength;
-                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
+                int arrayLength = uniform.ArrayLength;
+                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -719,8 +709,8 @@ namespace ghgl
             }
             foreach (var uniform in _vec4Uniforms)
             {
-                int arrayLength;
-                int location = UniformLocation(ProgramId, uniform.Name, out arrayLength);
+                int arrayLength = uniform.ArrayLength;
+                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)

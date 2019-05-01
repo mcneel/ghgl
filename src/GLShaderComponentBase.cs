@@ -12,6 +12,16 @@ using Rhino.Geometry;
 
 namespace ghgl
 {
+    class IdleRedraw
+    {
+        public void PerformRedraw(object sender, EventArgs e)
+        {
+            var doc = Rhino.RhinoDoc.ActiveDoc;
+            if (doc != null)
+                doc.Views.Redraw();
+        }
+    }
+
     /// <summary>
     /// Base class for the GL Shader components. Most of the heavy lifting is done in this class
     /// and the subclasses just specialize a little bit
@@ -23,7 +33,7 @@ namespace ghgl
         static uint _viewSerialNumber;
         static IntPtr _hglrc;
         static bool _initializeCallbackSet;
-        static Eto.Forms.UITimer _animationTimer;
+        static IdleRedraw _idleRedraw;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -59,36 +69,32 @@ namespace ghgl
         {
             get
             {
-                return _animationTimer != null;
+                return _idleRedraw != null;
             }
             set
             {
                 if( value )
                 {
-                    if (_animationTimer == null)
+                    if (_idleRedraw == null)
                     {
-                        _animationTimer = new Eto.Forms.UITimer();
-                        _animationTimer.Interval = 0.05;
-                        _animationTimer.Elapsed += (s, e) =>
-                        {
-                            var doc = Rhino.RhinoDoc.ActiveDoc;
-                            if (doc != null)
-                                doc.Views.Redraw();
-                            RedrawViewportControl();
-                        };
-                        _animationTimer.Start();
+                        _idleRedraw = new IdleRedraw();
+                        Rhino.RhinoApp.Idle += _idleRedraw.PerformRedraw;
                     }
                 }
                 else
                 {
-                    if(_animationTimer!=null)
+                    if(_idleRedraw!=null)
                     {
-                        _animationTimer.Stop();
-                        _animationTimer.Dispose();
-                        _animationTimer = null;
+                        Rhino.RhinoApp.Idle -= _idleRedraw.PerformRedraw;
+                        _idleRedraw = null;
                     }
                 }
             }
+        }
+
+        private static void RhinoApp_Idle(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void ModelPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -211,7 +217,8 @@ namespace ghgl
 
                 string varname = Params.Input[i].NickName;
                 string datatype;
-                if (_model.TryGetUniformType(varname, out datatype))
+                int arrayLength;
+                if (_model.TryGetUniformType(varname, out datatype, out arrayLength))
                 {
 
                     switch (datatype)
@@ -237,7 +244,7 @@ namespace ghgl
                                     }
                                     values[j] = value;
                                 }
-                                _model.AddUniform(varname, values);
+                                _model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "float":
@@ -256,14 +263,14 @@ namespace ghgl
                                     }
                                     values[j] = (float)value;
                                 }
-                                _model.AddUniform(varname, values);
+                                _model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "vec3":
                             {
                                 Point3f[] values = GooListToPoint3fArray(destinationList);
                                 if( values != null )
-                                    _model.AddUniform(varname, values);
+                                    _model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "vec4":
@@ -281,7 +288,7 @@ namespace ghgl
                                         }
                                     }
                                 }
-                                _model.AddUniform(varname, values);
+                                _model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "bool":
@@ -299,7 +306,7 @@ namespace ghgl
                                     }
                                     values[j] = value ? 1 : 0;
                                 }
-                                _model.AddUniform(varname, values);
+                                _model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "sampler2D":

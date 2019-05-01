@@ -152,9 +152,10 @@ namespace ghgl
             {
                 if (line.StartsWith("uniform"))
                 {
-                    var sub_lines = line.Split(' ', ';', '=');
+                    var sub_lines = line.Split(' ', ';', '=', '[');
                     string type = null;
                     string name = null;
+                    int arrayLength = 0;
                     for (int j = 1; j < sub_lines.Length; j++)
                     {
                         if (string.IsNullOrWhiteSpace(sub_lines[j]))
@@ -164,11 +165,21 @@ namespace ghgl
                             type = sub_lines[j].Trim();
                             continue;
                         }
-                        name = sub_lines[j].Trim();
+                        if (name == null)
+                        {
+                            name = sub_lines[j].Trim();
+                            continue;
+                        }
+                        if( sub_lines[j].EndsWith("]"))
+                        {
+                            arrayLength = int.Parse(sub_lines[j].Substring(0, sub_lines[j].Length - 1));
+                        }
                         break;
                     }
                     if (type != null && name != null)
-                        _uniforms.Add(new UniformDescription { Name = name, DataType = type });
+                    {
+                        _uniforms.Add(new UniformDescription { Name = name, DataType = type, ArrayLength = arrayLength });
+                    }
                 }
                 if (line.StartsWith("layout"))
                 {

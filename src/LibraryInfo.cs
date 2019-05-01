@@ -20,6 +20,11 @@ namespace ghgl
 
         public override string AuthorContact => "https://github.com/mcneel/ghgl";
 
-        public override string AssemblyVersion => "0.4.2";
+        public override string AssemblyVersion {
+            get {
+                var t = typeof(LibraryInfo).Assembly.GetName().Version;
+                return $"{t.Major}.{t.Minor}.{t.Build}";
+            }
+        }
     }
 }

@@ -5,5 +5,6 @@ namespace ghgl
     {
         public string Name { get; set; }
         public string DataType { get; set; }
+        public int ArrayLength { get; set; }
     }
 }
