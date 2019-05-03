@@ -1313,5 +1313,169 @@ namespace ghgl
             text.AppendLine(FragmentShaderCode);
             System.IO.File.WriteAllText(filename, text.ToString());
         }
+
+        int MinAttributeLength()
+        {
+            int length = -1;
+            foreach (var attr in _intAttribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in _floatAttribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in _vec3Attribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in _vec4Attribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            return length;
+        }
+
+        public void ExportToHtml(string filename)
+        {
+            string baseFilename = System.IO.Path.GetFileNameWithoutExtension(filename);
+            string dirName = System.IO.Path.GetDirectoryName(filename);
+
+            // create the javascript companion file that contains the attribute data
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("var ghglAttributes = {");
+            List<string> chunks = new List<string>();
+
+            if( VertexShaderCode.Contains("gl_VertexID"))
+            {
+                int length = MinAttributeLength();
+                int[] items = new int[length];
+                for (int i = 0; i < items.Length; i++)
+                    items[i] = i;
+                GLAttribute<int> vertexIds = new GLAttribute<int>("_vertex_id", -1, items);
+                chunks.Add(vertexIds.ToJsonString(2));
+            }
+
+            foreach (var attr in _intAttribs)
+            {
+                string attrAsJson = attr.ToJsonString(2);
+                if (!string.IsNullOrWhiteSpace(attrAsJson))
+                    chunks.Add(attrAsJson);
+            }
+            foreach (var attr in _floatAttribs)
+            {
+                string attrAsJson = attr.ToJsonString(2);
+                if (!string.IsNullOrWhiteSpace(attrAsJson))
+                    chunks.Add(attrAsJson);
+            }
+            foreach (var attr in _vec3Attribs)
+            {
+                string attrAsJson = attr.ToJsonString(2);
+                if (!string.IsNullOrWhiteSpace(attrAsJson))
+                    chunks.Add(attrAsJson);
+            }
+            foreach (var attr in _vec4Attribs)
+            {
+                string attrAsJson = attr.ToJsonString(2);
+                if (!string.IsNullOrWhiteSpace(attrAsJson))
+                    chunks.Add(attrAsJson);
+            }
+            for(int i=0; i<chunks.Count; i++)
+            {
+                sb.Append(chunks[i]);
+                if (i < (chunks.Count - 1))
+                    sb.Append(",");
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("};");
+            string jsfilepath = System.IO.Path.Combine(dirName, baseFilename + ".js");
+            string javascriptData = sb.ToString();
+            System.IO.File.WriteAllText(jsfilepath, javascriptData);
+            
+            System.Reflection.Assembly a = typeof(GLSLViewModel).Assembly;
+            var stream = a.GetManifestResourceStream("ghgl.resources.threejs_template.html");
+            var sr = new System.IO.StreamReader(stream);
+            string contents = sr.ReadToEnd();
+            stream.Close();
+
+            contents = contents.Replace("_JAVASCRIPT_FILENAME_", baseFilename + ".js");
+
+            sb = new System.Text.StringBuilder();
+            bool positionHandled = false;
+            string positionFiller = "";
+            if (VertexShaderCode.Contains("gl_VertexID"))
+            {
+                sb.AppendLine("      geometry.addAttribute('_vertex_id', new THREE.BufferAttribute( ghglAttributes._vertex_id, 1 ));");
+                positionFiller = "      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes._vertex_id, 1 ));";
+            }
+            foreach (var attr in _intAttribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));");
+                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));";
+            }
+            foreach( var attr in _floatAttribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));");
+                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));";
+            }
+            foreach (var attr in _vec4Attribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 4 ));");
+                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 4 ));";
+            }
+            foreach (var attr in _vec3Attribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 3 ));");
+                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 3 ));";
+            }
+
+            if ( !positionHandled )
+            {
+                sb.AppendLine(positionFiller);
+            }
+
+            string geometry_attributes = sb.ToString();
+            contents = contents.Replace("_GEOMETRY_ATTRIBUTES_", geometry_attributes);
+            contents = contents.Replace("_VERTEX_SHADER_", _shaders[(int)ShaderType.Vertex].ToWebGL1Code());
+            contents = contents.Replace("_FRAGMENT_SHADER_", _shaders[(int)ShaderType.Fragment].ToWebGL1Code());
+
+            var uniformDictionary = new Dictionary<string, string>();
+            var allUniforms = _shaders[(int)ShaderType.Vertex].GetUniforms();
+            allUniforms.AddRange(_shaders[(int)ShaderType.Fragment].GetUniforms());
+            foreach (var uniform in allUniforms)
+            {
+                if (uniform.Name == "_worldToClip")
+                    continue;
+                if (uniformDictionary.ContainsKey(uniform.Name))
+                    continue;
+                uniformDictionary[uniform.Name] = $"{uniform.Name} : {{value : 0}},";
+            }
+            sb = new System.Text.StringBuilder();
+            foreach(var kv in uniformDictionary)
+            {
+                sb.AppendLine("        " + kv.Value);
+            }
+            contents = contents.Replace("_UNIFORMS_", sb.ToString());
+
+            if (DrawMode == OpenGL.GL_LINES)
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "LineSegments");
+
+
+            string htmlfilepath = System.IO.Path.Combine(dirName, baseFilename + ".html");
+            System.IO.File.WriteAllText(htmlfilepath, contents);
+        }
     }
 }

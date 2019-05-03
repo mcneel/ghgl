@@ -599,6 +599,9 @@ namespace ghgl
             });
             tsi.Checked = _model.DepthWritingEnabled;
             menu.Items.Add(tsi);
+
+            tsi = new System.Windows.Forms.ToolStripMenuItem("Export...", null, (sender, e) => { Export(); });
+            menu.Items.Add(tsi);
         }
 
         void Menu_SingleDoubleValueTextChanged(GH_MenuTextBox sender, string text)
@@ -681,6 +684,17 @@ namespace ghgl
             };
             dlg.Owner = parent;
             dlg.Show();
+        }
+
+        void Export()
+        {
+            var saveDlg = new Eto.Forms.SaveFileDialog();
+            saveDlg.Filters.Add(new Eto.Forms.FileFilter("HTML file", new string[] { "html" }));
+            var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
+            if (saveDlg.ShowDialog(parent) == Eto.Forms.DialogResult.Ok)
+            {
+                _model.ExportToHtml(saveDlg.FileName);
+            }
         }
 
         public override void DrawViewportWires(IGH_PreviewArgs args)

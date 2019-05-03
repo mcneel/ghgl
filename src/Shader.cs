@@ -234,5 +234,75 @@ namespace ghgl
         }
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
+        public string ToWebGL1Code()
+        {
+            if (ShaderType != ShaderType.Vertex && ShaderType != ShaderType.Fragment)
+                throw new InvalidOperationException("Only vertex and fragment shaders can be convertes to WebGL 1.0");
+
+            var sb = new StringBuilder();
+            foreach (var attribute in GetVertexAttributes())
+            {
+                string dataType = attribute.DataType;
+                if (dataType == "int")
+                    dataType = "float";
+                sb.AppendLine($"attribute {dataType} {attribute.Name};");
+            }
+            if (Code.Contains("gl_VertexID"))
+                sb.AppendLine("attribute float _vertex_id;");
+
+            string processedCode = Code.Trim();
+            processedCode = processedCode.Replace("gl_VertexID", "_vertex_id");
+
+            foreach (var uniform in GetUniforms())
+            {
+                if (uniform.Name.Equals("_worldToClip"))
+                {
+                    sb.AppendLine("mat4 _worldToClip() {return projectionMatrix * modelViewMatrix;}");
+                    continue;
+                }
+
+                string dataType = uniform.DataType;
+                if (dataType == "int")
+                    dataType = "float";
+
+                sb.Append($"uniform {dataType} {uniform.Name}");
+                if (uniform.ArrayLength > 0)
+                    sb.Append($"[{uniform.ArrayLength}]");
+                sb.AppendLine(";");
+            }
+
+            string[] shaderLines = processedCode.Split('\n');
+            for (int i = 0; i < shaderLines.Length; i++)
+            {
+                string line = shaderLines[i].TrimEnd();
+                string trimmed = line.Trim();
+                if (trimmed.StartsWith("#version"))
+                    continue;
+                if (trimmed.StartsWith("//"))
+                {
+                    sb.AppendLine(line);
+                    continue;
+                }
+                if (string.IsNullOrWhiteSpace(trimmed))
+                {
+                    sb.AppendLine();
+                    continue;
+                }
+                if (trimmed.StartsWith("layout") || trimmed.StartsWith("attribute") || trimmed.StartsWith("uniform"))
+                {
+                    continue;
+                }
+                if (trimmed.StartsWith("out "))
+                {
+                    line = line.Replace("out ", "varying ");
+                }
+                if (trimmed.StartsWith("in "))
+                    line = line.Replace("in ", "varying ");
+
+                line = line.Replace("_worldToClip", "_worldToClip()");
+                sb.AppendLine(line);
+            }
+            return sb.ToString().Trim();
+        }
     }
 }
