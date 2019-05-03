@@ -599,6 +599,14 @@ namespace ghgl
         readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
         readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
         readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
+        readonly List<GLSLViewModel> _iterationModels = new List<GLSLViewModel>();
+
+        public GLSLViewModel AddIteration()
+        {
+            var vm = new GLSLViewModel();
+            _iterationModels.Add(vm);
+            return vm;
+        }
 
         public void AddMesh(Mesh mesh)
         {
@@ -1081,6 +1089,11 @@ namespace ghgl
                 _samplerCache.RemoveAt(0);
             }
             _sampler2DUniforms.Clear();
+            foreach(var iterationVM in _iterationModels)
+            {
+                iterationVM.ClearData();
+            }
+            _iterationModels.Clear();
         }
 
         public void Draw(Rhino.Display.DisplayPipeline display)
@@ -1105,8 +1118,6 @@ namespace ghgl
             OpenGL.glBindVertexArray(vao[0]);
             OpenGL.glUseProgram(programId);
 
-            SetupGLUniforms();
-
             // TODO: Parse shader and figure out the proper number to place here
             if (OpenGL.GL_PATCHES == DrawMode)
                 OpenGL.glPatchParameteri(OpenGL.GL_PATCH_VERTICES, 1);
@@ -1117,13 +1128,39 @@ namespace ghgl
             OpenGL.glPointSize(pointsize);
 
             // Define standard uniforms
-            foreach(var builtin in BuiltIn.GetUniformBuiltIns())
+            foreach (var builtin in BuiltIn.GetUniformBuiltIns())
                 builtin.Setup(programId, display);
 
             if (OpenGL.GL_POINTS == DrawMode)
                 OpenGL.glEnable(OpenGL.GL_VERTEX_PROGRAM_POINT_SIZE);
             OpenGL.glEnable(OpenGL.GL_BLEND);
             OpenGL.glBlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
+
+            DrawIteration(display, programId);
+            foreach (var vm in _iterationModels)
+            {
+                vm.DrawMode = DrawMode;
+                vm.DrawIteration(display, programId);
+            }
+
+            OpenGL.glBindVertexArray(0);
+            OpenGL.glDeleteVertexArrays(1, vao);
+            OpenGL.glUseProgram(0);
+
+            if (currentDepthTestingEnabled != _depthTestingEnabled)
+            {
+                if (currentDepthTestingEnabled)
+                    OpenGL.glEnable(OpenGL.GL_DEPTH_TEST);
+                else
+                    OpenGL.glDisable(OpenGL.GL_DEPTH_TEST);
+            }
+            if (!_depthWritingEnabled)
+                OpenGL.glDepthMask((byte)OpenGL.GL_TRUE);
+        }
+
+        void DrawIteration(Rhino.Display.DisplayPipeline display, uint programId)
+        {
+            SetupGLUniforms();
 
             int totalCount = 1;
             if (_meshes != null && _meshes.Count > 1)
@@ -1228,20 +1265,6 @@ namespace ghgl
                 DisableVertexAttribArray(item.Location);
             foreach (var item in _vec4Attribs)
                 DisableVertexAttribArray(item.Location);
-
-            OpenGL.glBindVertexArray(0);
-            OpenGL.glDeleteVertexArrays(1, vao);
-            OpenGL.glUseProgram(0);
-
-            if (currentDepthTestingEnabled != _depthTestingEnabled)
-            {
-                if( currentDepthTestingEnabled )
-                    OpenGL.glEnable(OpenGL.GL_DEPTH_TEST);
-                else
-                    OpenGL.glDisable(OpenGL.GL_DEPTH_TEST);
-            }
-            if (!_depthWritingEnabled)
-                OpenGL.glDepthMask((byte)OpenGL.GL_TRUE);
         }
 
         static void DisableVertexAttribArray(int location)
