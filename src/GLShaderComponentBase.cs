@@ -254,6 +254,11 @@ namespace ghgl
                                     }
                                     values[j] = value;
                                 }
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
                                 uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
@@ -273,13 +278,23 @@ namespace ghgl
                                     }
                                     values[j] = (float)value;
                                 }
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
                                 uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "vec3":
                             {
                                 Point3f[] values = GooListToPoint3fArray(destinationList);
-                                if( values != null )
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                if ( values != null )
                                     uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
@@ -298,10 +313,10 @@ namespace ghgl
                                         }
                                     }
                                 }
+
+                                // hack for iterations
                                 if (arrayLength == 0 && data.Iteration < destinationList.Count)
-                                {
                                     values[0] = values[data.Iteration];
-                                }
 
                                 uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
@@ -321,6 +336,11 @@ namespace ghgl
                                     }
                                     values[j] = value ? 1 : 0;
                                 }
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
                                 uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }

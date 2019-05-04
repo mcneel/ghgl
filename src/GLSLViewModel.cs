@@ -27,7 +27,6 @@ namespace ghgl
                 _shaders[i] = new Shader((ShaderType)i, this);
                 _shaders[i].PropertyChanged += OnShaderChanged;
             }
-            _uniformsAndAttributes = new UniformsAndAttributes(_samplerCache);
         }
 
         public bool Modified
@@ -1150,7 +1149,7 @@ namespace ghgl
             }
 
 
-            public void ClearData(List<SamplerUniformData> samplerCache)
+            public void ClearData()
             {
                 foreach (var data in _meshes)
                 {
@@ -1179,12 +1178,12 @@ namespace ghgl
                     GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
                 _vec4Attribs.Clear();
 
-                samplerCache.AddRange(_sampler2DUniforms);
-                while (samplerCache.Count > 10)
+                _samplerCache.AddRange(_sampler2DUniforms);
+                while (_samplerCache.Count > 10)
                 {
-                    var sampler = samplerCache[0];
+                    var sampler = _samplerCache[0];
                     GLRecycleBin.AddTextureToDeleteList(sampler.TextureId);
-                    samplerCache.RemoveAt(0);
+                    _samplerCache.RemoveAt(0);
                 }
                 _sampler2DUniforms.Clear();
 
@@ -1202,28 +1201,22 @@ namespace ghgl
             readonly List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
             readonly List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
         }
-        UniformsAndAttributes _uniformsAndAttributes;
-        readonly List<GLSLViewModel> _iterationModels = new List<GLSLViewModel>();
+        readonly List<UniformsAndAttributes> _uniformAndAttributeIterations = new List<UniformsAndAttributes>();
 
         public UniformsAndAttributes GetUniformsAndAttributes(int iteration)
         {
-            if (iteration == 0)
-                return this._uniformsAndAttributes;
-            while (iteration >= _iterationModels.Count)
-                _iterationModels.Add(new GLSLViewModel());
-            return _iterationModels[iteration - 1]._uniformsAndAttributes;
+            while (iteration >= _uniformAndAttributeIterations.Count)
+                _uniformAndAttributeIterations.Add(new UniformsAndAttributes(_samplerCache));
+            return _uniformAndAttributeIterations[iteration];
         }
 
         readonly List<SamplerUniformData> _samplerCache = new List<SamplerUniformData>();
 
         public void ClearData()
         {
-            _uniformsAndAttributes.ClearData(_samplerCache);
-            foreach(var iterationVM in _iterationModels)
-            {
-                iterationVM.ClearData();
-            }
-            _iterationModels.Clear();
+            foreach (var iteration in _uniformAndAttributeIterations)
+                iteration.ClearData();
+            _uniformAndAttributeIterations.Clear();
         }
 
         public void Draw(Rhino.Display.DisplayPipeline display)
@@ -1266,12 +1259,9 @@ namespace ghgl
             OpenGL.glEnable(OpenGL.GL_BLEND);
             OpenGL.glBlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 
-            _uniformsAndAttributes.Draw(display, programId, DrawMode);
-            foreach (var vm in _iterationModels)
-            {
-                vm._uniformsAndAttributes.Draw(display, programId, DrawMode);
-            }
-
+            foreach (var iteration in _uniformAndAttributeIterations)
+                iteration.Draw(display, programId, DrawMode);
+            
             OpenGL.glBindVertexArray(0);
             OpenGL.glDeleteVertexArrays(1, vao);
             OpenGL.glUseProgram(0);
