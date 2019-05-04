@@ -13,29 +13,32 @@
   <script>
     function buildScene() {
       var scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xffffff);
-      var geometry = new THREE.BufferGeometry();
+      scene.background = new THREE.Color(_BACKGROUND_COLOR_);
+
+      for (let i = 0; i < ghglAttributes.length; i++) {
+          var geometry = new THREE.BufferGeometry();
 _GEOMETRY_ATTRIBUTES_
 
-      // specify custom uniforms and attributes for shaders
-      // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
-      material = new THREE.ShaderMaterial({
-      uniforms: {
+          // specify custom uniforms and attributes for shaders
+          // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
+          material = new THREE.ShaderMaterial({
+              uniforms: {
 _UNIFORMS_
-      },
-      vertexShader: `
+              },
+              vertexShader: `
 _VERTEX_SHADER_
       `,
-      fragmentShader:`
+              fragmentShader: `
 _FRAGMENT_SHADER_
       `,
-      transparent: true
-    });
+              transparent: true
+          });
 
-    var sceneObject = new THREE._THREE_OBJECT_TYPE_(geometry, material);
-    scene.add(sceneObject);
-    return scene;
-  }
+          var sceneObject = new THREE._THREE_OBJECT_TYPE_(geometry, material);
+          scene.add(sceneObject);
+      }
+      return scene;
+    }
 
   function getCamera() {
     var aspectRatio = window.innerWidth / window.innerHeight;

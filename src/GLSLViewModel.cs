@@ -1196,10 +1196,11 @@ namespace ghgl
             readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
             readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
             readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
-            readonly List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
-            readonly List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
-            readonly List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
-            readonly List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
+
+            readonly public List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
+            readonly public List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
+            readonly public List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
+            readonly public List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
         }
         readonly List<UniformsAndAttributes> _uniformAndAttributeIterations = new List<UniformsAndAttributes>();
 
@@ -1314,25 +1315,25 @@ namespace ghgl
             System.IO.File.WriteAllText(filename, text.ToString());
         }
 
-        int MinAttributeLength()
+        int MinAttributeLength(UniformsAndAttributes attrs)
         {
             int length = -1;
-            foreach (var attr in _intAttribs)
+            foreach (var attr in attrs._intAttribs)
             {
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
             }
-            foreach (var attr in _floatAttribs)
+            foreach (var attr in attrs._floatAttribs)
             {
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
             }
-            foreach (var attr in _vec3Attribs)
+            foreach (var attr in attrs._vec3Attribs)
             {
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
             }
-            foreach (var attr in _vec4Attribs)
+            foreach (var attr in attrs._vec4Attribs)
             {
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
@@ -1347,52 +1348,62 @@ namespace ghgl
 
             // create the javascript companion file that contains the attribute data
             var sb = new System.Text.StringBuilder();
-            sb.AppendLine("var ghglAttributes = {");
-            List<string> chunks = new List<string>();
+            sb.AppendLine("var ghglAttributes = [");
 
-            if( VertexShaderCode.Contains("gl_VertexID"))
+            for( int i=0; i<_uniformAndAttributeIterations.Count; i++ )
             {
-                int length = MinAttributeLength();
-                int[] items = new int[length];
-                for (int i = 0; i < items.Length; i++)
-                    items[i] = i;
-                GLAttribute<int> vertexIds = new GLAttribute<int>("_vertex_id", -1, items);
-                chunks.Add(vertexIds.ToJsonString(2));
+                if (i > 0)
+                    sb.AppendLine("  , {");
+                else
+                    sb.AppendLine("  {");
+                var itterationAttrs = _uniformAndAttributeIterations[i];
+                List<string> chunks = new List<string>();
+
+                if (VertexShaderCode.Contains("gl_VertexID"))
+                {
+                    int length = MinAttributeLength(itterationAttrs);
+                    int[] items = new int[length];
+                    for (int j = 0; j < items.Length; j++)
+                        items[j] = j;
+                    GLAttribute<int> vertexIds = new GLAttribute<int>("_vertex_id", -1, items);
+                    chunks.Add(vertexIds.ToJsonString(2));
+                }
+
+                foreach (var attr in itterationAttrs._intAttribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in itterationAttrs._floatAttribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in itterationAttrs._vec3Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in itterationAttrs._vec4Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                for (int j = 0; j < chunks.Count; j++)
+                {
+                    sb.Append(chunks[j]);
+                    if (j < (chunks.Count - 1))
+                        sb.Append(",");
+                    sb.AppendLine();
+                }
+                sb.AppendLine("  }");
             }
 
-            foreach (var attr in _intAttribs)
-            {
-                string attrAsJson = attr.ToJsonString(2);
-                if (!string.IsNullOrWhiteSpace(attrAsJson))
-                    chunks.Add(attrAsJson);
-            }
-            foreach (var attr in _floatAttribs)
-            {
-                string attrAsJson = attr.ToJsonString(2);
-                if (!string.IsNullOrWhiteSpace(attrAsJson))
-                    chunks.Add(attrAsJson);
-            }
-            foreach (var attr in _vec3Attribs)
-            {
-                string attrAsJson = attr.ToJsonString(2);
-                if (!string.IsNullOrWhiteSpace(attrAsJson))
-                    chunks.Add(attrAsJson);
-            }
-            foreach (var attr in _vec4Attribs)
-            {
-                string attrAsJson = attr.ToJsonString(2);
-                if (!string.IsNullOrWhiteSpace(attrAsJson))
-                    chunks.Add(attrAsJson);
-            }
-            for(int i=0; i<chunks.Count; i++)
-            {
-                sb.Append(chunks[i]);
-                if (i < (chunks.Count - 1))
-                    sb.Append(",");
-                sb.AppendLine();
-            }
-
-            sb.AppendLine("};");
+            sb.AppendLine("];");
             string jsfilepath = System.IO.Path.Combine(dirName, baseFilename + ".js");
             string javascriptData = sb.ToString();
             System.IO.File.WriteAllText(jsfilepath, javascriptData);
@@ -1408,39 +1419,42 @@ namespace ghgl
             sb = new System.Text.StringBuilder();
             bool positionHandled = false;
             string positionFiller = "";
+            var attrs = _uniformAndAttributeIterations[0];
             if (VertexShaderCode.Contains("gl_VertexID"))
             {
-                sb.AppendLine("      geometry.addAttribute('_vertex_id', new THREE.BufferAttribute( ghglAttributes._vertex_id, 1 ));");
-                positionFiller = "      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes._vertex_id, 1 ));";
+                sb.AppendLine("      geometry.addAttribute('_vertex_id', new THREE.BufferAttribute( ghglAttributes[i]._vertex_id, 1 ));");
+                positionFiller = "      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i]._vertex_id, 1 ));";
             }
-            foreach (var attr in _intAttribs)
+            
+            foreach (var attr in attrs._intAttribs)
             {
                 if (attr.Name == "position")
                     positionHandled = true;
-                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));");
-                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));";
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));";
             }
-            foreach( var attr in _floatAttribs)
+            foreach( var attr in attrs._floatAttribs)
             {
                 if (attr.Name == "position")
                     positionHandled = true;
-                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));");
-                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 1 ));";
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));";
             }
-            foreach (var attr in _vec4Attribs)
+            foreach (var attr in attrs._vec4Attribs)
             {
                 if (attr.Name == "position")
                     positionHandled = true;
-                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 4 ));");
-                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 4 ));";
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));";
             }
-            foreach (var attr in _vec3Attribs)
+            foreach (var attr in attrs._vec3Attribs)
             {
                 if (attr.Name == "position")
                     positionHandled = true;
-                sb.AppendLine($"      geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 3 ));");
-                positionFiller = $"      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes.{attr.Name}, 3 ));";
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 3 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 3 ));";
             }
+            
 
             if ( !positionHandled )
             {
@@ -1468,11 +1482,25 @@ namespace ghgl
             {
                 sb.AppendLine("        " + kv.Value);
             }
+
+            /*
+             *               uniforms: {
+                          vcolor : {type:"v4", value: new THREE.Vector4(1,0,0,1)},
+
+              },
+
+             */
+
             contents = contents.Replace("_UNIFORMS_", sb.ToString());
 
             if (DrawMode == OpenGL.GL_LINES)
                 contents = contents.Replace("_THREE_OBJECT_TYPE_", "LineSegments");
+            if (DrawMode == OpenGL.GL_LINE_STRIP)
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "Line");
 
+            var bg = Rhino.ApplicationSettings.AppearanceSettings.ViewportBackgroundColor;
+            string sBg = $"{bg.R / 255.0}, {bg.G / 255.0}, {bg.B / 255.0}";
+            contents = contents.Replace("_BACKGROUND_COLOR_", sBg);
 
             string htmlfilepath = System.IO.Path.Combine(dirName, baseFilename + ".html");
             System.IO.File.WriteAllText(htmlfilepath, contents);
