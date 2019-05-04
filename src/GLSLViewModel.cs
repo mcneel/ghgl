@@ -668,12 +668,12 @@ namespace ghgl
             _vec4Attribs.Add(new GLAttribute<Vec4>(name, location, value));
         }
 
-        void SetupGLUniforms()
+        void SetupGLUniforms(uint programId)
         {
             foreach (var uniform in _intUniforms)
             {
                 int arrayLength = uniform.ArrayLength;
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -685,7 +685,7 @@ namespace ghgl
             foreach (var uniform in _floatUniforms)
             {
                 int arrayLength = uniform.ArrayLength;
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -697,7 +697,7 @@ namespace ghgl
             foreach (var uniform in _vec3Uniforms)
             {
                 int arrayLength = uniform.ArrayLength;
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -718,7 +718,7 @@ namespace ghgl
             foreach (var uniform in _vec4Uniforms)
             {
                 int arrayLength = uniform.ArrayLength;
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                 if (-1 != location)
                 {
                     if (arrayLength < 1)
@@ -741,7 +741,7 @@ namespace ghgl
             int currentTexture = 1;
             foreach (var uniform in _sampler2DUniforms)
             {
-                int location = OpenGL.glGetUniformLocation(ProgramId, uniform.Name);
+                int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                 if (-1 != location)
                 {
                     if (0 == uniform.TextureId)
@@ -759,7 +759,7 @@ namespace ghgl
             }
         }
 
-        int SetupGLAttributes(int index)
+        int SetupGLAttributes(int index, uint programId)
         {
             int element_count = 0;
             if (_meshes.Count >= (index + 1))
@@ -767,7 +767,7 @@ namespace ghgl
                 var data = _meshes[index];
                 var mesh = data.Mesh;
                 element_count = mesh.Vertices.Count;
-                int location = OpenGL.glGetAttribLocation(ProgramId, "_meshVertex");
+                int location = OpenGL.glGetAttribLocation(programId, "_meshVertex");
                 if(location>=0)
                 {
                     if (data.VertexVbo == 0)
@@ -787,7 +787,7 @@ namespace ghgl
                     OpenGL.glEnableVertexAttribArray((uint)location);
                     OpenGL.glVertexAttribPointer((uint)location, 3, OpenGL.GL_FLOAT, 0, 0, IntPtr.Zero);
                 }
-                location = OpenGL.glGetAttribLocation(ProgramId, "_meshNormal");
+                location = OpenGL.glGetAttribLocation(programId, "_meshNormal");
                 if (location >= 0)
                 {
                     if (data.NormalVbo == 0 && mesh.Normals.Count == mesh.Vertices.Count)
@@ -816,7 +816,7 @@ namespace ghgl
                     }
                 }
 
-                location = OpenGL.glGetAttribLocation(ProgramId, "_meshTextureCoordinate");
+                location = OpenGL.glGetAttribLocation(programId, "_meshTextureCoordinate");
                 if (location >= 0)
                 {
                     if (data.TextureCoordVbo == 0 && mesh.TextureCoordinates.Count == mesh.Vertices.Count)
@@ -845,7 +845,7 @@ namespace ghgl
                     }
                 }
 
-                location = OpenGL.glGetAttribLocation(ProgramId, "_meshVertexColor");
+                location = OpenGL.glGetAttribLocation(programId, "_meshVertexColor");
                 if (location >= 0)
                 {
                     if (data.ColorVbo == 0 && mesh.VertexColors.Count == mesh.Vertices.Count)
@@ -894,7 +894,7 @@ namespace ghgl
 
                 if (item.Location < 0)
                 {
-                    item.Location = OpenGL.glGetAttribLocation(ProgramId, item.Name);
+                    item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
                 }
                 if (item.Location >= 0)
                 {
@@ -933,7 +933,7 @@ namespace ghgl
 
                 if (item.Location < 0)
                 {
-                    item.Location = OpenGL.glGetAttribLocation(ProgramId, item.Name);
+                    item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
                 }
                 if (item.Location >= 0)
                 {
@@ -972,7 +972,7 @@ namespace ghgl
 
                 if (item.Location < 0)
                 {
-                    item.Location = OpenGL.glGetAttribLocation(ProgramId, item.Name);
+                    item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
                 }
                 if (item.Location >= 0)
                 {
@@ -1012,7 +1012,7 @@ namespace ghgl
 
                 if (item.Location < 0)
                 {
-                    item.Location = OpenGL.glGetAttribLocation(ProgramId, item.Name);
+                    item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
                 }
                 if (item.Location >= 0)
                 {
@@ -1160,7 +1160,7 @@ namespace ghgl
 
         void DrawIteration(Rhino.Display.DisplayPipeline display, uint programId)
         {
-            SetupGLUniforms();
+            SetupGLUniforms(programId);
 
             int totalCount = 1;
             if (_meshes != null && _meshes.Count > 1)
@@ -1168,7 +1168,7 @@ namespace ghgl
 
             for (int i = 0; i < totalCount; i++)
             {
-                int element_count = SetupGLAttributes(i);
+                int element_count = SetupGLAttributes(i, programId);
                 if (element_count < 1)
                     continue;
 

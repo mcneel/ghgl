@@ -143,6 +143,7 @@ namespace ghgl
             {
                 writer.SetVersion("GLShader", 0, 1, 0);
                 rc = _model.Write(writer);
+                writer.SetInt32("PreviewSortOrder", PreviewSortOrder);
             }
             return rc;
         }
@@ -151,6 +152,12 @@ namespace ghgl
         {
             bool rc = base.Read(reader) &&
               _model.Read(reader);
+            if( rc )
+            {
+                int order = PreviewSortOrder;
+                if (reader.TryGetInt32("PreviewSortOrder", ref order))
+                    PreviewSortOrder = order;
+            }
             return rc;
         }
 
@@ -293,6 +300,11 @@ namespace ghgl
                                         }
                                     }
                                 }
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                {
+                                    values[0] = values[data.Iteration];
+                                }
+
                                 model.AddUniform(varname, values, arrayLength);
                                 break;
                             }
