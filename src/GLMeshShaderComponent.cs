@@ -75,8 +75,9 @@ void main()
             var list = new System.Collections.Generic.List<Rhino.Geometry.Mesh>();
             if (data.GetDataList(0, list))
             {
+                var uniformsAndAttributes = _model.GetUniformsAndAttributes(data.Iteration);
                 foreach(var mesh in list)
-                    _model.AddMesh(mesh);
+                    uniformsAndAttributes.AddMesh(mesh);
             }
         }
     }
