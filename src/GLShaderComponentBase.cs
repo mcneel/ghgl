@@ -209,9 +209,7 @@ namespace ghgl
 
                 _model.ClearData();
             }
-            var model = _model;
-            if (data.Iteration > 0)
-                model = _model.AddIteration();
+            var uniformsAndAttributes = _model.GetUniformsAndAttributes(data.Iteration);
 
             for (int i = startIndex; i < Params.Input.Count; i++)
             {
@@ -256,7 +254,12 @@ namespace ghgl
                                     }
                                     values[j] = value;
                                 }
-                                model.AddUniform(varname, values, arrayLength);
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "float":
@@ -275,14 +278,24 @@ namespace ghgl
                                     }
                                     values[j] = (float)value;
                                 }
-                                model.AddUniform(varname, values, arrayLength);
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "vec3":
                             {
                                 Point3f[] values = GooListToPoint3fArray(destinationList);
-                                if( values != null )
-                                    model.AddUniform(varname, values, arrayLength);
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                if ( values != null )
+                                    uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "vec4":
@@ -300,12 +313,12 @@ namespace ghgl
                                         }
                                     }
                                 }
-                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
-                                {
-                                    values[0] = values[data.Iteration];
-                                }
 
-                                model.AddUniform(varname, values, arrayLength);
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "bool":
@@ -323,7 +336,12 @@ namespace ghgl
                                     }
                                     values[j] = value ? 1 : 0;
                                 }
-                                model.AddUniform(varname, values, arrayLength);
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
                         case "sampler2D":
@@ -346,14 +364,14 @@ namespace ghgl
                                         }
                                     }
 
-                                    model.AddSampler2DUniform(varname, path);
+                                    uniformsAndAttributes.AddSampler2DUniform(varname, path);
                                 }
                                 else
                                 {
                                     System.Drawing.Bitmap bmp;
                                     if( destination.CastTo(out bmp) )
                                     {
-                                        model.AddSampler2DUniform(varname, bmp);
+                                        uniformsAndAttributes.AddSampler2DUniform(varname, bmp);
                                     }
                                 }
 
@@ -381,9 +399,9 @@ namespace ghgl
                                     floats[index] = (float)destination[index];
                             }
                             if (ints != null && ints.Length > 0)
-                                model.AddAttribute(varname, location, ints);
+                                uniformsAndAttributes.AddAttribute(varname, location, ints);
                             if (floats != null && floats.Length > 0)
-                                model.AddAttribute(varname, location, floats);
+                                uniformsAndAttributes.AddAttribute(varname, location, floats);
                         }
                         if (destination.Count < 1 && datatype == "int")
                         {
@@ -392,7 +410,7 @@ namespace ghgl
                             {
                                 int[] ints = int_destination.ToArray();
                                 if (ints != null && ints.Length > 0)
-                                    model.AddAttribute(varname, location, ints);
+                                    uniformsAndAttributes.AddAttribute(varname, location, ints);
                             }
 
                         }
@@ -402,7 +420,7 @@ namespace ghgl
                         //vec3 -> point3d
                         Point3f[] vec3_array = GooListToPoint3fArray(destinationList);
                         if( vec3_array!=null )
-                            model.AddAttribute(varname, location, vec3_array);
+                            uniformsAndAttributes.AddAttribute(varname, location, vec3_array);
                     }
                     if (datatype == "vec4")
                     {
@@ -415,7 +433,7 @@ namespace ghgl
                                 Color4f color = new Color4f(destination[index]);
                                 vec4_array[index] = new Vec4(color.R, color.G, color.B, color.A);
                             }
-                            model.AddAttribute(varname, location, vec4_array);
+                            uniformsAndAttributes.AddAttribute(varname, location, vec4_array);
                         }
                     }
                 }
