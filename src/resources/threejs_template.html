@@ -71,6 +71,7 @@ _FRAGMENT_SHADER_
   var scene = buildScene();
   var camera = getCamera();
   var renderer = getRenderer();
+  renderer.debug.checkShaderErrors = true;
 
   window.addEventListener('resize', onWindowResize, false);
   render();
