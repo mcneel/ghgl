@@ -103,6 +103,9 @@
     <EmbeddedResource Include="resources\GLSL_Component_24x24.png" />
     <EmbeddedResource Include="resources\GLSL_MeshComponent_24x24.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\threejs_template.html" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

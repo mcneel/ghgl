@@ -212,13 +212,12 @@ namespace ghgl
                 }
             }
 
-
         }
-        public List<UniformDescription> GetUniforms()
+        public UniformDescription[] GetUniforms()
         {
             if (_uniforms == null)
                 ParseUniformsAndAttributes();
-            return _uniforms;
+            return _uniforms.ToArray();
         }
 
         public List<AttributeDescription> GetVertexAttributes()
@@ -234,5 +233,78 @@ namespace ghgl
         }
         public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
+        public string ToWebGL1Code()
+        {
+            if (ShaderType != ShaderType.Vertex && ShaderType != ShaderType.Fragment)
+                throw new InvalidOperationException("Only vertex and fragment shaders can be convertes to WebGL 1.0");
+
+            var sb = new StringBuilder();
+            foreach (var attribute in GetVertexAttributes())
+            {
+                string dataType = attribute.DataType;
+                if (dataType == "int")
+                    dataType = "float";
+                sb.AppendLine($"attribute {dataType} {attribute.Name};");
+            }
+            if (Code.Contains("gl_VertexID"))
+                sb.AppendLine("attribute float _vertex_id;");
+
+            string processedCode = Code.Trim();
+            processedCode = processedCode.Replace("gl_VertexID", "_vertex_id");
+
+            foreach (var uniform in GetUniforms())
+            {
+                string dataType = uniform.DataType;
+                if (dataType == "int")
+                    dataType = "float";
+
+                sb.Append($"uniform {dataType} {uniform.Name}");
+                if (uniform.ArrayLength > 0)
+                    sb.Append($"[{uniform.ArrayLength}]");
+                sb.AppendLine(";");
+            }
+
+            string[] shaderLines = processedCode.Split('\n');
+            for (int i = 0; i < shaderLines.Length; i++)
+            {
+                string line = shaderLines[i].TrimEnd();
+                string trimmed = line.Trim();
+                if (trimmed.StartsWith("#version"))
+                    continue;
+                if (trimmed.StartsWith("//"))
+                {
+                    sb.AppendLine(line);
+                    continue;
+                }
+                if (string.IsNullOrWhiteSpace(trimmed))
+                {
+                    sb.AppendLine();
+                    continue;
+                }
+                if (trimmed.StartsWith("layout") || trimmed.StartsWith("attribute") || trimmed.StartsWith("uniform"))
+                {
+                    continue;
+                }
+                if (trimmed.StartsWith("out "))
+                {
+                    if( ShaderType == ShaderType.Vertex )
+                        line = line.Replace("out ", "varying ");
+                    else
+                    {
+                        int index = line.IndexOf("vec4") + "vec4".Length;
+                        string token = line.Substring(index).Trim(new char[] { ' ', ';' });
+                        for (int j = i + 1; j < shaderLines.Length; j++)
+                            shaderLines[j] = shaderLines[j].Replace(token, "gl_FragColor");
+
+                        continue;
+                    }
+                }
+                if (trimmed.StartsWith("in "))
+                    line = line.Replace("in ", "varying ");
+
+                sb.AppendLine(line);
+            }
+            return sb.ToString().Trim();
+        }
     }
 }

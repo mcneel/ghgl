@@ -394,6 +394,22 @@ namespace ghgl
             public string Name { get; private set; }
             public int ArrayLength { get; private set; }
             public T[] Data { get; private set; }
+
+            public string ToJsonString(int indent)
+            {
+                string threeTypeValue = "";
+                if (typeof(T) == typeof(int) || typeof(T) == typeof(float))
+                    threeTypeValue = $"type:\"float\", value: {Data[0]}";
+                if (typeof(T) == typeof(Point3f))
+                {
+                    threeTypeValue = $"type:\"vec3\", value: new THREE.Vector3({Data[0]})";
+                }
+                if (typeof(T) == typeof(Vec4))
+                    threeTypeValue = $"type:\"vec4\", value: new THREE.Vector4({Data[0]})";
+
+                string s = "".PadLeft(indent) + $"{Name} : {{ {threeTypeValue} }}";
+                return s;
+            }
         }
 
         public class SamplerUniformData
@@ -500,7 +516,7 @@ namespace ghgl
             }
         }
 
-        class MeshData
+        public class MeshData
         {
             uint _triangleIndexBuffer;
             uint _linesIndexBuffer;
@@ -1189,17 +1205,60 @@ namespace ghgl
 
             }
 
+            public string UniformsToJsonString(int indent, List<UniformDescription> builtInsUsed)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("".PadLeft(2) + "uniforms: {");
+                var chunks = new List<string>();
+
+                foreach(var builtin in builtInsUsed)
+                {
+                    string threeTypeValue = "";
+                    if (builtin.DataType == "float")
+                        threeTypeValue = "type:\"float\", value: 0.0";
+                    if (builtin.DataType == "vec3")
+                    {
+                        threeTypeValue = "type:\"vec3\", value: new THREE.Vector3(0,0,0)";
+                        if( builtin.ArrayLength>0)
+                            threeTypeValue = "type:\"vec3v\", value: [new THREE.Vector3(1,-1,-3),new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,0)]";
+                    }
+                    if (builtin.DataType == "vec4")
+                        threeTypeValue = "type:\"vec4\", value: new THREE.Vector4(0,0,0,0)";
+                    if (builtin.DataType == "mat3")
+                        threeTypeValue = "type:\"mat3\", value: new Float32Array( [1,0,0,0,1,0,0,0,1] )";
+                    string s = "".PadLeft(indent) + $"{builtin.Name} : {{ {threeTypeValue} }}";
+                    chunks.Add(s);
+                }
+
+                _intUniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
+                _floatUniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
+                _vec3Uniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
+                _vec4Uniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
+                
+                for(int i=0; i<chunks.Count; i++)
+                {
+                    sb.Append(chunks[i]);
+                    if (i < (chunks.Count - 1))
+                        sb.Append(",");
+                    sb.AppendLine();
+                }
+
+                sb.Append("".PadLeft(2) + "}");
+                return sb.ToString();
+            }
+
             readonly List<SamplerUniformData> _samplerCache;
-            readonly List<MeshData> _meshes = new List<MeshData>();
+            readonly public List<MeshData> _meshes = new List<MeshData>();
             readonly List<UniformData<int>> _intUniforms = new List<UniformData<int>>();
             readonly List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
             readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
             readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
             readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
-            readonly List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
-            readonly List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
-            readonly List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
-            readonly List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
+
+            readonly public List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
+            readonly public List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
+            readonly public List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
+            readonly public List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
         }
         readonly List<UniformsAndAttributes> _uniformAndAttributeIterations = new List<UniformsAndAttributes>();
 
@@ -1312,6 +1371,304 @@ namespace ghgl
             text.AppendLine("[fragment shader]");
             text.AppendLine(FragmentShaderCode);
             System.IO.File.WriteAllText(filename, text.ToString());
+        }
+
+        int MinAttributeLength(UniformsAndAttributes attrs)
+        {
+            int length = -1;
+            foreach (var attr in attrs._intAttribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in attrs._floatAttribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in attrs._vec3Attribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in attrs._vec4Attribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            return length;
+        }
+
+        static string ToJsonString<T>(string name, List<T> data, int indent, bool indices=false)
+        {
+            var sb = new System.Text.StringBuilder();
+            string padding = "".PadLeft(indent);
+            if( indices)
+                sb.AppendLine(padding + $"{name} : [");
+            else
+                sb.AppendLine(padding + $"{name} : new Float32Array([");
+            padding = "".PadLeft(indent + 2);
+            int lineBreakOn = 6;
+            bool startLine = true;
+            for (int i = 0; i < data.Count; i++)
+            {
+                if (startLine)
+                    sb.Append(padding);
+                startLine = false;
+                sb.Append(data[i].ToString());
+                if (i < (data.Count - 1))
+                    sb.Append(",");
+                if (i % lineBreakOn == lineBreakOn)
+                {
+                    sb.AppendLine();
+                    startLine = true;
+                }
+            }
+            if (!startLine)
+                sb.AppendLine();
+
+            if(indices)
+                sb.Append("".PadLeft(indent) + "]");
+            else
+                sb.Append("".PadLeft(indent) + "])");
+            return sb.ToString();
+        }
+
+        public void ExportToHtml(string filename)
+        {
+            string baseFilename = System.IO.Path.GetFileNameWithoutExtension(filename);
+            string dirName = System.IO.Path.GetDirectoryName(filename);
+
+            // create the javascript companion file that contains the attribute data
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("var ghglAttributes = [");
+
+            int meshCount = 0;
+            if (_uniformAndAttributeIterations.Count > 0)
+                meshCount = _uniformAndAttributeIterations[0]._meshes.Count;
+
+            int count = meshCount > 0 ? meshCount : _uniformAndAttributeIterations.Count;
+
+            for( int i=0; i<count; i++ )
+            {
+                if (i > 0)
+                    sb.AppendLine("  , {");
+                else
+                    sb.AppendLine("  {");
+
+                UniformsAndAttributes iterationData = meshCount>0 ?
+                    _uniformAndAttributeIterations[0] : 
+                    _uniformAndAttributeIterations[i];
+
+                List<string> chunks = new List<string>();
+
+                var allUniforms = new List<UniformDescription>(_shaders[(int)ShaderType.Vertex].GetUniforms());
+                allUniforms.AddRange(_shaders[(int)ShaderType.Fragment].GetUniforms());
+                var builtInDictionary = new Dictionary<string, UniformDescription>();
+                foreach (var uniform in allUniforms)
+                {
+                    builtInDictionary[uniform.Name] = uniform;
+                }
+                List<UniformDescription> builtInsUsed = new List<UniformDescription>(builtInDictionary.Values);
+                chunks.Add(iterationData.UniformsToJsonString(2, builtInsUsed));
+
+                if( meshCount>0 )
+                {
+                    var meshData = iterationData._meshes[i];
+
+                    int[] indices = new int[3 * (meshData.Mesh.Faces.TriangleCount + 2 * meshData.Mesh.Faces.QuadCount)];
+                    int current = 0;
+                    foreach (var face in meshData.Mesh.Faces)
+                    {
+                        indices[current++] = face.A;
+                        indices[current++] = face.B;
+                        indices[current++] = face.C;
+                        if (face.IsQuad)
+                        {
+                            indices[current++] = face.C;
+                            indices[current++] = face.D;
+                            indices[current++] = face.A;
+                        }
+                    }
+                    chunks.Add(ToJsonString("meshIndices", new List<int>(indices), 2, true));
+
+                    if( meshData.VertexVbo != 0)
+                    {
+                        List<Point3f> pts = new List<Point3f>(meshData.Mesh.Vertices.ToPoint3fArray());
+                        chunks.Add(ToJsonString("_meshVertex", pts, 2));
+                    }
+                    if( meshData.NormalVbo != 0)
+                    {
+                        List<Vector3f> normals = new List<Vector3f>(meshData.Mesh.Normals.Count);
+                        foreach (var normal in meshData.Mesh.Normals)
+                            normals.Add(normal);
+                        chunks.Add(ToJsonString("_meshNormal", normals, 2));
+                    }
+                    if( meshData.TextureCoordVbo != 0)
+                    {
+                        List<Point2f> tcs = new List<Point2f>(meshData.Mesh.TextureCoordinates.Count);
+                        foreach (var tc in meshData.Mesh.TextureCoordinates)
+                            tcs.Add(tc);
+                        chunks.Add(ToJsonString("_meshTextureCoordinate", tcs, 2));
+                    }
+                    if(meshData.ColorVbo != 0)
+                    {
+                        List<Vec4> colors = new List<Vec4>(meshData.Mesh.VertexColors.Count);
+                        foreach( var color in meshData.Mesh.VertexColors)
+                        {
+                            Vec4 v4 = new Vec4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
+                            colors.Add(v4);
+                        }
+                        chunks.Add(ToJsonString("_meshVertexColor", colors, 2));
+                    }
+                }
+
+                if (VertexShaderCode.Contains("gl_VertexID"))
+                {
+                    int length = MinAttributeLength(iterationData);
+                    int[] items = new int[length];
+                    for (int j = 0; j < items.Length; j++)
+                        items[j] = j;
+                    GLAttribute<int> vertexIds = new GLAttribute<int>("_vertex_id", -1, items);
+                    chunks.Add(vertexIds.ToJsonString(2));
+                }
+
+                foreach (var attr in iterationData._intAttribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in iterationData._floatAttribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in iterationData._vec3Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                foreach (var attr in iterationData._vec4Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
+                for (int j = 0; j < chunks.Count; j++)
+                {
+                    sb.Append(chunks[j]);
+                    if (j < (chunks.Count - 1))
+                        sb.Append(",");
+                    sb.AppendLine();
+                }
+                sb.AppendLine("  }");
+            }
+
+            sb.AppendLine("];");
+            string jsfilepath = System.IO.Path.Combine(dirName, baseFilename + ".js");
+            string javascriptData = sb.ToString();
+            System.IO.File.WriteAllText(jsfilepath, javascriptData);
+            
+            System.Reflection.Assembly a = typeof(GLSLViewModel).Assembly;
+            var stream = a.GetManifestResourceStream("ghgl.resources.threejs_template.html");
+            var sr = new System.IO.StreamReader(stream);
+            string contents = sr.ReadToEnd();
+            stream.Close();
+
+            contents = contents.Replace("_JAVASCRIPT_FILENAME_", baseFilename + ".js");
+
+            sb = new System.Text.StringBuilder();
+            bool positionHandled = false;
+            string positionFiller = "";
+            var attrs = _uniformAndAttributeIterations[0];
+            if (VertexShaderCode.Contains("gl_VertexID"))
+            {
+                sb.AppendLine("      geometry.addAttribute('_vertex_id', new THREE.BufferAttribute( ghglAttributes[i]._vertex_id, 1 ));");
+                positionFiller = "      geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i]._vertex_id, 1 ));";
+            }
+            
+            foreach (var attr in attrs._intAttribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));";
+            }
+            foreach( var attr in attrs._floatAttribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 1 ));";
+            }
+            foreach (var attr in attrs._vec4Attribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));";
+            }
+            foreach (var attr in attrs._vec3Attribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 3 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 3 ));";
+            }
+
+            if( attrs._meshes.Count>0)
+            {
+                sb.AppendLine($"          geometry.setIndex(ghglAttributes[i].meshIndices);");
+                if (attrs._meshes[0].VertexVbo!=0)
+                {
+                    sb.AppendLine($"          geometry.addAttribute('_meshVertex', new THREE.BufferAttribute( ghglAttributes[i]._meshVertex, 3 ));");
+                    positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i]._meshVertex, 3 ));";
+                }
+                if(attrs._meshes[0].NormalVbo!=0)
+                    sb.AppendLine($"          geometry.addAttribute('_meshNormal', new THREE.BufferAttribute( ghglAttributes[i]._meshNormal, 3 ));");
+                if(attrs._meshes[0].TextureCoordVbo!=0)
+                    sb.AppendLine($"          geometry.addAttribute('_meshTextureCoordinate', new THREE.BufferAttribute( ghglAttributes[i]._meshTextureCoordinate, 2 ));");
+                if(attrs._meshes[0].ColorVbo!=0)
+                    sb.AppendLine($"          geometry.addAttribute('_meshVertexColor', new THREE.BufferAttribute( ghglAttributes[i]._meshVertexColor, 4 ));");
+            }
+
+            if ( !positionHandled )
+            {
+                sb.AppendLine(positionFiller);
+            }
+
+            string geometry_attributes = sb.ToString();
+            contents = contents.Replace("_GEOMETRY_ATTRIBUTES_", geometry_attributes);
+            contents = contents.Replace("_VERTEX_SHADER_", _shaders[(int)ShaderType.Vertex].ToWebGL1Code());
+            contents = contents.Replace("_FRAGMENT_SHADER_", _shaders[(int)ShaderType.Fragment].ToWebGL1Code());
+
+            if (DrawMode == OpenGL.GL_LINES)
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "LineSegments");
+            else if (DrawMode == OpenGL.GL_LINE_STRIP)
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "Line");
+            else if (DrawMode == OpenGL.GL_POINTS)
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "Points");
+            else
+                contents = contents.Replace("_THREE_OBJECT_TYPE_", "Mesh");
+
+            var bg = Rhino.ApplicationSettings.AppearanceSettings.ViewportBackgroundColor;
+            string sBg = $"{bg.R / 255.0}, {bg.G / 255.0}, {bg.B / 255.0}";
+            contents = contents.Replace("_BACKGROUND_COLOR_", sBg);
+
+            var viewport = Rhino.RhinoDoc.ActiveDoc.Views.ActiveView.MainViewport;
+            contents = contents.Replace("_CAMERA_LOCATION_", viewport.CameraLocation.ToString());
+            double frLeft, frRight, frTop, frBottom, frNear, frFar;
+            viewport.GetFrustum(out frLeft, out frRight, out frBottom, out frTop, out frNear, out frFar);
+            contents = contents.Replace("_FRUSTUM_WIDTH_", (frRight - frLeft).ToString());
+            contents = contents.Replace("_FRUSTUM_NEAR_", frNear.ToString());
+            contents = contents.Replace("_FRUSTUM_FAR_", frFar.ToString());
+
+
+            string htmlfilepath = System.IO.Path.Combine(dirName, baseFilename + ".html");
+            System.IO.File.WriteAllText(htmlfilepath, contents);
         }
     }
 }
