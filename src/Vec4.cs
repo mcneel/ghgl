@@ -11,5 +11,9 @@ namespace ghgl
             _z = c;
             _w = d;
         }
+        public override string ToString()
+        {
+            return $"{_x},{_y},{_z},{_w}";
+        }
     }
 }

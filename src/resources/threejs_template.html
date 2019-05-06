@@ -7,77 +7,95 @@
   </style>
 </head>
 <body>
-  <script src='js/three.js'></script>
-  <script src='_JAVASCRIPT_FILENAME_'></script>
+    <script src='js/three.js'></script>
+    <script src='js/OrbitControls.js'></script>
+    <script src='_JAVASCRIPT_FILENAME_'></script>
 
-  <script>
-    function buildScene() {
-      var scene = new THREE.Scene();
-      scene.background = new THREE.Color(_BACKGROUND_COLOR_);
+    <script>
+        function buildScene() {
+            let scene = new THREE.Scene();
+            scene.background = new THREE.Color(_BACKGROUND_COLOR_);
 
-      for (let i = 0; i < ghglAttributes.length; i++) {
-          var geometry = new THREE.BufferGeometry();
-_GEOMETRY_ATTRIBUTES_
+            for (let i = 0; i < ghglAttributes.length; i++) {
+                var geometry = new THREE.BufferGeometry();
+                _GEOMETRY_ATTRIBUTES_
 
-          // specify custom uniforms and attributes for shaders
-          // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
-          material = new THREE.ShaderMaterial({
-              uniforms: {
-_UNIFORMS_
-              },
-              vertexShader: `
+                // specify custom uniforms and attributes for shaders
+                // Uniform types: https://github.com/mrdoob/three.js/wiki/Uniforms-types
+                let material = new THREE.RawShaderMaterial({
+                    uniforms: ghglAttributes[i].uniforms,
+                    vertexShader: `
 _VERTEX_SHADER_
-      `,
-              fragmentShader: `
+          `,
+                    fragmentShader: `
+precision mediump float;
 _FRAGMENT_SHADER_
-      `,
-              transparent: true
-          });
+          `,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
 
-          var sceneObject = new THREE._THREE_OBJECT_TYPE_(geometry, material);
-          scene.add(sceneObject);
-      }
-      return scene;
-    }
+                let sceneObject = new THREE._THREE_OBJECT_TYPE_(geometry, material);
+                scene.add(sceneObject);
+                sceneObjects.push(sceneObject);
+            }
+            return scene;
+        }
 
-  function getCamera() {
-    var aspectRatio = window.innerWidth / window.innerHeight;
-    let width = 250.0
-    let height = width / aspectRatio;
-    var camera = new THREE.OrthographicCamera(width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
-    camera.position.set(0, 1, 10);
-    return camera;
-  }
+        function getCamera() {
+            let aspectRatio = window.innerWidth / window.innerHeight;
+            let width = _FRUSTUM_WIDTH_;
+            let height = width / aspectRatio;
+            var camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000);
+            camera.up.set(0, 0, 1);
+            camera.position.set(40, -40, 40);
+            camera.lookAt(0, 0, 0);
+            return camera;
+        }
 
-  function getRenderer() {
-    var renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    return renderer;
-  }
+        function getRenderer() {
+            let renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            return renderer;
+        }
 
-  function render() {
-    requestAnimationFrame(render);
-    if( material.uniforms['_time']!=null)
-      material.uniforms._time.value = clock.getElapsedTime();
-    renderer.render(scene, camera);
-  }
+        function render() {
+            controls.update();
+            requestAnimationFrame(render);
+            for (let i = 0; i < sceneObjects.length; i++) {
+                let material = sceneObjects[i].material;
+                if (material.uniforms['_time'] != null)
+                    material.uniforms._time.value = clock.getElapsedTime();
+                if (material.uniforms['_worldToClip'] != null) {
+                    let w2c = new THREE.Matrix4();
+                    w2c.multiplyMatrices(camera.projectionMatrix, sceneObjects[i].modelViewMatrix);
+                    material.uniforms._worldToClip.value = w2c;
+                }
+                if (material.uniforms['_worldToCameraNormal' != null]) {
+                    material.uniforms._worldToCameraNormal = sceneObjects[i].normalMatrix;
+                }
+            }
 
-  function onWindowResize(){
-    renderer.setSize( window.innerWidth, window.innerHeight );
-  }
+            renderer.render(scene, camera);
+        }
 
-  var material;
-  var clock = new THREE.Clock();
-  clock.start();
-  var scene = buildScene();
-  var camera = getCamera();
-  var renderer = getRenderer();
-  renderer.debug.checkShaderErrors = true;
+        function onWindowResize() {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
 
-  window.addEventListener('resize', onWindowResize, false);
-  render();
-  </script>
+        var sceneObjects = [];
+        var clock = new THREE.Clock();
+        clock.start();
+        var scene = buildScene();
+        var camera = getCamera();
+        var renderer = getRenderer();
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+        renderer.debug.checkShaderErrors = true;
+
+        window.addEventListener('resize', onWindowResize, false);
+        render();
+    </script>
 </body>
 </html>

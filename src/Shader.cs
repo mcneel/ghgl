@@ -212,13 +212,12 @@ namespace ghgl
                 }
             }
 
-
         }
-        public List<UniformDescription> GetUniforms()
+        public UniformDescription[] GetUniforms()
         {
             if (_uniforms == null)
                 ParseUniformsAndAttributes();
-            return _uniforms;
+            return _uniforms.ToArray();
         }
 
         public List<AttributeDescription> GetVertexAttributes()
@@ -255,12 +254,6 @@ namespace ghgl
 
             foreach (var uniform in GetUniforms())
             {
-                if (uniform.Name.Equals("_worldToClip"))
-                {
-                    sb.AppendLine("mat4 _worldToClip() {return projectionMatrix * modelViewMatrix;}");
-                    continue;
-                }
-
                 string dataType = uniform.DataType;
                 if (dataType == "int")
                     dataType = "float";
@@ -294,12 +287,21 @@ namespace ghgl
                 }
                 if (trimmed.StartsWith("out "))
                 {
-                    line = line.Replace("out ", "varying ");
+                    if( ShaderType == ShaderType.Vertex )
+                        line = line.Replace("out ", "varying ");
+                    else
+                    {
+                        int index = line.IndexOf("vec4") + "vec4".Length;
+                        string token = line.Substring(index).Trim(new char[] { ' ', ';' });
+                        for (int j = i + 1; j < shaderLines.Length; j++)
+                            shaderLines[j] = shaderLines[j].Replace(token, "gl_FragColor");
+
+                        continue;
+                    }
                 }
                 if (trimmed.StartsWith("in "))
                     line = line.Replace("in ", "varying ");
 
-                line = line.Replace("_worldToClip", "_worldToClip()");
                 sb.AppendLine(line);
             }
             return sb.ToString().Trim();
