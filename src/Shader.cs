@@ -304,7 +304,10 @@ namespace ghgl
 
                 sb.AppendLine(line);
             }
-            return sb.ToString().Trim();
+            string rc = sb.ToString().Trim();
+            if( rc.Contains("glslify") )
+                rc = GlslifyPackage.GlslifyCode(rc);
+            return rc;
         }
     }
 }
