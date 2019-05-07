@@ -7,8 +7,8 @@
   </style>
 </head>
 <body>
-    <script src='js/three.js'></script>
-    <script src='js/OrbitControls.js'></script>
+    <script src='https://unpkg.com/three@0.104.0/build/three.min.js'></script>
+    <script src='https://unpkg.com/three@0.104.0/examples/js/controls/OrbitControls.js'></script>
     <script src='_JAVASCRIPT_FILENAME_'></script>
 
     <script>
@@ -26,11 +26,11 @@
                     uniforms: ghglAttributes[i].uniforms,
                     vertexShader: `
 _VERTEX_SHADER_
-          `,
+              `,
                     fragmentShader: `
 precision mediump float;
 _FRAGMENT_SHADER_
-          `,
+              `,
                     transparent: true,
                     side: THREE.DoubleSide
                 });
