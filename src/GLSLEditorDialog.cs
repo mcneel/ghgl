@@ -11,6 +11,8 @@ namespace ghgl
         {
             Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandlerWin());
         }
+        static int _dlgOpenCount;
+        public static bool EditorsOpen { get { return _dlgOpenCount > 0; } }
 
         class SimpleCommand : Eto.Forms.Command
         {
@@ -108,6 +110,7 @@ namespace ghgl
 
         public GLSLEditorDialog(GLSLViewModel model, bool includeTessellationShaders)
         {
+            _dlgOpenCount++;
             _tabarea = new TabControl();
             _shaderControls = new EditorPage[(int)ShaderType.Fragment + 1];
             var checkCommand = new CheckCommand[_shaderControls.Length];
@@ -230,6 +233,11 @@ namespace ghgl
             OnShadersCompiled(null, EventArgs.Empty);
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            _dlgOpenCount--;
+            base.OnClosed(e);
+        }
         private void OnShadersCompiled(object sender, EventArgs e)
         {
             GLSLViewModel model = DataContext as GLSLViewModel;

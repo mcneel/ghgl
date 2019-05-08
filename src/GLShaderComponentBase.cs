@@ -529,13 +529,6 @@ namespace ghgl
             tsi.Font = new System.Drawing.Font(tsi.Font, System.Drawing.FontStyle.Bold);
             menu.Items.Add(tsi);
 
-            tsi = new System.Windows.Forms.ToolStripMenuItem("Animate", null, (sender, e) =>
-            {
-                AnimationTimerEnabled = !AnimationTimerEnabled;
-            });
-            tsi.Checked = AnimationTimerEnabled;
-            menu.Items.Add(tsi);
-
             tsi = new System.Windows.Forms.ToolStripMenuItem("Sort Order");
             for(int i=1; i<=10; i++)
             {
@@ -646,7 +639,6 @@ namespace ghgl
 
         void OpenEditor()
         {
-            bool animationEnabled = AnimationTimerEnabled;
             string savedVS = _model.VertexShaderCode;
             string savedGS = _model.GeometryShaderCode;
             string savedTC = _model.TessellationControlCode;
@@ -680,7 +672,6 @@ namespace ghgl
                 //recompile shader if necessary
                 if (_model.ProgramId == 0)
                     ExpireSolution(true);
-                AnimationTimerEnabled = animationEnabled;
             };
             dlg.Owner = parent;
             dlg.Show();
@@ -721,6 +712,15 @@ namespace ghgl
             {
                 if (component.Hidden)
                     continue;
+
+                if(!GLSLEditorDialog.EditorsOpen && !AnimationTimerEnabled)
+                {
+                    string dataType;
+                    int arrayLength;
+                    if (component._model.TryGetUniformType("_time", out dataType, out arrayLength))
+                        AnimationTimerEnabled = true;
+                }
+
                 component._model.Draw(args.Display);
             }
             GLRecycleBin.Recycle();
@@ -731,6 +731,7 @@ namespace ghgl
         static List<GLShaderComponentBase> _activeShaderComponents = new List<GLShaderComponentBase>();
         static void AddToActiveComponentList(GLShaderComponentBase comp)
         {
+            AnimationTimerEnabled = false;
             foreach(var component in _activeShaderComponents)
             {
                 if (comp == component)

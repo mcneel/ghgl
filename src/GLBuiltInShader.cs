@@ -162,7 +162,6 @@ namespace ghgl
                 }
             }
 
-            bool animationEnabled = GLShaderComponentBase.AnimationTimerEnabled;
             Rhino.Display.DisplayPipeline.PreDrawObjects += DisplayPipeline_PreDrawObjects;
             string savedVS = _model.VertexShaderCode;
             string savedGS = _model.GeometryShaderCode;
@@ -201,7 +200,6 @@ namespace ghgl
                 //recompile shader if necessary
                 if (_model.ProgramId == 0)
                     ExpireSolution(true);
-                GLShaderComponentBase.AnimationTimerEnabled = animationEnabled;
                 Rhino.Display.DisplayPipeline.PreDrawObjects -= DisplayPipeline_PreDrawObjects;
             };
             dlg.Title = this.NickName;
