@@ -684,7 +684,7 @@ namespace ghgl
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             if (saveDlg.ShowDialog(parent) == Eto.Forms.DialogResult.Ok)
             {
-                _model.ExportToHtml(saveDlg.FileName);
+                _model.ExportToHtml(saveDlg.FileName, this);
             }
         }
 

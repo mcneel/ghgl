@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Rhino.Geometry;
+using Grasshopper.Kernel;
 
 namespace ghgl
 {
@@ -382,7 +383,7 @@ namespace ghgl
         }
 
 
-        class UniformData<T>
+        public class UniformData<T>
         {
             public UniformData(string name, int arrayLength, T[] value)
             {
@@ -1252,7 +1253,7 @@ namespace ghgl
             readonly List<UniformData<int>> _intUniforms = new List<UniformData<int>>();
             readonly List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
             readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
-            readonly List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
+            readonly public List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
             readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
 
             readonly public List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
@@ -1267,6 +1268,20 @@ namespace ghgl
             while (iteration >= _uniformAndAttributeIterations.Count)
                 _uniformAndAttributeIterations.Add(new UniformsAndAttributes(_samplerCache));
             return _uniformAndAttributeIterations[iteration];
+        }
+
+        public bool TryGetVec4Uniform(int iteration, string name, out Vec4[] data)
+        {
+            data = new Vec4[0];
+            foreach(var u in _uniformAndAttributeIterations[iteration]._vec4Uniforms)
+            {
+                if( u.Name == name)
+                {
+                    data = u.Data;
+                    return true;
+                }
+            }
+            return false;
         }
 
         readonly List<SamplerUniformData> _samplerCache = new List<SamplerUniformData>();
@@ -1434,7 +1449,7 @@ namespace ghgl
             return sb.ToString();
         }
 
-        public void ExportToHtml(string filename)
+        public void ExportToHtml(string filename, GH_Component component)
         {
             string baseFilename = System.IO.Path.GetFileNameWithoutExtension(filename);
             string dirName = System.IO.Path.GetDirectoryName(filename);
@@ -1666,9 +1681,86 @@ namespace ghgl
             contents = contents.Replace("_FRUSTUM_NEAR_", frNear.ToString());
             contents = contents.Replace("_FRUSTUM_FAR_", frFar.ToString());
 
+            //Make some controls based on the component's input
+            var guiControls = new List<GuiItem>();
+            for( int i=0; i<component.Params.Input.Count; i++)
+            {
+                var slider = component.Params.Input[i].Sources[0] as Grasshopper.Kernel.Special.GH_NumberSlider;
+                if( slider!=null)
+                {
+                    var gi = new GuiItem();
+                    gi.Name = component.Params.Input[i].Name;
+                    gi.Value = (float)slider.Slider.Value;
+                    gi.Minimum = (float)slider.Slider.Minimum;
+                    gi.Maximum = (float)slider.Slider.Maximum;
+                    guiControls.Add(gi);
+                    continue;
+                }
+                Vec4[] v4;
+                if(TryGetVec4Uniform(0, component.Params.Input[i].Name, out v4))
+                {
+                    if( v4.Length==1)
+                    {
+                        var gi = new GuiItem();
+                        gi.Name = component.Params.Input[i].Name;
+                        gi.Color = v4[0];
+                        gi.IsColor = true;
+                        guiControls.Add(gi);
+                    }
+                }
+            }
+
+            sb = new System.Text.StringBuilder();
+            if(guiControls.Count>0)
+            {
+                sb.AppendLine($"        var gui = new dat.GUI({{ height : {guiControls.Count} * 32 - 1 }});");
+                sb.AppendLine("        var GuiControl = function() {");
+                foreach(var ctrl in guiControls)
+                {
+                    if (ctrl.IsColor)
+                        sb.AppendLine($"            this.{ctrl.Name} = [{(int)(ctrl.Color._x*255)}," +
+                            $" {(int)(ctrl.Color._y*255)}, {(int)(ctrl.Color._z*255)}, {(int)(ctrl.Color._w*255)}];");
+                    else
+                        sb.AppendLine($"            this.{ctrl.Name} = {ctrl.Value};");
+                }
+                sb.AppendLine("        };");
+                sb.AppendLine("        let text = new GuiControl();");
+
+                foreach(var ctrl in guiControls)
+                {
+                    if (ctrl.IsColor)
+                    {
+                        sb.AppendLine($"        gui.addColor(text, '{ctrl.Name}').onChange(function(value) {{");
+                        sb.AppendLine("             for (let i = 0; i < sceneObjects.length; i++) {");
+                        sb.AppendLine($"                sceneObjects[i].material.uniforms.{ctrl.Name}.value = ");
+                        sb.AppendLine($"                    new THREE.Vector4(value[0]/255.0,value[1]/255.0,value[2]/255.0,value[3]/255.0);");
+                        sb.AppendLine("             }");
+                        sb.AppendLine("        });");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"        gui.add(text, '{ctrl.Name}', {ctrl.Minimum}, {ctrl.Maximum}).onChange(function(value) {{");
+                        sb.AppendLine("             for (let i = 0; i < sceneObjects.length; i++) {");
+                        sb.AppendLine($"                sceneObjects[i].material.uniforms.{ctrl.Name}.value = value;");
+                        sb.AppendLine("             }");
+                        sb.AppendLine("        });");
+                    }
+                }
+            }
+            contents = contents.Replace("_GUI_CONTROLS_", sb.ToString());
 
             string htmlfilepath = System.IO.Path.Combine(dirName, baseFilename + ".html");
             System.IO.File.WriteAllText(htmlfilepath, contents);
         }
+    }
+
+    class GuiItem
+    {
+        public string Name { get; set; }
+        public float Value { get; set; }
+        public float Minimum { get; set; }
+        public float Maximum { get; set; }
+        public Vec4 Color { get; set; }
+        public bool IsColor { get; set; }
     }
 }
