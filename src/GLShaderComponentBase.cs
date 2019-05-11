@@ -12,18 +12,8 @@ using Rhino.Geometry;
 
 namespace ghgl
 {
-    class IdleRedraw
-    {
-        public void PerformRedraw(object sender, EventArgs e)
-        {
-            var doc = Rhino.RhinoDoc.ActiveDoc;
-            if (doc != null)
-                doc.Views.Redraw();
-        }
-    }
-
     /// <summary>
-    /// Base class for the GL Shader components. Most of the heavy lifting is done in this class
+    /// Base class for GL Shader components. Most of the heavy lifting is done in this class
     /// and the subclasses just specialize a little bit
     /// </summary>
     public abstract class GLShaderComponentBase : GH_Component, IGH_VariableParameterComponent
@@ -227,6 +217,8 @@ namespace ghgl
                 }
 
                 string varname = Params.Input[i].NickName;
+                if (varname.Contains("["))
+                    varname = varname.Substring(0, varname.IndexOf('['));
                 string datatype;
                 int arrayLength;
                 if (_model.TryGetUniformType(varname, out datatype, out arrayLength))
@@ -443,7 +435,7 @@ namespace ghgl
         static Point3f[] GooListToPoint3fArray(List<IGH_Goo> list)
         {
             int count = list.Count;
-            if (count < 1)
+            if (count < 1 || list[0]==null)
                 return null;
 
             Point3d point;
@@ -682,6 +674,14 @@ namespace ghgl
             var saveDlg = new Eto.Forms.SaveFileDialog();
             saveDlg.Filters.Add(new Eto.Forms.FileFilter("HTML file", new string[] { "html" }));
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
+            var ghDocPath = OnPingDocument()?.FilePath;
+            if( !string.IsNullOrWhiteSpace(ghDocPath))
+            {
+                string path = System.IO.Path.GetDirectoryName(ghDocPath);
+                string filename = System.IO.Path.GetFileNameWithoutExtension(ghDocPath);
+                path = System.IO.Path.Combine(path, filename + ".html");
+                saveDlg.FileName = path;
+            }
             if (saveDlg.ShowDialog(parent) == Eto.Forms.DialogResult.Ok)
             {
                 _model.ExportToHtml(saveDlg.FileName, this);

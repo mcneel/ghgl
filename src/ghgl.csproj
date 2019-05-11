@@ -87,7 +87,7 @@
     <Compile Include="GLSLEditorDialog.cs" />
     <Compile Include="GlslifyPackage.cs" />
     <Compile Include="GLSLViewModel.cs" />
-    <Compile Include="LibraryInfo.cs" />
+    <Compile Include="IdleRedraw.cs" />
     <Compile Include="OpenGL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rhino7NativeMethods.cs" />

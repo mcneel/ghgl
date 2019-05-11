@@ -1,6 +1,6 @@
 ---
 name: ghgl
-version: 0.6.3
+version: 0.6.4
 authors:
 - Robert McNeel & Associates
 description: OpenGL shader support in Grasshopper

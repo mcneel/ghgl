@@ -5,14 +5,12 @@ namespace ghgl
     class CompileError
     {
         readonly string _message;
-        readonly Shader _parent;
-        readonly int _lineNumber = -1;
-        public CompileError(string message) : this(message, null)
-        {
-        }
+
+        public CompileError(string message) : this(message, null) { }
 
         public CompileError(string message, Shader parent)
         {
+            LineNumber = -1;
             //ERROR: 0:9: error message
             if (message.StartsWith("ERROR:", StringComparison.OrdinalIgnoreCase))
                 message = message.Substring("ERROR:".Length).Trim();
@@ -27,25 +25,25 @@ namespace ghgl
                     string line = message.Substring(firstColon + 1, secondColon - firstColon - 1);
                     if(int.TryParse(line, out lineNumber))
                     {
-                        _lineNumber = lineNumber;
+                        LineNumber = LineNumber;
                         message = message.Substring(secondColon + 1).Trim();
                     }
                 }
             }
 
             _message = message.Trim();
-            _parent = parent;
+            Shader = parent;
         }
 
-        public int LineNumber { get => _lineNumber; }
+        public int LineNumber { get; }
 
-        public Shader Shader { get => _parent; }
+        public Shader Shader { get; }
 
         public override string ToString()
         {
-            string rc = _parent != null ? $"{_parent.ShaderType} Shader " : "";
-            if (_lineNumber >= 0)
-                rc += $"(line {_lineNumber}) ";
+            string rc = Shader != null ? $"{Shader.ShaderType} Shader " : "";
+            if (LineNumber >= 0)
+                rc += $"(line {LineNumber}) ";
             return rc + _message;
         }
     }

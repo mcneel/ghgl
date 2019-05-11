@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace ghgl
 {
@@ -24,9 +23,9 @@ namespace ghgl
             _setup = setup;
         }
 
-        public string Name { get; private set; }
-        public string Description { get; private set; }
-        public string DataType { get; private set; }
+        public string Name { get; }
+        public string Description { get; }
+        public string DataType { get; }
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
