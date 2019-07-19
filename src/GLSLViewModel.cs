@@ -881,10 +881,12 @@ namespace ghgl
             public int SetupGLAttributes(int index, uint programId)
             {
                 int element_count = 0;
-                if (_meshes.Count >= (index + 1))
+                if (_meshes.Count >= (index + 1) && _meshes[index]!=null)
                 {
                     var data = _meshes[index];
                     var mesh = data.Mesh;
+                    if (mesh == null)
+                        return 0;
                     element_count = mesh.Vertices.Count;
                     int location = OpenGL.glGetAttribLocation(programId, "_meshVertex");
                     if (location >= 0)
