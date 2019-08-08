@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using ScintillaNET;
 
 namespace CodeEditor
@@ -379,3 +380,4 @@ groupMemoryBarrier
 
     }
 }
+*/

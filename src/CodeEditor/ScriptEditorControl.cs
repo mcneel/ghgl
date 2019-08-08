@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using Eto;
 using Eto.Forms;
 
@@ -81,3 +82,4 @@ namespace CodeEditor
         Python
     }
 }
+*/

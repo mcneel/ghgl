@@ -1,6 +1,6 @@
 ﻿using System;
 using Eto.Forms;
-using CodeEditor;
+//using CodeEditor;
 using System.ComponentModel;
 
 namespace ghgl
@@ -9,7 +9,7 @@ namespace ghgl
     {
         static GLSLEditorDialog()
         {
-            Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandlerWin());
+            //Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandlerWin());
         }
         static int _dlgOpenCount;
         public static bool EditorsOpen { get { return _dlgOpenCount > 0; } }
@@ -294,23 +294,23 @@ namespace ghgl
 
         void InsertBuiltIn(BuiltIn b)
         {
-            var shaderCtrl = ActiveEditorControl();
-            if( shaderCtrl != null )
-            {
-                string text = $"uniform {b.DataType} {b.Name};";
-                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
-            }
+            //var shaderCtrl = ActiveEditorControl();
+            //if( shaderCtrl != null )
+            //{
+            //    string text = $"uniform {b.DataType} {b.Name};";
+            //    shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+            //}
         }
 
         void InsertGlslifyFunction(GlslifyPackage package)
         {
             var shaderCtrl = ActiveEditorControl();
-            if (shaderCtrl != null)
-            {
+            //if (shaderCtrl != null)
+            //{
 
-                string text = package.PragmaLine(null);
-                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
-            }
+            //    string text = package.PragmaLine(null);
+            //    shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+            //}
         }
     }
 

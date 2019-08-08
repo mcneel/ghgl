@@ -80,7 +80,10 @@ namespace ghgl
                 {
                     if (_model.ProgramId != 0)
                     {
-                        RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
+                        if (Rhino.Runtime.HostUtils.RunningOnWindows)
+                            WindowsMethods.RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
+                        else
+                            MacMethods.RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
                         _model.RecycleCurrentProgram = false;
 
                         var doc = Rhino.RhinoDoc.ActiveDoc;
@@ -152,7 +155,10 @@ namespace ghgl
                     IntPtr _tesseval = tesseval.NonConstPointer;
                     IntPtr _geometry = geometry.NonConstPointer;
                     IntPtr _fragment = fragment.NonConstPointer;
-                    RHC_GetShaderSource(_resourceName, _defines, _vertex, _tessctrl, _tesseval, _geometry, _fragment);
+                    if( Rhino.Runtime.HostUtils.RunningOnWindows )
+                        WindowsMethods.RHC_GetShaderSource(_resourceName, _defines, _vertex, _tessctrl, _tesseval, _geometry, _fragment);
+                    else
+                        MacMethods.RHC_GetShaderSource(_resourceName, _defines, _vertex, _tessctrl, _tesseval, _geometry, _fragment);
 
                     _model.VertexShaderCode = vertex.ToString();
                     _model.TessellationControlCode = tessctrl.ToString();
@@ -211,21 +217,42 @@ namespace ghgl
         {
             if( _model.ProgramId != 0 )
             {
-                RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
+                if( Rhino.Runtime.HostUtils.RunningOnWindows)
+                    WindowsMethods.RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
+                else
+                    MacMethods.RHC_UpdateShader(_resourceName, _defines, _model.ProgramId);
                 _model.RecycleCurrentProgram = false;
             }
         }
 
-        const string lib = "rhcommon_c";
-        //void RHC_GetShaderSource(const RHMONO_STRING* resource_name, const RHMONO_STRING* defines,
-        //  ON_wString* vertex, ON_wString* tessctrl, ON_wString* tesseval, ON_wString* geometry, ON_wString* fragment)
-        // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2552
-        [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern void RHC_GetShaderSource([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, IntPtr vertex, IntPtr tessctrl, IntPtr tesseval, IntPtr geometry, IntPtr fragment);
 
-        //void RHC_UpdateShader(const RHMONO_STRING* resourceName, const RHMONO_STRING* defines, unsigned int programId)
-        // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2561
-        [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern void RHC_UpdateShader([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, uint programId);
+        class WindowsMethods
+        {
+            const string lib = "rhcommon_c";
+            //void RHC_GetShaderSource(const RHMONO_STRING* resource_name, const RHMONO_STRING* defines,
+            //  ON_wString* vertex, ON_wString* tessctrl, ON_wString* tesseval, ON_wString* geometry, ON_wString* fragment)
+            // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2552
+            [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
+            internal static extern void RHC_GetShaderSource([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, IntPtr vertex, IntPtr tessctrl, IntPtr tesseval, IntPtr geometry, IntPtr fragment);
+
+            //void RHC_UpdateShader(const RHMONO_STRING* resourceName, const RHMONO_STRING* defines, unsigned int programId)
+            // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2561
+            [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
+            internal static extern void RHC_UpdateShader([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, uint programId);
+        }
+        class MacMethods
+        {
+            const string lib = "__Internal";
+            //void RHC_GetShaderSource(const RHMONO_STRING* resource_name, const RHMONO_STRING* defines,
+            //  ON_wString* vertex, ON_wString* tessctrl, ON_wString* tesseval, ON_wString* geometry, ON_wString* fragment)
+            // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2552
+            [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
+            internal static extern void RHC_GetShaderSource([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, IntPtr vertex, IntPtr tessctrl, IntPtr tesseval, IntPtr geometry, IntPtr fragment);
+
+            //void RHC_UpdateShader(const RHMONO_STRING* resourceName, const RHMONO_STRING* defines, unsigned int programId)
+            // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2561
+            [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
+            internal static extern void RHC_UpdateShader([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, uint programId);
+        }
     }
 }
