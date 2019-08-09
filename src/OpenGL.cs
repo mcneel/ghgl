@@ -37,11 +37,11 @@ namespace ghgl
             IsAvailable = true;
             try
             {
-                IPlatformGetProc procBuilder = null;
+                PlatformGL.IPlatformGetProc procBuilder = null;
                 if (Rhino.Runtime.HostUtils.RunningOnWindows)
-                    procBuilder = new WindowsGL();
+                    procBuilder = new PlatformGL.WindowsGL();
                 else
-                    procBuilder = new MacGL();
+                    procBuilder = new PlatformGL.MacGL();
                 _glBlendFunc = (glBlendFuncProc)procBuilder.GetProc<glBlendFuncProc>();
                 _glLineWidth = (glLineWidthProc)procBuilder.GetProc<glLineWidthProc>();
                 _glPointSize = (glPointSizeProc)procBuilder.GetProc<glPointSizeProc>();
@@ -111,7 +111,7 @@ namespace ghgl
                 _glGenerateMipmap = (glGenerateMipmapProc)procBuilder.GetProc<glGenerateMipmapProc>();
                 _glTexStorage2D = (glTexStorage2DProc)procBuilder.GetProc<glTexStorage2DProc>();
             }
-            catch(Exception)
+            catch (Exception)
             {
                 IsAvailable = false;
             }
@@ -247,9 +247,9 @@ namespace ghgl
         public const uint GL_NEAREST = 0x2600;
         public const uint GL_LINEAR = 0x2601;
         public const uint GL_NEAREST_MIPMAP_NEAREST = 0x2700;
-        public const uint GL_LINEAR_MIPMAP_NEAREST  = 0x2701;
-        public const uint GL_NEAREST_MIPMAP_LINEAR  = 0x2702;
-        public const uint GL_LINEAR_MIPMAP_LINEAR   = 0x2703;
+        public const uint GL_LINEAR_MIPMAP_NEAREST = 0x2701;
+        public const uint GL_NEAREST_MIPMAP_LINEAR = 0x2702;
+        public const uint GL_LINEAR_MIPMAP_LINEAR = 0x2703;
         public const uint GL_CLAMP = 0x2900;
         public const uint GL_REPEAT = 0x2901;
 
@@ -744,21 +744,21 @@ namespace ghgl
         public static HGLRC wglGetCurrentContext()
         {
             if (Rhino.Runtime.HostUtils.RunningOnWindows)
-                return WindowsGL.wglGetCurrentContext();
+                return PlatformGL.WindowsGL.wglGetCurrentContext();
             return IntPtr.Zero;
         }
 
         public static bool wglMakeCurrent(HDC hdc, HGLRC hglrc)
         {
             if (Rhino.Runtime.HostUtils.RunningOnWindows)
-                return WindowsGL.wglMakeCurrent(hdc, hglrc);
+                return PlatformGL.WindowsGL.wglMakeCurrent(hdc, hglrc);
             return false;
         }
 
         public static HDC GetDC(IntPtr hWnd)
         {
             if (Rhino.Runtime.HostUtils.RunningOnWindows)
-                return WindowsGL.GetDC(hWnd);
+                return PlatformGL.WindowsGL.GetDC(hWnd);
             return IntPtr.Zero;
         }
 
@@ -778,7 +778,7 @@ namespace ghgl
                 {
                     if (Rhino.Runtime.HostUtils.RunningOnWindows)
                     {
-                        byte[] err = WindowsGL.gluErrorString(nGLError);
+                        byte[] err = PlatformGL.WindowsGL.gluErrorString(nGLError);
                         glerrStr = System.Text.Encoding.ASCII.GetString(err);
                     }
                 }
@@ -786,341 +786,345 @@ namespace ghgl
             }
             return error_occurred;
         }
-
-        interface IPlatformGetProc
-        {
-            Delegate GetProc<T>();
-        }
-
-        class WindowsGL : IPlatformGetProc
-        {
-            System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo> _glMethods;
-
-            public Delegate GetProc<T>()
-            {
-                if( _glMethods==null)
-                {
-                    _glMethods = new System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo>();
-                    var methods = GetType().GetMethods();
-                    foreach (var method in methods)
-                    {
-                        if (method.Name.StartsWith("gl"))
-                            _glMethods.Add(method.Name, method);
-                    }
-                }
-
-                string name = typeof(T).Name;
-                name = name.Substring(0, name.Length - "Proc".Length);
-
-                // Check to see if a static function in this class exists with the name
-                if( _glMethods.ContainsKey(name) )
-                {
-                    return _glMethods[name].CreateDelegate(typeof(T));
-                }
-
-                IntPtr ptr = wglGetProcAddress(name);
-                return Marshal.GetDelegateForFunctionPointer(ptr, typeof(T));
-            }
-            const string OPENGL_LIB = "opengl32.dll";
-
-
-            [DllImport(OPENGL_LIB)]
-            public static extern IntPtr wglGetProcAddress(string function);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBlendFunc(GLenum sfactor, GLenum dfactor);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glLineWidth(float width);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glPointSize(float size);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLenum glGetError();
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glEnable(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDisable(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLboolean glIsEnabled(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDepthMask(GLboolean flag);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, System.IntPtr indices);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBindTexture(GLenum target, GLuint texture);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, IntPtr pixels);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glTexParameteri(GLenum target, GLenum pname, GLint param);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenerateTextureMipmap(GLuint texture);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern HGLRC wglGetCurrentContext();
-
-            [DllImport(OPENGL_LIB)]
-            public static extern bool wglMakeCurrent(HDC hdc, HGLRC hglrc);
-
-            [DllImport("User32.dll")]
-            public static extern HDC GetDC(IntPtr hWnd);
-
-            [DllImport("gdi32.dll")]
-            public static extern byte[] gluErrorString(uint errCode);
-        }
-
-
-        class MacGL : IPlatformGetProc
-        {
-            System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo> _glMethods;
-
-            public Delegate GetProc<T>()
-            {
-                if (_glMethods == null)
-                {
-                    _glMethods = new System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo>();
-                    var methods = GetType().GetMethods();
-                    foreach (var method in methods)
-                    {
-                        if (method.Name.StartsWith("gl"))
-                            _glMethods.Add(method.Name, method);
-                    }
-                }
-
-                string name = typeof(T).Name;
-                name = name.Substring(0, name.Length - "Proc".Length);
-
-                // Check to see if a static function in this class exists with the name
-                if (_glMethods.ContainsKey(name))
-                {
-                    return _glMethods[name].CreateDelegate(typeof(T));
-                }
-                return null;
-            }
-            const string OPENGL_LIB = "__Internal";
-
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBlendFunc(GLenum sfactor, GLenum dfactor);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glLineWidth(float width);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glPointSize(float size);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLenum glGetError();
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glEnable(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDisable(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLboolean glIsEnabled(GLenum cap);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDepthMask(GLboolean flag);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, System.IntPtr indices);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBindTexture(GLenum target, GLuint texture);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, IntPtr pixels);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glTexParameteri(GLenum target, GLenum pname, GLint param);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenerateTextureMipmap(GLuint texture);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBindBuffer(GLenum target, GLuint buffer);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteBuffers(GLsizei n, GLuint[] buffers);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenBuffers(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] buffers);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBufferData(GLenum target, GLsizeiptr size, IntPtr data, GLenum usage);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glAttachShader(GLuint program, GLuint shader);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glCompileShader(GLuint shader);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteShader(GLuint shader);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteProgram(GLuint program);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLuint glCreateShader(GLenum type);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLuint glCreateProgram();
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glShaderSource(GLuint shader, GLsizei count, string[] source, GLint[] length);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUseProgram(GLuint program);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGetShaderiv(GLuint shader, GLenum pname, out GLint parameter);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, out GLsizei length, System.Text.StringBuilder infoLog);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glLinkProgram(GLuint program);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLint glGetAttribLocation(GLuint program, string name);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern GLint glGetUniformLocation(GLuint program, string name);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDisableVertexAttribArray(GLuint index);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glEnableVertexAttribArray(GLuint index);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform1f(GLint location, GLfloat v0);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform2f(GLint location, GLfloat v0, GLfloat v1);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform1i(GLint location, GLint v0);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform2i(GLint location, GLint v0, GLint v1);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform1fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform2fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform3fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform4fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniform1iv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLint[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttribI1i(GLuint index, GLint x);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttribI2i(GLuint index, GLint x, GLint y);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttribI3i(GLuint index, GLint x, GLint y, GLint z);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttrib1f(GLuint index, GLfloat x);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, IntPtr pointer);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glPatchParameteri(GLenum pname, GLint value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniformMatrix3fv(GLint location, GLsizei count, bool transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glUniformMatrix4fv(GLint location, GLsizei count, bool transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glBindVertexArray(GLuint array);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glDeleteVertexArrays(GLsizei n, GLuint[] arrays);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenVertexArrays(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] arrays);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glActiveTexture(GLenum id);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glGenerateMipmap(GLenum id);
-
-            [DllImport(OPENGL_LIB)]
-            public static extern void glTexStorage2D(GLenum target,
-                                             GLsizei levels,
-                                             GLenum internalformat,
-                                             GLsizei width,
-                                             GLsizei height);
-
-        }
     }
 }
+
+namespace ghgl.PlatformGL
+{
+    interface IPlatformGetProc
+    {
+        Delegate GetProc<T>();
+    }
+
+    class WindowsGL : IPlatformGetProc
+    {
+        System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo> _glMethods;
+
+        public Delegate GetProc<T>()
+        {
+            if (_glMethods == null)
+            {
+                _glMethods = new System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo>();
+                var methods = GetType().GetMethods();
+                foreach (var method in methods)
+                {
+                    if (method.Name.StartsWith("gl", StringComparison.Ordinal))
+                        _glMethods.Add(method.Name, method);
+                }
+            }
+
+            string name = typeof(T).Name;
+            name = name.Substring(0, name.Length - "Proc".Length);
+
+            // Check to see if a static function in this class exists with the name
+            if (_glMethods.ContainsKey(name))
+            {
+                return _glMethods[name].CreateDelegate(typeof(T));
+            }
+
+            IntPtr ptr = wglGetProcAddress(name);
+            return Marshal.GetDelegateForFunctionPointer(ptr, typeof(T));
+        }
+        const string OPENGL_LIB = "opengl32.dll";
+
+
+        [DllImport(OPENGL_LIB)]
+        public static extern IntPtr wglGetProcAddress(string function);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBlendFunc(GLenum sfactor, GLenum dfactor);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glLineWidth(float width);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glPointSize(float size);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLenum glGetError();
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glEnable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDisable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLboolean glIsEnabled(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDepthMask(GLboolean flag);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, System.IntPtr indices);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBindTexture(GLenum target, GLuint texture);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, IntPtr pixels);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glTexParameteri(GLenum target, GLenum pname, GLint param);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenerateTextureMipmap(GLuint texture);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern HGLRC wglGetCurrentContext();
+
+        [DllImport(OPENGL_LIB)]
+        public static extern bool wglMakeCurrent(HDC hdc, HGLRC hglrc);
+
+        [DllImport("User32.dll")]
+        public static extern HDC GetDC(IntPtr hWnd);
+
+        [DllImport("gdi32.dll")]
+        public static extern byte[] gluErrorString(uint errCode);
+    }
+
+
+    class MacGL : IPlatformGetProc
+    {
+        System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo> _glMethods;
+
+        public Delegate GetProc<T>()
+        {
+            if (_glMethods == null)
+            {
+                _glMethods = new System.Collections.Generic.Dictionary<string, System.Reflection.MethodInfo>();
+                var methods = GetType().GetMethods();
+                foreach (var method in methods)
+                {
+                    if (method.Name.StartsWith("gl", StringComparison.Ordinal))
+                        _glMethods.Add(method.Name, method);
+                }
+            }
+
+            string name = typeof(T).Name;
+            name = name.Substring(0, name.Length - "Proc".Length);
+
+            // Check to see if a static function in this class exists with the name
+            if (_glMethods.ContainsKey(name))
+            {
+                return _glMethods[name].CreateDelegate(typeof(T));
+            }
+            return null;
+        }
+        const string OPENGL_LIB = "__Internal";
+
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBlendFunc(GLenum sfactor, GLenum dfactor);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glLineWidth(float width);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glPointSize(float size);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLenum glGetError();
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glEnable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDisable(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLboolean glIsEnabled(GLenum cap);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDepthMask(GLboolean flag);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDrawElements(GLenum mode, GLsizei count, GLenum type, System.IntPtr indices);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBindTexture(GLenum target, GLuint texture);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, IntPtr pixels);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteTextures(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] textures);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glTexParameteri(GLenum target, GLenum pname, GLint param);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenerateTextureMipmap(GLuint texture);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBindBuffer(GLenum target, GLuint buffer);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteBuffers(GLsizei n, GLuint[] buffers);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenBuffers(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] buffers);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBufferData(GLenum target, GLsizeiptr size, IntPtr data, GLenum usage);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glAttachShader(GLuint program, GLuint shader);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glCompileShader(GLuint shader);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteShader(GLuint shader);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteProgram(GLuint program);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLuint glCreateShader(GLenum type);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLuint glCreateProgram();
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glShaderSource(GLuint shader, GLsizei count, string[] source, GLint[] length);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUseProgram(GLuint program);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGetShaderiv(GLuint shader, GLenum pname, out GLint parameter);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGetShaderInfoLog(GLuint shader, GLsizei bufSize, out GLsizei length, System.Text.StringBuilder infoLog);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glLinkProgram(GLuint program);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLint glGetAttribLocation(GLuint program, string name);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern GLint glGetUniformLocation(GLuint program, string name);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDisableVertexAttribArray(GLuint index);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glEnableVertexAttribArray(GLuint index);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform1f(GLint location, GLfloat v0);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform2f(GLint location, GLfloat v0, GLfloat v1);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform1i(GLint location, GLint v0);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform2i(GLint location, GLint v0, GLint v1);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform1fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform2fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform3fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform4fv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniform1iv(GLint location, GLsizei count, [MarshalAs(UnmanagedType.LPArray)]GLint[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttribI1i(GLuint index, GLint x);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttribI2i(GLuint index, GLint x, GLint y);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttribI3i(GLuint index, GLint x, GLint y, GLint z);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttrib1f(GLuint index, GLfloat x);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, IntPtr pointer);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glPatchParameteri(GLenum pname, GLint value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, [MarshalAs(UnmanagedType.LPArray)]GLfloat[] value);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glBindVertexArray(GLuint array);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glDeleteVertexArrays(GLsizei n, GLuint[] arrays);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenVertexArrays(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] arrays);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glActiveTexture(GLenum id);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glGenerateMipmap(GLenum id);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glTexStorage2D(GLenum target,
+                                         GLsizei levels,
+                                         GLenum internalformat,
+                                         GLsizei width,
+                                         GLsizei height);
+
+    }
+}
+
