@@ -857,7 +857,7 @@ namespace ghgl
                     }
                 }
 
-                int currentTexture = 1;
+                int currentTexture = 4; // Testing a higher texture unit
                 foreach (var uniform in _sampler2DUniforms)
                 {
                     int location = OpenGL.glGetUniformLocation(programId, uniform.Name);

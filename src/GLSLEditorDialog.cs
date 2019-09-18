@@ -1,16 +1,12 @@
 ﻿using System;
 using Eto.Forms;
-using CodeEditor;
+//using CodeEditor;
 using System.ComponentModel;
 
 namespace ghgl
 {
     class GLSLEditorDialog : Form
     {
-        static GLSLEditorDialog()
-        {
-            Eto.Platform.Instance.Add<ScriptEditorControl.IScriptEditorControlHandler>(() => new ScriptEditorControlHandlerWin());
-        }
         static int _dlgOpenCount;
         public static bool EditorsOpen { get { return _dlgOpenCount > 0; } }
 
@@ -295,7 +291,7 @@ namespace ghgl
         void InsertBuiltIn(BuiltIn b)
         {
             var shaderCtrl = ActiveEditorControl();
-            if( shaderCtrl != null )
+            if (shaderCtrl != null)
             {
                 string text = $"uniform {b.DataType} {b.Name};";
                 shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);

@@ -156,6 +156,10 @@ namespace ghgl
             if (!OpenGL.IsAvailable)
                 return false;
 
+            // just assume GL context is active for now
+            if (Rhino.Runtime.HostUtils.RunningOnOSX)
+                return true;
+
             if (OpenGL.wglGetCurrentContext() != IntPtr.Zero)
                 return true;
 
@@ -174,9 +178,9 @@ namespace ghgl
             return true;
         }
 
-        protected override void SolveInstance(IGH_DataAccess data)
+        protected override void SolveInstance(IGH_DataAccess DA)
         {
-            SolveInstanceHelper(data, 0);
+            SolveInstanceHelper(DA, 0);
 
             if (!OpenGL.IsAvailable)
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to access required OpenGL features");

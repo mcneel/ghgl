@@ -56,20 +56,72 @@ namespace ghgl
             kDEPTH_STENCIL = 100,
         }
 
-        const string RHINOCORE_LIB = "RhinoCore.dll";
+        public static IntPtr RhTexture2dCreate()
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnWindows)
+                return WindowsMethods.RhTexture2dCreate();
+            else
+                return MacMethods.RhTexture2dCreate();
+        }
 
-        [DllImport(RHINOCORE_LIB)]
-        public static extern IntPtr RhTexture2dCreate();
+        public static void RhTexture2dDelete(IntPtr ptrTexture2d)
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnWindows)
+                WindowsMethods.RhTexture2dDelete(ptrTexture2d);
+            else
+                MacMethods.RhTexture2dDelete(ptrTexture2d);
+        }
 
-        [DllImport(RHINOCORE_LIB)]
-        public static extern void RhTexture2dDelete(IntPtr ptrTexture2d);
+        public static uint RhTexture2dHandle(IntPtr ptrTexture2d)
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnWindows)
+                return WindowsMethods.RhTexture2dHandle(ptrTexture2d);
+            else
+                return MacMethods.RhTexture2dHandle(ptrTexture2d);
+        }
 
-        [DllImport(RHINOCORE_LIB)]
-        public static extern uint RhTexture2dHandle(IntPtr ptrTexture2d);
+        public static bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat)
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnWindows)
+                return WindowsMethods.RhTexture2dCapture(viewSerialNumber, ptrTexture2d, captureFormat);
+            else
+                return MacMethods.RhTexture2dCapture(viewSerialNumber, ptrTexture2d, captureFormat);
+        }
 
-        [DllImport(RHINOCORE_LIB)]
-        [return: MarshalAs(UnmanagedType.U1)]
-        public static extern bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat);
 
+        class WindowsMethods
+        {
+            const string RHINOCORE_LIB = "RhinoCore.dll";
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern IntPtr RhTexture2dCreate();
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern void RhTexture2dDelete(IntPtr ptrTexture2d);
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern uint RhTexture2dHandle(IntPtr ptrTexture2d);
+
+            [DllImport(RHINOCORE_LIB)]
+            [return: MarshalAs(UnmanagedType.U1)]
+            public static extern bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat);
+        }
+        class MacMethods
+        {
+            const string RHINOCORE_LIB = "__Internal";
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern IntPtr RhTexture2dCreate();
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern void RhTexture2dDelete(IntPtr ptrTexture2d);
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern uint RhTexture2dHandle(IntPtr ptrTexture2d);
+
+            [DllImport(RHINOCORE_LIB)]
+            [return: MarshalAs(UnmanagedType.U1)]
+            public static extern bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat);
+        }
     }
 }

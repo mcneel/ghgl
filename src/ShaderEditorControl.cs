@@ -2,14 +2,14 @@
 
 namespace ghgl
 {
-    class ShaderEditorControl : CodeEditor.ScriptEditorControl
+    class ShaderEditorControl : Eto.CodeEditor.CodeEditor// CodeEditor.ScriptEditorControl
     {
         readonly ShaderType _shaderType;
         readonly GLSLViewModel _model;
         Eto.Forms.UITimer _compileTimer = new Eto.Forms.UITimer();
 
         public ShaderEditorControl(ShaderType type, GLSLViewModel model) 
-            : base(CodeEditor.ScriptEditorLanguage.GLSL)
+            : base(Eto.CodeEditor.ProgrammingLanguage.GLSL)
         {
             _shaderType = type;
             _model = model;
@@ -66,9 +66,9 @@ namespace ghgl
         static string[] _keywords;
         static string[] _builtins;
 
-        private void ShaderControlCharAdded(object sender, CodeEditor.CharAddedEventArgs e)
+        private void ShaderControlCharAdded(object sender, Eto.CodeEditor.CharAddedEventArgs e)
         {
-            if (AutoCActive)
+            if (AutoCompleteActive)
                 return;
 
             int currentPos = CurrentPosition;
@@ -118,19 +118,19 @@ namespace ghgl
                 }
                 items = items.Trim();
                 if (items.Length > 0)
-                    AutoCShow(lenEntered, items);
+                    AutoCompleteShow(lenEntered, items);
             }
         }
 
         void MarkErrors()
         {
-            ClearErrors();
+            ClearAllErrorIndicators();
             foreach (var error in _model.AllCompileErrors())
             {
                 if (error.Shader == null)
                     continue;
                 if (error.Shader.ShaderType == _shaderType)
-                    MarkError(error.LineNumber);
+                    AddErrorIndicator(error.LineNumber, 0);
             }
 
         }

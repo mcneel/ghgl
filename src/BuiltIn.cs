@@ -83,10 +83,10 @@ namespace ghgl
                             textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
                     }
 
-                    const int currentTexture = 40;
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
+                    const int textureUnit = 0;
+                    OpenGL.glUniform1i(location, textureUnit);
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
-                    OpenGL.glUniform1i(location, currentTexture);
                     if (texture2dPtr == IntPtr.Zero)
                         GLRecycleBin.AddTextureToDeleteList(textureId);
                     else
@@ -103,10 +103,10 @@ namespace ghgl
                     if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
                         textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
 
-                    const int currentTexture = 41;
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
+                    const int textureUnit = 1;
+                    OpenGL.glUniform1i(location, textureUnit);
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
-                    OpenGL.glUniform1i(location, currentTexture);
                     GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
                 });
 
