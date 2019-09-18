@@ -183,6 +183,21 @@ namespace ghgl
                     var camLoc = display.Viewport.CameraLocation;
                     OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
                 });
+                Register("_cameraNear", "float", "near clip plane distance in camera coordinates", (location, display) =>
+                {
+                    display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
+                    OpenGL.glUniform1f(location, (float)near);
+                });
+                Register("_cameraFar", "float", "farclip  plane distance in camera coordinates", (location, display) =>
+                {
+                    display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
+                    OpenGL.glUniform1f(location, (float)far);
+                });
+                Register("_parallelViewport", "int", "1 if viewport has a parallel projection. 0 if perspective", (location, display) =>
+                {
+                    int parallel = display.Viewport.IsParallelProjection ? 1:0;
+                    OpenGL.glUniform1i(location, parallel);
+                });
                 const int maxlights = 4;
                 Register("_lightCount", "int", "number of lights in the scene", (location, display) =>
                 {
