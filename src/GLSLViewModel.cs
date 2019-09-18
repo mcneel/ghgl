@@ -872,6 +872,7 @@ namespace ghgl
                             OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)currentTexture);
                             OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, uniform.TextureId);
                             OpenGL.glUniform1i(location, currentTexture);
+                            OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
                             currentTexture++;
                         }
                     }
