@@ -457,7 +457,25 @@ namespace ghgl
                             uniformsAndAttributes.AddAttribute(varname, location, vec4_array);
                         }
                     }
+
+                    continue;
                 }
+
+                // If we get here, we don't have a reference to this input in our code yet.
+                // See if the input is an upstream texture since we know how to handle those
+                if (destinationList.Count>0 && destinationList[0].CastTo(out string upstreamSampler))
+                {
+                    // see if path refers to a component's output parameter
+                    if (upstreamSampler.EndsWith(":color") || upstreamSampler.EndsWith(":depth"))
+                    {
+                        string id = upstreamSampler.Substring(0, upstreamSampler.IndexOf(":"));
+                        bool isComponentInput = Guid.TryParse(id, out Guid compId);
+                        if (isComponentInput)
+                            uniformsAndAttributes.AddSampler2DUniform(varname, upstreamSampler);
+                    }
+                }
+
+
             }
         }
 

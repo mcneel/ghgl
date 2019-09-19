@@ -66,21 +66,7 @@ namespace ghgl
             if( _uniformBuiltins==null)
             {
                 _startTime = DateTime.Now;
-                Register("_colorBuffer", "sampler2D", "texture representing the current state of the color information in the viewport", (location, display) =>
-                {
-                    uint textureId = 0;
-                    IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                    if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
-                        textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
-
-                    const int textureUnit = (int)SamplerTextureUnit.ColorBuffer;
-                    OpenGL.glUniform1i(location, textureUnit);
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
-                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
-                    GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
-                });
-                Register("_initialColorBuffer", "sampler2D", "texture representing the color information in the viewport before any shader components have executed", (location, display) =>
+                Register("_colorBuffer", "sampler2D", "texture representing the color information in the viewport before any shader components have executed", (location, display) =>
                 {
                     IntPtr texture2dPtr = PerFrameCache.InitialColorBuffer;
                     uint textureId = 0;
@@ -93,24 +79,7 @@ namespace ghgl
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
                 });
 
-                Register("_depthBuffer", "sampler2D", "texture representing the current state of the depth information in the viewport", (location, display) =>
-                {
-                    if (Rhino.RhinoApp.ExeVersion < 7)
-                        throw new Exception("_depthBuffer uniform is only supported in Rhino 7 or above");
-
-                    uint textureId = 0;
-                    IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                    if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
-                        textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
-
-                    const int textureUnit = (int)SamplerTextureUnit.DepthBuffer;
-                    OpenGL.glUniform1i(location, textureUnit);
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
-                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
-                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
-                    GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
-                });
-                Register("_initialDepthBuffer", "sampler2D", "texture representing the depth information in the viewport before any shader components have executed", (location, display) =>
+                Register("_depthBuffer", "sampler2D", "texture representing the depth information in the viewport before any shader components have executed", (location, display) =>
                 {
                     IntPtr texture2dPtr = PerFrameCache.InitialDepthBuffer;
                     uint textureId = 0;

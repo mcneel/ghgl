@@ -17,14 +17,14 @@ namespace ghgl
 
         public static IDisposable BeginFrame(Rhino.Display.DisplayPipeline display, List<GLShaderComponentBase> components)
         {
-            // check to see if any components use _initialColorBuffer or _initialDepthBuffer
+            // check to see if any components use _colorBuffer or _depthBuffer
             bool usesInitialColorBuffer = false;
             bool usesInitialDepthBuffer = false;
             foreach (var component in components)
             {
-                if (!usesInitialColorBuffer && component._model.TryGetUniformType("_initialColorBuffer", out string dataType, out int arrayLength))
+                if (!usesInitialColorBuffer && component._model.TryGetUniformType("_colorBuffer", out string dataType, out int arrayLength))
                     usesInitialColorBuffer = true;
-                if (!usesInitialDepthBuffer && component._model.TryGetUniformType("_initialDepthBuffer", out dataType, out arrayLength))
+                if (!usesInitialDepthBuffer && component._model.TryGetUniformType("_depthBuffer", out dataType, out arrayLength))
                     usesInitialDepthBuffer = true;
             }
             if (usesInitialColorBuffer)

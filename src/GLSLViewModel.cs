@@ -8,11 +8,9 @@ namespace ghgl
 {
     enum SamplerTextureUnit : int
     {
-        ColorBuffer = 1,
-        DepthBuffer = 2,
-        InitialColorBuffer = 3,
-        InitialDepthBuffer = 4,
-        BaseSampler = 5
+        InitialColorBuffer = 1,
+        InitialDepthBuffer = 2,
+        BaseSampler = 3
     }
 
     class GLSLViewModel : System.ComponentModel.INotifyPropertyChanged
