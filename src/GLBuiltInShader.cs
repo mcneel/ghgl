@@ -178,7 +178,7 @@ namespace ghgl
 
             bool containsTessShaders = !string.IsNullOrWhiteSpace(_model.TessellationControlCode) ||
                 !string.IsNullOrWhiteSpace(_model.TessellationEvalualtionCode);
-            var dlg = new GLSLEditorDialog(_model, containsTessShaders);
+            var dlg = new GLSLEditorDialog(_model, containsTessShaders, "Built-In");
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             _model.Modified = false;
 

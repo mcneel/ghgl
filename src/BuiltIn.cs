@@ -91,7 +91,6 @@ namespace ghgl
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
-                    GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
                 });
 
                 Register("_depthBuffer", "sampler2D", "texture representing the current state of the depth information in the viewport", (location, display) =>
@@ -122,7 +121,6 @@ namespace ghgl
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
                     OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
-                    GLRecycleBin.AddTextureToDeleteList(texture2dPtr);
                 });
 
                 Register("_worldToClip", "mat4", "transformation from world to clipping coordinates", (location, display) =>

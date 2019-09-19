@@ -104,7 +104,7 @@ namespace ghgl
 
         public bool Canceled { get; set; }
 
-        public GLSLEditorDialog(GLSLViewModel model, bool includeTessellationShaders)
+        public GLSLEditorDialog(GLSLViewModel model, bool includeTessellationShaders, string componentName)
         {
             _dlgOpenCount++;
             _tabarea = new TabControl();
@@ -129,7 +129,7 @@ namespace ghgl
 
 
             DataContext = model;
-            Title = "GLSL Shader";
+            Title = $"GLSL Shader - {componentName}";
 
             var uniformBuiltinMenu = new ButtonMenuItem { Text = "Insert Built-In Uniform" };
             foreach(var bi in BuiltIn.GetUniformBuiltIns())

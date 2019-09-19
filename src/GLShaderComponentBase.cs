@@ -667,7 +667,7 @@ namespace ghgl
             string savedFS = _model.FragmentShaderCode;
             string savedXfrmFeedbackVertex = _model.TransformFeedbackShaderCode;
 
-            var dlg = new GLSLEditorDialog(_model, false);
+            var dlg = new GLSLEditorDialog(_model, false, NickName);
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             _model.Modified = false;
             dlg.Closed += (s, e) =>
