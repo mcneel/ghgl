@@ -24,6 +24,8 @@ namespace ghgl
         static IntPtr _hglrc;
         static bool _initializeCallbackSet;
         static IdleRedraw _idleRedraw;
+        int _majorVersion = 0;
+        int _minorVersion = 2;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -124,6 +126,8 @@ namespace ghgl
 
         protected override void RegisterOutputParams(GH_OutputParamManager pManager)
         {
+            pManager.AddTextParameter("Color", "C", "Color Buffer", GH_ParamAccess.item);
+            pManager.AddTextParameter("Depth", "D", "Depth Buffer", GH_ParamAccess.item);
         }
 
         public override bool Write(GH_IWriter writer)
@@ -131,7 +135,7 @@ namespace ghgl
             bool rc = base.Write(writer);
             if (rc)
             {
-                writer.SetVersion("GLShader", 0, 1, 0);
+                writer.SetVersion("GLShader", _majorVersion, _minorVersion, 0);
                 rc = _model.Write(writer);
                 writer.SetInt32("PreviewSortOrder", PreviewSortOrder);
             }
@@ -148,6 +152,9 @@ namespace ghgl
                 if (reader.TryGetInt32("PreviewSortOrder", ref order))
                     PreviewSortOrder = order;
             }
+            var version = reader.GetVersion("GLShader");
+            _majorVersion = version.major;
+            _minorVersion = version.minor;
             return rc;
         }
 
@@ -180,6 +187,7 @@ namespace ghgl
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            _componentsNeedSorting = true;
             SolveInstanceHelper(DA, 0);
 
             if (!OpenGL.IsAvailable)
@@ -190,6 +198,12 @@ namespace ghgl
         {
             if (!ActivateGlContext())
                 return;
+
+            if( _majorVersion>0 || _minorVersion>1 )
+            {
+                data.SetData(0, $"{InstanceGuid}:color");
+                data.SetData(1, $"{InstanceGuid}:depth");
+            }
 
             if (data.Iteration == 0)
             {
@@ -347,16 +361,27 @@ namespace ghgl
                                 string path;
                                 if (destination.CastTo(out path))
                                 {
-                                    bool isUrl = path.StartsWith("http:/", StringComparison.InvariantCultureIgnoreCase) ||
-                                        path.StartsWith("https:/", StringComparison.InvariantCultureIgnoreCase);
-                                    if(!isUrl && !System.IO.File.Exists(path))
+                                    bool isComponentInput = false;
+                                    // see if path refers to a component's output parameter
+                                    if(path.EndsWith(":color") || path.EndsWith(":depth"))
                                     {
-                                        var ghdoc = OnPingDocument();
-                                        if( ghdoc!=null )
+                                        string id = path.Substring(0, path.IndexOf(":"));
+                                        isComponentInput = Guid.TryParse(id, out Guid compId);
+                                    }
+
+                                    if (!isComponentInput)
+                                    {
+                                        bool isUrl = path.StartsWith("http:/", StringComparison.InvariantCultureIgnoreCase) ||
+                                            path.StartsWith("https:/", StringComparison.InvariantCultureIgnoreCase);
+                                        if (!isUrl && !System.IO.File.Exists(path))
                                         {
-                                            string workingDirectory = System.IO.Path.GetDirectoryName(ghdoc.FilePath);
-                                            path = System.IO.Path.GetFileName(path);
-                                            path = System.IO.Path.Combine(workingDirectory, path);
+                                            var ghdoc = OnPingDocument();
+                                            if (ghdoc != null)
+                                            {
+                                                string workingDirectory = System.IO.Path.GetDirectoryName(ghdoc.FilePath);
+                                                path = System.IO.Path.GetFileName(path);
+                                                path = System.IO.Path.Combine(workingDirectory, path);
+                                            }
                                         }
                                     }
 
@@ -694,6 +719,13 @@ namespace ghgl
 
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
+            if (_componentsNeedSorting)
+                SortComponents();
+
+
+            // ok, this code is a little obscure... This limits the drawing
+            // to only the first component in the _activeShaderComponent list
+            // that is not hidden
             for( int i=0; i<_activeShaderComponents.Count; i++ )
             {
                 if (_activeShaderComponents[i].Hidden)
@@ -712,21 +744,25 @@ namespace ghgl
                 _hglrc = OpenGL.wglGetCurrentContext();
                 _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
             }
-            foreach(var component in _activeShaderComponents)
+
+            using (IDisposable lifetimeObject = PerFrameCache.BeginFrame(args.Display, _activeShaderComponents))
             {
-                if (component.Hidden)
-                    continue;
-
-                if(!GLSLEditorDialog.EditorsOpen && !AnimationTimerEnabled)
+                foreach (var component in _activeShaderComponents)
                 {
-                    string dataType;
-                    int arrayLength;
-                    if (component._model.TryGetUniformType("_time", out dataType, out arrayLength) ||
-                        component._model.TryGetUniformType("_date", out dataType, out arrayLength))
-                        AnimationTimerEnabled = true;
-                }
+                    if (component.Hidden)
+                        continue;
 
-                component._model.Draw(args.Display);
+                    if (!GLSLEditorDialog.EditorsOpen && !AnimationTimerEnabled)
+                    {
+                        string dataType;
+                        int arrayLength;
+                        if (component._model.TryGetUniformType("_time", out dataType, out arrayLength) ||
+                            component._model.TryGetUniformType("_date", out dataType, out arrayLength))
+                            AnimationTimerEnabled = true;
+                    }
+
+                    component._model.Draw(args.Display, component);
+                }
             }
             GLRecycleBin.Recycle();
         }
@@ -734,6 +770,8 @@ namespace ghgl
         public int PreviewSortOrder { get; set; } = 5;
 
         static List<GLShaderComponentBase> _activeShaderComponents = new List<GLShaderComponentBase>();
+        static bool _componentsNeedSorting = true;
+
         static void AddToActiveComponentList(GLShaderComponentBase comp)
         {
             AnimationTimerEnabled = false;
@@ -747,13 +785,64 @@ namespace ghgl
         }
         static void SortComponents()
         {
+            _componentsNeedSorting = false;
             _activeShaderComponents.Sort((x, y) => {
+                var xUpstream = x.RequiredUpstreamComponents();
+                var yUpstream = y.RequiredUpstreamComponents();
+
+                foreach(var component in xUpstream)
+                {
+                    // if x depends on y, then y must be drawn first
+                    if (component == y)
+                        return 1;
+                }
+                foreach(var component in yUpstream)
+                {
+                    // if y depends on x, then x must be drawn first
+                    if (component == x)
+                        return -1;
+                }
+
                 if (x.PreviewSortOrder < y.PreviewSortOrder)
                     return -1;
                 if (x.PreviewSortOrder > y.PreviewSortOrder)
                     return 1;
                 return 0;
             });
+        }
+
+        /// <summary>
+        /// If this component uses texture inputs that are the result of other
+        /// components, then those other components must be drawn before this
+        /// component (they are "upstream")
+        /// </summary>
+        /// <returns></returns>
+        HashSet<GLShaderComponentBase> RequiredUpstreamComponents()
+        {
+            var upstream = new HashSet<GLShaderComponentBase>();
+
+            // Just assume that all sampler inputs are the same across iterations.
+            var uniforms = _model.GetUniformsAndAttributes(0);
+            var samplers = uniforms.GetComponentSamplers();
+            HashSet<Guid> ids = new HashSet<Guid>();
+            foreach(var sampler in samplers)
+            {
+                string id = sampler.Substring(0, sampler.IndexOf(":"));
+                if (Guid.TryParse(id, out Guid componentId))
+                    ids.Add(componentId);
+            }
+
+            foreach(var id in ids)
+            {
+                foreach(var component in _activeShaderComponents)
+                {
+                    if (component == this)
+                        continue;
+                    if (component.InstanceGuid == id)
+                        upstream.Add(component);
+                }
+            }
+            return upstream;
         }
 
         public override void DocumentContextChanged(GH_Document document, GH_DocumentContext context)

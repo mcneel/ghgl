@@ -71,6 +71,7 @@
     <Compile Include="GLSLViewModel.cs" />
     <Compile Include="IdleRedraw.cs" />
     <Compile Include="OpenGL.cs" />
+    <Compile Include="PerFrameCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rhino7NativeMethods.cs" />
     <Compile Include="Shader.cs" />

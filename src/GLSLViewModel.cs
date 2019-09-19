@@ -6,6 +6,15 @@ using Grasshopper.Kernel;
 
 namespace ghgl
 {
+    enum SamplerTextureUnit : int
+    {
+        ColorBuffer = 1,
+        DepthBuffer = 2,
+        InitialColorBuffer = 3,
+        InitialDepthBuffer = 4,
+        BaseSampler = 5
+    }
+
     class GLSLViewModel : System.ComponentModel.INotifyPropertyChanged
     {
         const double DefaultLineWidth = 3.0;
@@ -617,6 +626,19 @@ namespace ghgl
                 _samplerCache = samplerCache;
             }
 
+            public string[] GetComponentSamplers()
+            {
+                HashSet<string> items = new HashSet<string>();
+                foreach(var item in _sampler2DUniforms)
+                {
+                    if (item.Path.EndsWith(":color") || item.Path.EndsWith(":depth"))
+                        items.Add(item.Path);
+                }
+                string[] rc = new string[items.Count];
+                items.CopyTo(rc);
+                return rc;
+            }
+
             public void AddMesh(Mesh mesh)
             {
                 _meshes.Add(new MeshData(mesh));
@@ -641,15 +663,21 @@ namespace ghgl
             public void AddSampler2DUniform(string name, string path)
             {
                 var data = new SamplerUniformData(name, path);
-                //try to find a cached item first
-                for (int i = 0; i < _samplerCache.Count; i++)
+
+                bool isComponentOutput = path.EndsWith(":color") || path.EndsWith(":depth");
+
+                if (!isComponentOutput)
                 {
-                    var sampler = _samplerCache[i];
-                    if (string.Equals(sampler.Path, path, StringComparison.OrdinalIgnoreCase))
+                    //try to find a cached item first
+                    for (int i = 0; i < _samplerCache.Count; i++)
                     {
-                        data.TextureId = sampler.TextureId;
-                        _samplerCache.RemoveAt(i);
-                        break;
+                        var sampler = _samplerCache[i];
+                        if (string.Equals(sampler.Path, path, StringComparison.OrdinalIgnoreCase))
+                        {
+                            data.TextureId = sampler.TextureId;
+                            _samplerCache.RemoveAt(i);
+                            break;
+                        }
                     }
                 }
                 _sampler2DUniforms.Add(data);
@@ -857,7 +885,7 @@ namespace ghgl
                     }
                 }
 
-                int currentTexture = 4; // Testing a higher texture unit
+                int currentTexture = (int)SamplerTextureUnit.BaseSampler;
                 foreach (var uniform in _sampler2DUniforms)
                 {
                     int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
@@ -865,7 +893,10 @@ namespace ghgl
                     {
                         if (0 == uniform.TextureId)
                         {
-                            uniform.TextureId = SamplerUniformData.CreateTexture(uniform.GetBitmap());
+                            if (uniform.Path.EndsWith(":color") || uniform.Path.EndsWith(":depth"))
+                                uniform.TextureId = PerFrameCache.GetTextureId(uniform.Path);
+                            else
+                                uniform.TextureId = SamplerUniformData.CreateTexture(uniform.GetBitmap());
                         }
                         if (uniform.TextureId != 0)
                         {
@@ -1296,7 +1327,7 @@ namespace ghgl
             _uniformAndAttributeIterations.Clear();
         }
 
-        public void Draw(Rhino.Display.DisplayPipeline display)
+        public void Draw(Rhino.Display.DisplayPipeline display, GLShaderComponentBase component)
         {
             uint programId = ProgramId;
             if (programId == 0)
@@ -1338,7 +1369,7 @@ namespace ghgl
 
             foreach (var iteration in _uniformAndAttributeIterations)
                 iteration.Draw(display, programId, DrawMode);
-            
+
             OpenGL.glBindVertexArray(0);
             OpenGL.glDeleteVertexArrays(1, vao);
             OpenGL.glUseProgram(0);
@@ -1352,6 +1383,22 @@ namespace ghgl
             }
             if (!_depthWritingEnabled)
                 OpenGL.glDepthMask((byte)OpenGL.GL_TRUE);
+
+            // capture output color and depth buffer if they are needed downstream
+            bool saveColor = PerFrameCache.IsColorTextureUsed(component);
+            if( saveColor )
+            {
+                IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
+                if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
+                    PerFrameCache.SaveColorTexture(component, texture2dPtr);
+            }
+            bool saveDepth = PerFrameCache.IsDepthTextureUsed(component);
+            if(saveDepth)
+            {
+                IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
+                if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
+                    PerFrameCache.SaveDepthTexture(component, texture2dPtr);
+            }
         }
 
         static void DisableVertexAttribArray(int location)
