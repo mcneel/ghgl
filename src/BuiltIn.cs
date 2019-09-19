@@ -163,6 +163,11 @@ namespace ghgl
                     double seconds = span.TotalSeconds;
                     OpenGL.glUniform1f(location, (float)seconds);
                 });
+                Register("_date", "vec4", "year, month, day, time in seconds", (location, display) =>
+                {
+                    var date = DateTime.Now;
+                    OpenGL.glUniform4f(location, (float)date.Year, (float)date.Month, (float)date.Day, (float)date.TimeOfDay.TotalSeconds);
+                });
                 Register("_timeDelta", "float", "seconds since the last time this view was drawn", (location, display) =>
                 {
                     if (_drawTimes == null)
