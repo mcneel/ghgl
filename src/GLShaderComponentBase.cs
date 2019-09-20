@@ -187,6 +187,11 @@ namespace ghgl
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            if( !_conduitEnabled)
+            {
+                Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
+                _conduitEnabled = true;
+            }
             _componentsNeedSorting = true;
             SolveInstanceHelper(DA, 0);
 
@@ -735,23 +740,17 @@ namespace ghgl
             }
         }
 
-        public override void DrawViewportWires(IGH_PreviewArgs args)
+        static bool _drawViewportWiresCalled = false;
+        static bool _conduitEnabled = false;
+        static void PostDrawObjects(object sender, DrawEventArgs args)
         {
+            if (!_drawViewportWiresCalled)
+                return;
+            _drawViewportWiresCalled = false;
+
             if (_componentsNeedSorting)
                 SortComponents();
 
-
-            // ok, this code is a little obscure... This limits the drawing
-            // to only the first component in the _activeShaderComponent list
-            // that is not hidden
-            for( int i=0; i<_activeShaderComponents.Count; i++ )
-            {
-                if (_activeShaderComponents[i].Hidden)
-                    continue;
-                if (_activeShaderComponents[i] != this)
-                    return;
-                break;
-            }
 
             if (!OpenGL.Initialized)
                 OpenGL.Initialize();
@@ -783,6 +782,11 @@ namespace ghgl
                 }
             }
             GLRecycleBin.Recycle();
+        }
+
+        public override void DrawViewportWires(IGH_PreviewArgs args)
+        {
+            _drawViewportWiresCalled = true;
         }
 
         public int PreviewSortOrder { get; set; } = 5;
