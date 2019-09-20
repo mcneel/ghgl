@@ -800,7 +800,10 @@ namespace ghgl
                         }
                     }
                     else
+                    {
                         OpenGL.glDrawArrays(drawMode, 0, element_count);
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, 0);
+                    }
                 }
                 foreach (var item in _intAttribs)
                     DisableVertexAttribArray(item.Location);
@@ -1368,6 +1371,7 @@ namespace ghgl
             foreach (var iteration in _uniformAndAttributeIterations)
                 iteration.Draw(display, programId, DrawMode);
 
+            OpenGL.glDisable(OpenGL.GL_BLEND);
             OpenGL.glBindVertexArray(0);
             OpenGL.glDeleteVertexArrays(1, vao);
             OpenGL.glUseProgram(0);
