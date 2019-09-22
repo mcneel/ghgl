@@ -694,6 +694,10 @@ namespace ghgl
             {
                 _floatAttribs.Add(new GLAttribute<float>(name, location, value));
             }
+            public void AddAttribute(string name, int location, Point2f[] value)
+            {
+                _vec2Attribs.Add(new GLAttribute<Point2f>(name, location, value));
+            }
             public void AddAttribute(string name, int location, Point3f[] value)
             {
                 _vec3Attribs.Add(new GLAttribute<Point3f>(name, location, value));
@@ -808,6 +812,8 @@ namespace ghgl
                 foreach (var item in _intAttribs)
                     DisableVertexAttribArray(item.Location);
                 foreach (var item in _floatAttribs)
+                    DisableVertexAttribArray(item.Location);
+                foreach (var item in _vec2Attribs)
                     DisableVertexAttribArray(item.Location);
                 foreach (var item in _vec3Attribs)
                     DisableVertexAttribArray(item.Location);
@@ -1117,6 +1123,46 @@ namespace ghgl
                         }
                     }
                 }
+                foreach (var item in _vec2Attribs)
+                {
+                    if (element_count == 0)
+                        element_count = item.Items.Length;
+                    if (element_count > item.Items.Length && item.Items.Length > 1)
+                        element_count = item.Items.Length;
+
+                    if (item.Location < 0)
+                    {
+                        item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
+                    }
+                    if (item.Location >= 0)
+                    {
+                        uint location = (uint)item.Location;
+                        if (1 == item.Items.Length)
+                        {
+                            OpenGL.glDisableVertexAttribArray(location);
+                            Point2f v = item.Items[0];
+                            OpenGL.glVertexAttrib2f(location, v.X, v.Y);
+                        }
+                        else
+                        {
+                            if (item.VboHandle == 0)
+                            {
+                                uint[] buffers;
+                                OpenGL.glGenBuffers(1, out buffers);
+                                item.VboHandle = buffers[0];
+                                OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, item.VboHandle);
+                                IntPtr size = new IntPtr(2 * sizeof(float) * item.Items.Length);
+                                var handle = GCHandle.Alloc(item.Items, GCHandleType.Pinned);
+                                IntPtr pointer = handle.AddrOfPinnedObject();
+                                OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                                handle.Free();
+                            }
+                            OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, item.VboHandle);
+                            OpenGL.glEnableVertexAttribArray(location);
+                            OpenGL.glVertexAttribPointer(location, 2, OpenGL.GL_FLOAT, 0, 2 * sizeof(float), IntPtr.Zero);
+                        }
+                    }
+                }
                 foreach (var item in _vec3Attribs)
                 {
                     if (element_count == 0)
@@ -1223,6 +1269,9 @@ namespace ghgl
                 foreach (var attr in _floatAttribs)
                     GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
                 _floatAttribs.Clear();
+                foreach (var attr in _vec2Attribs)
+                    GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
+                _vec2Attribs.Clear();
                 foreach (var attr in _vec3Attribs)
                     GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
                 _vec3Attribs.Clear();
@@ -1293,6 +1342,7 @@ namespace ghgl
 
             readonly public List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
             readonly public List<GLAttribute<float>> _floatAttribs = new List<GLAttribute<float>>();
+            readonly public List<GLAttribute<Point2f>> _vec2Attribs = new List<GLAttribute<Point2f>>();
             readonly public List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
             readonly public List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
         }
@@ -1391,14 +1441,14 @@ namespace ghgl
             if( saveColor )
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
+                if (Rhino7NativeMethods.RhTexture2dCapture(display, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
                     PerFrameCache.SaveColorTexture(component, texture2dPtr);
             }
             bool saveDepth = PerFrameCache.IsDepthTextureUsed(component);
             if(saveDepth)
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                if (Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
+                if (Rhino7NativeMethods.RhTexture2dCapture(display, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24))
                     PerFrameCache.SaveDepthTexture(component, texture2dPtr);
             }
         }
@@ -1449,6 +1499,11 @@ namespace ghgl
                     length = attr.Items.Length;
             }
             foreach (var attr in attrs._floatAttribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
+            foreach (var attr in attrs._vec2Attribs)
             {
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
@@ -1612,6 +1667,12 @@ namespace ghgl
                     if (!string.IsNullOrWhiteSpace(attrAsJson))
                         chunks.Add(attrAsJson);
                 }
+                foreach (var attr in iterationData._vec2Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
                 foreach (var attr in iterationData._vec3Attribs)
                 {
                     string attrAsJson = attr.ToJsonString(2);
@@ -1677,6 +1738,13 @@ namespace ghgl
                     positionHandled = true;
                 sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));");
                 positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));";
+            }
+            foreach (var attr in attrs._vec2Attribs)
+            {
+                if (attr.Name == "position")
+                    positionHandled = true;
+                sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 2 ));");
+                positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 2 ));";
             }
             foreach (var attr in attrs._vec3Attribs)
             {

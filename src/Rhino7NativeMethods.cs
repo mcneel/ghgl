@@ -80,12 +80,17 @@ namespace ghgl
                 return MacMethods.RhTexture2dHandle(ptrTexture2d);
         }
 
-        public static bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat)
+        public static bool RhTexture2dCapture(Rhino.Display.DisplayPipeline pipeline, IntPtr ptrTexture2d, CaptureFormat captureFormat)
         {
+            var fieldInfo = pipeline.GetType().GetField("m_ptr", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            IntPtr ptrPipeline = (IntPtr)fieldInfo.GetValue(pipeline);
             if (Rhino.Runtime.HostUtils.RunningOnWindows)
-                return WindowsMethods.RhTexture2dCapture(viewSerialNumber, ptrTexture2d, captureFormat);
+                return WindowsMethods.RhTexture2dPipelineCapture(ptrPipeline, ptrTexture2d, captureFormat);
             else
+            {
+                var viewSerialNumber = pipeline.Viewport.ParentView.RuntimeSerialNumber;
                 return MacMethods.RhTexture2dCapture(viewSerialNumber, ptrTexture2d, captureFormat);
+            }
         }
 
 
@@ -104,7 +109,7 @@ namespace ghgl
 
             [DllImport(RHINOCORE_LIB)]
             [return: MarshalAs(UnmanagedType.U1)]
-            public static extern bool RhTexture2dCapture(uint viewSerialNumber, IntPtr ptrTexture2d, CaptureFormat captureFormat);
+            public static extern bool RhTexture2dPipelineCapture(IntPtr ptrPipeline, IntPtr ptrTexture2d, CaptureFormat captureFormat);
         }
         class MacMethods
         {

@@ -441,6 +441,13 @@ namespace ghgl
 
                         }
                     }
+                    if ( datatype == "vec2" )
+                    {
+                        //vec2 -> point2d
+                        Point2f[] vec2_array = GooListToPoint2fArray(destinationList);
+                        if (vec2_array != null)
+                            uniformsAndAttributes.AddAttribute(varname, location, vec2_array);
+                    }
                     if (datatype == "vec3")
                     {
                         //vec3 -> point3d
@@ -482,6 +489,46 @@ namespace ghgl
 
 
             }
+        }
+
+        static Point2f[] GooListToPoint2fArray(List<IGH_Goo> list)
+        {
+            int count = list.Count;
+            if (count < 1 || list[0] == null)
+                return null;
+
+            Point2d point;
+            if (list[0].CastTo(out point))
+            {
+                Point2f[] vec2_array = new Point2f[count];
+                for (int i = 0; i < count; i++)
+                {
+                    if (list[i].CastTo(out point))
+                    {
+                        float x = (float)point.X;
+                        float y = (float)point.Y;
+                        vec2_array[i] = new Point2f(x, y);
+                    }
+                }
+                return vec2_array;
+            }
+
+            Vector2d vector;
+            if (list[0].CastTo(out vector))
+            {
+                Point2f[] vec2_array = new Point2f[count];
+                for (int i = 0; i < count; i++)
+                {
+                    if (list[i].CastTo(out vector))
+                    {
+                        float x = (float)vector.X;
+                        float y = (float)vector.Y;
+                        vec2_array[i] = new Point2f(x, y);
+                    }
+                }
+                return vec2_array;
+            }
+            return null;
         }
 
         static Point3f[] GooListToPoint3fArray(List<IGH_Goo> list)

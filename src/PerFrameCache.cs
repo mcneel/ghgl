@@ -30,13 +30,13 @@ namespace ghgl
             if (usesInitialColorBuffer)
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA);
+                Rhino7NativeMethods.RhTexture2dCapture(display, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA);
                 InitialColorBuffer = texture2dPtr;
             }
             if (usesInitialDepthBuffer)
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
-                Rhino7NativeMethods.RhTexture2dCapture(display.Viewport.ParentView.RuntimeSerialNumber, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24);
+                Rhino7NativeMethods.RhTexture2dCapture(display, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kDEPTH24);
                 InitialDepthBuffer = texture2dPtr;
             }
 
