@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using GH_IO.Serialization;
 using Grasshopper.GUI;
 using Grasshopper.GUI.Canvas;
@@ -583,10 +584,12 @@ namespace ghgl
 
         class GlShaderComponentAttributes : GH_ComponentAttributes
         {
+            readonly GLShaderComponentBase _component;
             readonly Action _doubleClickAction;
-            public GlShaderComponentAttributes(IGH_Component component, Action doubleClickAction)
+            public GlShaderComponentAttributes(GLShaderComponentBase component, Action doubleClickAction)
               : base(component)
             {
+                _component = component;
                 _doubleClickAction = doubleClickAction;
             }
 
@@ -594,6 +597,27 @@ namespace ghgl
             {
                 _doubleClickAction();
                 return base.RespondToMouseDoubleClick(sender, e);
+            }
+
+            public override void SetupTooltip(PointF point, GH_TooltipDisplayEventArgs e)
+            {
+                // Allow the base class to set up the tooltip.
+                // It will handle those cases where the mouse is over a state icon.
+                base.SetupTooltip(point, e);
+
+                try
+                {
+                    var colorBuffer = PerFrameCache.GetTextureImage(_component, true);
+                    if (colorBuffer != null)
+                    {
+                        e.Description = "Output Color Buffer";
+                        e.Diagram = colorBuffer;
+                        //e.Diagram = GH_IconTable.ResizeImage(colorBuffer, new Size(300, 200),
+                        //System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic,
+                        //System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                    }
+                }
+                catch { /* no action required. */ }
             }
         }
 

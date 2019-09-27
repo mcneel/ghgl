@@ -93,6 +93,20 @@ namespace ghgl
             }
         }
 
+        public static System.Drawing.Bitmap RhTexture2dToDib(IntPtr ptrTexture2d)
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnWindows)
+            {
+                IntPtr ptrRhinoDib = WindowsMethods.RhTexture2dToBitmap(ptrTexture2d);
+
+                var type = typeof(Rhino.Runtime.Interop).Assembly.GetType("Rhino.Runtime.InteropWrappers.RhinoDib");
+                var mi = type.GetMethod("ToBitmap", new Type[] { typeof(IntPtr), typeof(bool) });
+                System.Drawing.Bitmap rc = mi.Invoke(null, new object[] { ptrRhinoDib, true }) as System.Drawing.Bitmap;
+                return rc;
+            }
+            return null;
+        }
+
 
         class WindowsMethods
         {
@@ -110,6 +124,9 @@ namespace ghgl
             [DllImport(RHINOCORE_LIB)]
             [return: MarshalAs(UnmanagedType.U1)]
             public static extern bool RhTexture2dPipelineCapture(IntPtr ptrPipeline, IntPtr ptrTexture2d, CaptureFormat captureFormat);
+
+            [DllImport(RHINOCORE_LIB)]
+            public static extern IntPtr RhTexture2dToBitmap(IntPtr ptrTexture2d);
         }
         class MacMethods
         {

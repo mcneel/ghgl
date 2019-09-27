@@ -40,8 +40,12 @@ namespace ghgl
                 InitialDepthBuffer = texture2dPtr;
             }
 
+            foreach (var texture in _componentSamplers.Values)
+                GLRecycleBin.AddTextureToDeleteList(texture);
+            _componentSamplers.Clear();
+
             // figure out list of per component depth and color textures that need to be created/retrieved
-            foreach(var component in components)
+            foreach (var component in components)
             {
                 string[] samplers = component._model.GetUniformsAndAttributes(0).GetComponentSamplers();
                 foreach (var sampler in samplers)
@@ -94,16 +98,25 @@ namespace ghgl
             return 0;
         }
 
+        public static System.Drawing.Bitmap GetTextureImage(GLShaderComponentBase component, bool colorBuffer)
+        {
+            string id = colorBuffer ?
+                $"{component.InstanceGuid}:color".ToLowerInvariant() :
+                $"{component.InstanceGuid}:depth".ToLowerInvariant();
+            if (_componentSamplers.TryGetValue(id.ToLowerInvariant(), out IntPtr ptrColorTexture))
+            {
+                GLShaderComponentBase.ActivateGlContext();
+                return Rhino7NativeMethods.RhTexture2dToDib(ptrColorTexture);
+            }
+            return null;
+        }
+
         public static void EndFrame()
         {
             GLRecycleBin.AddTextureToDeleteList(InitialColorBuffer);
             InitialColorBuffer = IntPtr.Zero;
             GLRecycleBin.AddTextureToDeleteList(InitialDepthBuffer);
             InitialDepthBuffer = IntPtr.Zero;
-
-            foreach (var texture in _componentSamplers.Values)
-                GLRecycleBin.AddTextureToDeleteList(texture);
-            _componentSamplers.Clear();
         }
     }
 }
