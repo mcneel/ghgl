@@ -898,6 +898,9 @@ namespace ghgl
                     int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
                     if (-1 != location)
                     {
+                        if (uniform.Path.EndsWith(":color") || uniform.Path.EndsWith(":depth"))
+                            uniform.TextureId = PerFrameCache.GetTextureId(uniform.Path);
+
                         if (0 == uniform.TextureId)
                         {
                             if (uniform.Path.EndsWith(":color") || uniform.Path.EndsWith(":depth"))
