@@ -186,8 +186,21 @@ namespace ghgl
             return true;
         }
 
+        internal string VersionErrorMessage
+        {
+            get
+            {
+                return "This version of GhGL is for Rhino 7 or above and will not work in Rhino 6.\nEither run TestPackageManager and choose to use GhGL version 0.6.4 or use Rhino 7";
+            }
+        }
+
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            if( Rhino.RhinoApp.ExeVersion == 6 )
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, VersionErrorMessage);
+            }
+
             if( !_conduitEnabled)
             {
                 Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
