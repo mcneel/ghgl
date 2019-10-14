@@ -1440,14 +1440,14 @@ namespace ghgl
                 OpenGL.glDepthMask((byte)OpenGL.GL_TRUE);
 
             // capture output color and depth buffer if they are needed downstream
-            bool saveColor = PerFrameCache.IsColorTextureUsed(component);
+            bool saveColor = true;//            PerFrameCache.IsColorTextureUsed(component);
             if( saveColor )
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();
                 if (Rhino7NativeMethods.RhTexture2dCapture(display, texture2dPtr, Rhino7NativeMethods.CaptureFormat.kRGBA))
                     PerFrameCache.SaveColorTexture(component, texture2dPtr);
             }
-            bool saveDepth = PerFrameCache.IsDepthTextureUsed(component);
+            bool saveDepth = true;//            PerFrameCache.IsDepthTextureUsed(component);
             if(saveDepth)
             {
                 IntPtr texture2dPtr = Rhino7NativeMethods.RhTexture2dCreate();

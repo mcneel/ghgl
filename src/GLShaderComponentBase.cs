@@ -620,14 +620,25 @@ namespace ghgl
 
                 try
                 {
-                    var colorBuffer = PerFrameCache.GetTextureImage(_component, true);
-                    if (colorBuffer != null)
+                    using (var colorBuffer = PerFrameCache.GetTextureImage(_component, true))
+                    using (var depthBuffer = PerFrameCache.GetTextureImage(_component, false))
                     {
-                        e.Description = "Output Color Buffer";
-                        e.Diagram = colorBuffer;
-                        //e.Diagram = GH_IconTable.ResizeImage(colorBuffer, new Size(300, 200),
-                        //System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic,
-                        //System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        if( colorBuffer!=null && depthBuffer!=null )
+                        {
+                            var size = colorBuffer.Size;
+                            size.Width /= 2;
+                            var bmp = new System.Drawing.Bitmap(size.Width, size.Height);
+                            using (var g = System.Drawing.Graphics.FromImage(bmp))
+                            {
+                                g.DrawImage(colorBuffer, Rectangle.FromLTRB(0, 0, size.Width, size.Height / 2));
+                                g.DrawImage(depthBuffer, Rectangle.FromLTRB(0, size.Height / 2, size.Width, size.Height));
+                            }
+                            e.Description = "Output Color/Depth Buffers";
+                            e.Diagram = bmp;
+                            //e.Diagram = GH_IconTable.ResizeImage(colorBuffer, new Size(300, 200),
+                            //System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic,
+                            //System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                        }
                     }
                 }
                 catch { /* no action required. */ }
