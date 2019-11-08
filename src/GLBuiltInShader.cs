@@ -76,7 +76,9 @@ namespace ghgl
             }
             if( _firstTime && !string.IsNullOrWhiteSpace(_model.VertexShaderCode) && !string.IsNullOrWhiteSpace(_resourceName))
             {
-                if(_model.CompileProgram())
+                ActivateGL();
+
+                if (_model.CompileProgram())
                 {
                     if (_model.ProgramId != 0)
                     {
@@ -225,6 +227,11 @@ namespace ghgl
             }
         }
 
+        public static void ActivateGL()
+        {
+            if (Rhino.Runtime.HostUtils.RunningOnOSX)
+                MacMethods.RHC_ActivateGL();
+        }
 
         class WindowsMethods
         {
@@ -253,6 +260,9 @@ namespace ghgl
             // C:\dev\github\mcneel\rhino\src4\DotNetSDK\rhinocommon\c\rh_displaypipeline.cpp line 2561
             [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
             internal static extern void RHC_UpdateShader([MarshalAs(UnmanagedType.LPWStr)]string resourceName, [MarshalAs(UnmanagedType.LPWStr)]string defines, uint programId);
+
+            [DllImport(lib, CallingConvention = CallingConvention.Cdecl)]
+            internal static extern void RHC_ActivateGL();
         }
     }
 }

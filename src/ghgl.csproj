@@ -93,6 +93,6 @@
   <Import Project="packages\RhinoCommon.6.16.19190.7001\build\net45\RhinoCommon.targets" Condition="Exists('packages\RhinoCommon.6.16.19190.7001\build\net45\RhinoCommon.targets')" />
   <Import Project="packages\Grasshopper.6.16.19190.7001\build\net45\Grasshopper.targets" Condition="Exists('packages\Grasshopper.6.16.19190.7001\build\net45\Grasshopper.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"</PostBuildEvent>
+    <PostBuildEvent>cp "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"</PostBuildEvent>
   </PropertyGroup>
 </Project>
