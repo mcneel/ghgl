@@ -7,6 +7,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ghgl</RootNamespace>
     <AssemblyName>ghgl</AssemblyName>
+    <TargetExt>.gha</TargetExt>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <RhinoPluginType>gha</RhinoPluginType>
     <RhinoMacLauncher>/Users/stevenbaer/Library/Developer/Xcode/DerivedData/MacRhino-czfxbuxsfmepsddqjdyfntcnznbj/Build/Products/Debug/Rhinoceros.app</RhinoMacLauncher>
@@ -92,7 +93,4 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\RhinoCommon.6.16.19190.7001\build\net45\RhinoCommon.targets" Condition="Exists('packages\RhinoCommon.6.16.19190.7001\build\net45\RhinoCommon.targets')" />
   <Import Project="packages\Grasshopper.6.16.19190.7001\build\net45\Grasshopper.targets" Condition="Exists('packages\Grasshopper.6.16.19190.7001\build\net45\Grasshopper.targets')" />
-  <PropertyGroup>
-    <PostBuildEvent>Copy "$(TargetPath)" "$(TargetDir)$(ProjectName).gha"</PostBuildEvent>
-  </PropertyGroup>
 </Project>

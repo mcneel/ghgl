@@ -25,6 +25,7 @@ namespace ghgl
         private void CompileTimerTick(object sender, EventArgs e)
         {
             _compileTimer.Stop();
+            GLBuiltInShader.ActivateGL();
             _model.CompileProgram();
             GLShaderComponentBase.AnimationTimerEnabled = true;
             MarkErrors();
