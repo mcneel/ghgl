@@ -196,29 +196,30 @@ namespace ghgl
 
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            if( Rhino.RhinoApp.ExeVersion == 6 )
+            SolveInstanceHelper(DA, 0);
+        }
+
+        protected void SolveInstanceHelper(IGH_DataAccess data, int startIndex)
+        {
+            if (Rhino.RhinoApp.ExeVersion == 6)
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, VersionErrorMessage);
             }
 
-            if( !_conduitEnabled)
+            if (!_conduitEnabled)
             {
                 Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
                 _conduitEnabled = true;
             }
             _componentsNeedSorting = true;
-            SolveInstanceHelper(DA, 0);
 
-            if (!OpenGL.IsAvailable)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to access required OpenGL features");
-        }
-
-        protected void SolveInstanceHelper(IGH_DataAccess data, int startIndex)
-        {
             if (!ActivateGlContext())
                 return;
 
-            if( _majorVersion>0 || _minorVersion>1 )
+            if (!OpenGL.IsAvailable)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Unable to access required OpenGL features");
+
+            if ( _majorVersion>0 || _minorVersion>1 )
             {
                 data.SetData(0, $"{InstanceGuid}:color");
                 data.SetData(1, $"{InstanceGuid}:depth");
