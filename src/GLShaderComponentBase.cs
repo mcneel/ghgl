@@ -173,6 +173,7 @@ namespace ghgl
 
             if (IntPtr.Zero == _hglrc)
                 return false;
+
             RhinoView view = RhinoView.FromRuntimeSerialNumber(_viewSerialNumber);
             if (null == view)
             {
@@ -836,6 +837,12 @@ namespace ghgl
             }
         }
 
+        public static void UpdateContext(DrawEventArgs args)
+        {
+            _hglrc = OpenGL.wglGetCurrentContext();
+            _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
+        }
+
         static bool _drawViewportWiresCalled = false;
         static bool _conduitEnabled = false;
         static void PostDrawObjects(object sender, DrawEventArgs args)
@@ -852,11 +859,7 @@ namespace ghgl
                 OpenGL.Initialize();
             if (!OpenGL.IsAvailable)
                 return;
-            if (args.Display.Viewport.ParentView != null)
-            {
-                _hglrc = OpenGL.wglGetCurrentContext();
-                _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
-            }
+            UpdateContext(args);
 
             using (IDisposable lifetimeObject = PerFrameCache.BeginFrame(args.Display, _activeShaderComponents))
             {

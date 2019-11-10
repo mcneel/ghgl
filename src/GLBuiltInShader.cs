@@ -59,8 +59,6 @@ namespace ghgl
             return rc;
         }
 
-        bool _firstTime = true;
-
         protected override void SolveInstance(IGH_DataAccess data)
         {
             string resourceName = "";
@@ -74,10 +72,11 @@ namespace ghgl
                 _defines = defines;
                 _model = new GLSLViewModel();
             }
-            if( _firstTime && !string.IsNullOrWhiteSpace(_model.VertexShaderCode) && !string.IsNullOrWhiteSpace(_resourceName))
+            if( _model.ProgramId == 0 &&
+                !string.IsNullOrWhiteSpace(_model.VertexShaderCode) &&
+                !string.IsNullOrWhiteSpace(_resourceName))
             {
                 ActivateGL();
-
                 if (_model.CompileProgram())
                 {
                     if (_model.ProgramId != 0)
@@ -94,9 +93,7 @@ namespace ghgl
                         GLShaderComponentBase.RedrawViewportControl();
                     }
                 }
-                
             }
-            _firstTime = false;
         }
 
         class GlShaderComponentAttributes : GH_ComponentAttributes
@@ -217,6 +214,7 @@ namespace ghgl
 
         private void DisplayPipeline_PreDrawObjects(object sender, Rhino.Display.DrawEventArgs e)
         {
+            GLShaderComponentBase.UpdateContext(e);
             if( _model.ProgramId != 0 )
             {
                 if( Rhino.Runtime.HostUtils.RunningOnWindows)
