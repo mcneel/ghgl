@@ -120,17 +120,20 @@ namespace ghgl
                       (float)m.M20, (float)m.M21, (float)m.M22};
                     OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
                 });
-                Register("_worldToScreen", "mat4" ,"transformation from world to screen coordinates", (location, display) =>
+                Register("_worldToScreen", "mat4" ,"transformation from world to screen coordinates. Screen origin is upper left", (location, display) =>
                 {
-                    var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
-                    xf = xf.Transpose();
-                    Rhino.Geometry.Transform m;
-                    xf.TryGetInverse(out m);
+                    var m = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
                     m = m.Transpose();
-                    float[] w2cn = new float[] {(float)m.M00, (float)m.M01, (float)m.M02, (float)m.M03,
+                    float[] w2s = new float[] {(float)m.M00, (float)m.M01, (float)m.M02, (float)m.M03,
                       (float)m.M10, (float)m.M11, (float)m.M12, (float)m.M13,
-                      (float)m.M20, (float)m.M21, (float)m.M22, (float)m.M23};
-                    OpenGL.glUniformMatrix4fv(location, 1, false, w2cn);
+                      (float)m.M20, (float)m.M21, (float)m.M22, (float)m.M23,
+                      (float)m.M30, (float)m.M31, (float)m.M32, (float)m.M33};
+                    // flip z
+                    w2s[2] = -w2s[2];
+                    w2s[6] = -w2s[6];
+                    w2s[10] = -w2s[10];
+                    w2s[14] = -w2s[14];
+                    OpenGL.glUniformMatrix4fv(location, 1, false, w2s);
                 });
                 Register("_cameraToClip", "mat4", "transformation from camera to clipping coordinates", (location, display) =>
                 {
