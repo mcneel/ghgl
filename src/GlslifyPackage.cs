@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -81,6 +80,13 @@ namespace ghgl
                 {
                     _availablePackages = _packageRetriever.Result;
                     _packageRetriever = null;
+                    if (_availablePackages != null)
+                    {
+                        _availablePackages.Sort((a, b) =>
+                        {
+                            return string.CompareOrdinal(a.Name.ToLowerInvariant(), b.Name.ToLowerInvariant());
+                        });
+                    }
                 }
                 return _availablePackages.ToArray();
             }

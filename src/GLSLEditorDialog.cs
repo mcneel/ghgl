@@ -145,12 +145,19 @@ namespace ghgl
                 menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
             }
 
-            var functionBuiltinMenu = new ButtonMenuItem { Text = "Insert Glslify Function" };
-            foreach(var package in GlslifyPackage.AvailablePackages)
+            var functionBuiltinMenu = new ButtonMenuItem { Text = "Insert Function (glslify)" };
+            var glslBuiltinMenu = new ButtonMenuItem { Text = "StackGL Items" };
+            foreach (var package in GlslifyPackage.AvailablePackages)
             {
-                var menuitem = functionBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));
+                MenuItem menuitem = null;
+                if (package.Name.StartsWith("glsl-", StringComparison.OrdinalIgnoreCase))
+                    menuitem = glslBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));
+                else
+                    menuitem = functionBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));
+
                 menuitem.ToolTip = $"{package.Description}\n{package.HomePage}";
             }
+            functionBuiltinMenu.Items.Add(glslBuiltinMenu);
 
             Menu = new MenuBar
             {
