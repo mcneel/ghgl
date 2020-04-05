@@ -150,7 +150,9 @@ namespace ghgl
             foreach (var package in GlslifyPackage.AvailablePackages)
             {
                 MenuItem menuitem = null;
-                if (package.Name.StartsWith("glsl-", StringComparison.OrdinalIgnoreCase))
+                bool isStackGl = package.Name.Equals("matcap", StringComparison.OrdinalIgnoreCase) ||
+                    package.Name.StartsWith("glsl-", StringComparison.OrdinalIgnoreCase);
+                if (isStackGl)
                     menuitem = glslBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));
                 else
                     menuitem = functionBuiltinMenu.Items.Add(new SimpleCommand(package.Name, () => InsertGlslifyFunction(package)));

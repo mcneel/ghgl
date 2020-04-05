@@ -19,10 +19,9 @@ layout(location = 1) in vec3 _meshNormal;
 uniform mat4 _worldToClip;
 out vec3 normal;
 
-void main() 
-{
+void main() {
   normal = _meshNormal;
-  gl_Position = _worldToClip * vec4(_meshVertex,1);
+  gl_Position = _worldToClip * vec4(_meshVertex , 1.0);
 }
 ";
 
@@ -33,18 +32,17 @@ uniform vec3 _lightDirection[4];
 uniform mat3 _worldToCameraNormal;
 
 in  vec3 normal;
-out vec4 FragColor;
+out vec4 fragment_color;
 
-void main()
-{
+void main() {
   vec3 l = normalize(_lightDirection[0]);
   vec3 camNormal = _worldToCameraNormal * normal;
-  float intensity = dot(l,normalize(camNormal.xyz));
-  vec4 diffuse = vec4(1,0,1,1);
+  float intensity = dot(l, normalize(camNormal.xyz));
+  vec4 diffuse = vec4(1.0, 0.0, 1.0, 1.0);
 
-  vec3 ambient = vec3(0.1,0.1,0.1) * diffuse.rgb;
+  vec3 ambient = vec3(0.1, 0.1, 0.1) * diffuse.rgb;
   vec3 c = ambient + diffuse.rgb * abs(intensity);
-  FragColor = vec4(c, diffuse.a);
+  fragment_color = vec4(c, diffuse.a);
 }
 ";
         }

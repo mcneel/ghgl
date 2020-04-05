@@ -12,24 +12,23 @@ namespace ghgl
 
 layout(location = 0) in vec3 vertex;
 layout(location = 1) in vec4 vcolor;
+
 uniform mat4 _worldToClip;
 out vec4 vertex_color;
 
-void main() 
-{
+void main() {
   vertex_color = vcolor;
-  gl_Position = _worldToClip * vec4(vertex,1);
+  gl_Position = _worldToClip * vec4(vertex, 1.0);
 }
 ";
             _model.FragmentShaderCode =
       @"#version 330
 
 in vec4 vertex_color;
-out vec4 final_color;
+out vec4 fragment_color;
 
-void main()
-{
-  final_color = vertex_color;
+void main() {
+  fragment_color = vertex_color;
 }
 ";
         }
