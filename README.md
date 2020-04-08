@@ -9,4 +9,4 @@ https://mcneel.myjetbrains.com/youtrack/issues/GHGL
 
 -----
 
-[![Watch the video](https://i.vimeocdn.com/video/682931406_640.webp)](https://vimeo.com/255506371)
+[![Watch the video](https://i.vimeocdn.com/video/875843257_640.webp)](https://vimeo.com/405599673)
