@@ -428,24 +428,47 @@ namespace ghgl
                 {
                     if (datatype == "int" || datatype == "float")
                     {
-                        List<double> destination = new List<double>();
-                        if (data.GetDataList(i, destination))
+                        List<IGH_Goo> goo = new List<IGH_Goo>();
+                        if(data.GetDataList(i, goo))
                         {
-                            int[] ints = datatype == "int" ? new int[destination.Count] : null;
-                            float[] floats = ints == null ? new float[destination.Count] : null;
-                            for (int index = 0; index < destination.Count; index++)
+                            int[] ints = datatype == "int" ? new int[goo.Count] : null;
+                            float[] floats = ints == null ? new float[goo.Count] : null;
+                            for (int index = 0; index < goo.Count; index++)
                             {
-                                if (ints != null)
-                                    ints[index] = (int)destination[index];
-                                if (floats != null)
-                                    floats[index] = (float)destination[index];
+                                double dValue;
+                                int iValue;
+                                string sValue;
+                                if (goo[index].CastTo(out dValue))
+                                {
+                                    if (ints != null)
+                                        ints[index] = (int)dValue;
+                                    if (floats != null)
+                                        floats[index] = (float)dValue;
+                                }
+                                else if (goo[index].CastTo(out iValue))
+                                {
+                                    if (ints != null)
+                                        ints[index] = (int)dValue;
+                                    if (floats != null)
+                                        floats[index] = (float)dValue;
+                                }
+                                else if (goo[index].CastTo(out sValue))
+                                {
+                                    if (double.TryParse(sValue, out dValue))
+                                    {
+                                        if (ints != null)
+                                            ints[index] = (int)dValue;
+                                        if (floats != null)
+                                            floats[index] = (float)dValue;
+                                    }
+                                }
                             }
                             if (ints != null && ints.Length > 0)
                                 uniformsAndAttributes.AddAttribute(varname, location, ints);
                             if (floats != null && floats.Length > 0)
                                 uniformsAndAttributes.AddAttribute(varname, location, floats);
                         }
-                        if (destination.Count < 1 && datatype == "int")
+                        if (goo.Count < 1 && datatype == "int")
                         {
                             List<int> int_destination = new List<int>();
                             if (data.GetDataList(i, int_destination) && int_destination.Count > 0)

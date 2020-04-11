@@ -416,7 +416,7 @@ namespace ghgl
         static glCompileShaderProc _glCompileShader;
         public static void glCompileShader(GLuint shader)
         {
-            _glCompileShader(shader);
+           _glCompileShader(shader);
         }
 
         delegate void glDeleteShaderProc(GLuint shader);

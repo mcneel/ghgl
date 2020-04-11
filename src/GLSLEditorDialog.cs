@@ -134,14 +134,14 @@ namespace ghgl
             var uniformBuiltinMenu = new ButtonMenuItem { Text = "Insert Built-In Uniform" };
             foreach(var bi in BuiltIn.GetUniformBuiltIns())
             {
-                var menuitem = uniformBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, ()=>InsertBuiltIn(bi)));
+                var menuitem = uniformBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, ()=>InsertBuiltIn(bi, true)));
                 menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
             }
 
             var attributeBuiltinMenu = new ButtonMenuItem { Text = "Insert Built-In Attribute" };
             foreach(var bi in BuiltIn.GetAttributeBuiltIns())
             {
-                var menuitem = attributeBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, () => InsertBuiltIn(bi)));
+                var menuitem = attributeBuiltinMenu.Items.Add(new SimpleCommand(bi.Name, () => InsertBuiltIn(bi, false)));
                 menuitem.ToolTip = $"({bi.DataType}) {bi.Description}";
             }
 
@@ -297,12 +297,29 @@ namespace ghgl
             return _tabarea.SelectedPage.Content as ShaderEditorControl;
         }
 
-        void InsertBuiltIn(BuiltIn b)
+        void InsertBuiltIn(BuiltIn b, bool asUniform)
         {
             var shaderCtrl = ActiveEditorControl();
-            if (shaderCtrl != null)
+            if (shaderCtrl == null)
+                return;
+            if (asUniform)
             {
                 string text = $"uniform {b.DataType} {b.Name};";
+                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+            }
+            else
+            {
+                //layout(location = 1) in vec4 vcolor;
+                string code = shaderCtrl.Text;
+                code = code.Replace(" ", "");
+                int count = 0;
+                int index = code.IndexOf("(location=", 0);
+                while(index >=0)
+                {
+                    count++;
+                    index = code.IndexOf("(location=", index+10);
+                }
+                string text = $"layout(location = {count}) in {b.DataType} {b.Name};";
                 shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
             }
         }
