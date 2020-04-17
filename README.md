@@ -9,4 +9,7 @@ https://mcneel.myjetbrains.com/youtrack/issues/GHGL
 
 -----
 
-[![Watch the video](https://i.vimeocdn.com/video/875843257_640.webp)](https://vimeo.com/405599673)
+Videos on using GhGL can be found on youtube at
+https://www.youtube.com/playlist?list=PLs-XUlmGDNIxuQTOSBrknv5EvlrpGCxTs
+
+[![Watch the video](https://i.vimeocdn.com/video/875843257_640.webp)](https://www.youtube.com/playlist?list=PLs-XUlmGDNIxuQTOSBrknv5EvlrpGCxTs)
