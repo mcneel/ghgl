@@ -11,7 +11,7 @@ namespace ghgl
     class BuiltIn
     {
         static List<BuiltIn> _uniformBuiltins;
-        static DateTime _startTime;
+        public static DateTime _startTime;
         Action<int, Rhino.Display.DisplayPipeline> _setup;
         static Dictionary<uint, DateTime> _drawTimes;
 
@@ -26,6 +26,7 @@ namespace ghgl
         public string Name { get; }
         public string Description { get; }
         public string DataType { get; }
+        public static System.Drawing.Point MouseDownPosition { get; set; }
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
@@ -65,7 +66,12 @@ namespace ghgl
         {
             if( _uniformBuiltins==null)
             {
-                _startTime = DateTime.Now;
+                // "Start stime" is now based on when the shader was last compiled. Setting it here does not allow 
+                // for time based shaders to "start over" if/when they're based on overall frame time/counts.
+                // Resetting the start time here, means that time continues to ellapse even when the shader isn't
+                // running. Until we have a way to start and stop a shader at a given point, allow for edits, and 
+                // then continue, picking up where we left off...this is the only "easy" way of doing this for now.
+                //_startTime = DateTime.Now;
                 Register("_colorBuffer", "sampler2D", "texture representing the color information in the viewport before any shader components have executed", (location, display) =>
                 {
                     IntPtr texture2dPtr = PerFrameCache.InitialColorBuffer;
@@ -102,6 +108,53 @@ namespace ghgl
                 {
                     var viewportSize = display.Viewport.Size;
                     OpenGL.glUniform2f(location, (float)viewportSize.Width, (float)viewportSize.Height);
+                });
+                Register("_frameSize", "vec2", "width and height of overall rendered frame in pixels", (location, display) =>
+                {
+                    var frameSize = display.FrameSize;
+                    OpenGL.glUniform2f(location, (float)frameSize.Width, (float)frameSize.Height);
+                });
+                Register("_mousePosition", "vec2", "current mouse postion", (location, display) =>
+                {
+                    var mouse = display.Viewport.ParentView.ScreenToClient(System.Windows.Forms.Control.MousePosition);
+                    mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
+
+                    OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                });
+                Register("_mouseDownPosition", "vec2", "current mouse postion", (location, display) =>
+                {
+                    if (MouseDownPosition == null)
+                        MouseDownPosition = new System.Drawing.Point(-1, -1);
+
+                    if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.None)
+                    {
+                        // No mouse button is being pressed...reset the "down" position to reflect that...
+                        var mdp = MouseDownPosition;
+                        mdp.X = mdp.Y = -1;
+                        MouseDownPosition = mdp;
+                    }
+                    
+                    // If the "down" position hasn't been set yet, set it to the current mouse position...
+                    if (MouseDownPosition.X == -1 && MouseDownPosition.Y == -1)
+                    {
+                        // Note: Mouse down position is stored in screen coordinates and translated to 
+                        //       client coordinates prior to sending it to the shader... This is done
+                        //       so that a mouse down in one viewport doesn't confuse the shader running
+                        //       in another viewport.
+                        MouseDownPosition = System.Windows.Forms.Control.MousePosition;
+                    }
+
+                    var mouse = display.Viewport.ParentView.ScreenToClient(MouseDownPosition);
+                    mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
+
+                    OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                });
+                Register("_mouseState", "ivec3", "current mouse postion and button state", (location, display) =>
+                {
+                    bool lmb = System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Left;
+                    bool rmb = System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Right;
+                    bool mmb = System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Middle;
+                    OpenGL.glUniform3i(location, lmb?1:0, mmb?1:0, rmb?1:0);
                 });
                 Register("_worldToCamera", "mat4", "transformation from world to camera coordinates", (location, display) =>
                 {

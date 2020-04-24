@@ -294,6 +294,11 @@ namespace ghgl
                     ProgramId = 0;
                     _compileErrors.Add(new CompileError(errorMsg));
                 }
+                // Reset the start time every time a shader is compiled to ensure that any time-based shader "starts over"
+                // Time should only ellapse when the shader is actually running. Until we have a way to start and stop a
+                // shader at a given point, allow for edits, and then continue, picking up where we left off...this is the
+                // only "easy" way of doing this for now.
+                BuiltIn._startTime = DateTime.Now;
             }
             _compileFailed = (ProgramId == 0);
             return ProgramId != 0;
