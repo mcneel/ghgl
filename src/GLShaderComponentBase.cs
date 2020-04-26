@@ -212,7 +212,6 @@ namespace ghgl
                 Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
                 _conduitEnabled = true;
             }
-            _componentsNeedSorting = true;
 
             if (!ActivateGlContext())
                 return;
@@ -866,24 +865,20 @@ namespace ghgl
             _viewSerialNumber = args.Display.Viewport.ParentView.RuntimeSerialNumber;
         }
 
-        static bool _drawViewportWiresCalled = false;
         static bool _conduitEnabled = false;
         static void PostDrawObjects(object sender, DrawEventArgs args)
         {
-            if (!_drawViewportWiresCalled)
+            if (_activeShaderComponents.Count < 1)
                 return;
-            _drawViewportWiresCalled = false;
-
-            if (_componentsNeedSorting)
-                SortComponents();
-
 
             if (!OpenGL.Initialized)
                 OpenGL.Initialize();
             if (!OpenGL.IsAvailable)
                 return;
+
             UpdateContext(args);
 
+            SortComponents();
             using (IDisposable lifetimeObject = PerFrameCache.BeginFrame(args.Display, _activeShaderComponents))
             {
                 foreach (var component in _activeShaderComponents)
@@ -907,17 +902,17 @@ namespace ghgl
                 }
             }
             GLRecycleBin.Recycle();
+            _activeShaderComponents.Clear();
         }
 
         public override void DrawViewportWires(IGH_PreviewArgs args)
         {
-            _drawViewportWiresCalled = true;
+            AddToActiveComponentList(this);
         }
 
         public int PreviewSortOrder { get; set; } = 5;
 
         static List<GLShaderComponentBase> _activeShaderComponents = new List<GLShaderComponentBase>();
-        static bool _componentsNeedSorting = true;
 
         static void AddToActiveComponentList(GLShaderComponentBase comp)
         {
@@ -930,9 +925,9 @@ namespace ghgl
             _activeShaderComponents.Add(comp);
             SortComponents();
         }
+
         static void SortComponents()
         {
-            _componentsNeedSorting = false;
             _activeShaderComponents.Sort((x, y) => {
                 var xUpstream = x.RequiredUpstreamComponents();
                 var yUpstream = y.RequiredUpstreamComponents();
@@ -990,33 +985,6 @@ namespace ghgl
                 }
             }
             return upstream;
-        }
-
-        public override void DocumentContextChanged(GH_Document document, GH_DocumentContext context)
-        {
-            if (context == GH_DocumentContext.Unloaded || context == GH_DocumentContext.Close)
-            {
-                _activeShaderComponents.Clear();
-            }
-            if (context == GH_DocumentContext.Loaded)
-            {
-                AddToActiveComponentList(this);
-            }
-            base.DocumentContextChanged(document, context);
-        }
-        public override void MovedBetweenDocuments(GH_Document oldDocument, GH_Document newDocument)
-        {
-            base.MovedBetweenDocuments(oldDocument, newDocument);
-        }
-        public override void AddedToDocument(GH_Document document)
-        {
-            AddToActiveComponentList(this);
-            base.AddedToDocument(document);
-        }
-        public override void RemovedFromDocument(GH_Document document)
-        {
-            _activeShaderComponents.Remove(this);
-            base.RemovedFromDocument(document);
         }
 
         public IGH_Param CreateParameter(GH_ParameterSide side, int index)
