@@ -896,7 +896,10 @@ namespace ghgl
                         string dataType;
                         int arrayLength;
                         if (component._model.TryGetUniformType("_time", out dataType, out arrayLength) ||
-                            component._model.TryGetUniformType("_date", out dataType, out arrayLength))
+                            component._model.TryGetUniformType("_date", out dataType, out arrayLength) ||
+                            component._model.TryGetUniformType("_mousePosition", out dataType, out arrayLength) ||
+                            component._model.TryGetUniformType("_mouseDownPosition", out dataType, out arrayLength) ||
+                            component._model.TryGetUniformType("_mouseState", out dataType, out arrayLength))
                             AnimationTimerEnabled = true;
                     }
 
