@@ -28,6 +28,7 @@ namespace ghgl
             GLBuiltInShader.ActivateGL();
             _model.CompileProgram();
             GLShaderComponentBase.AnimationTimerEnabled = true;
+            GLPostEffectShaderComponent.PepAnimationTimerEnabled = true;
             MarkErrors();
             ShaderCompiled?.Invoke(this, new EventArgs());
         }
@@ -59,6 +60,7 @@ namespace ghgl
             if(_model.GetShader(_shaderType).ShaderId==0)
             {
                 GLShaderComponentBase.AnimationTimerEnabled = false;
+                GLPostEffectShaderComponent.PepAnimationTimerEnabled = false;
                 _compileTimer.Stop();
                 _compileTimer.Start();
             }

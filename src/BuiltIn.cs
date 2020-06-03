@@ -100,54 +100,69 @@ namespace ghgl
 
                 Register("_worldToClip", "mat4", "transformation from world to clipping coordinates", (location, display) =>
                 {
-                    float[] w2c = display.GetOpenGLWorldToClip(true);
-                    OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
+                    if (display != null)
+                    {
+                        float[] w2c = display.GetOpenGLWorldToClip(true);
+                        OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
+                    }
 
                 });
                 Register("_viewportSize", "vec2", "width and height of viewport in pixels", (location, display) =>
                 {
-                    var viewportSize = display.Viewport.Size;
-                    OpenGL.glUniform2f(location, (float)viewportSize.Width, (float)viewportSize.Height);
+                    if (display != null)
+                    {
+                        var viewportSize = display.Viewport.Size;
+                        OpenGL.glUniform2f(location, (float)viewportSize.Width, (float)viewportSize.Height);
+                    }
                 });
                 Register("_frameSize", "vec2", "width and height of overall rendered frame in pixels", (location, display) =>
                 {
-                    var frameSize = display.FrameSize;
-                    OpenGL.glUniform2f(location, (float)frameSize.Width, (float)frameSize.Height);
+                    if (display != null)
+                    {
+                        var frameSize = display.FrameSize;
+                        OpenGL.glUniform2f(location, (float)frameSize.Width, (float)frameSize.Height);
+                    }
                 });
                 Register("_mousePosition", "vec2", "current mouse postion", (location, display) =>
                 {
-                    var mouse = display.Viewport.ParentView.ScreenToClient(System.Windows.Forms.Control.MousePosition);
-                    mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
+                    if (display != null)
+                    {
+                        var mouse = display.Viewport.ParentView.ScreenToClient(System.Windows.Forms.Control.MousePosition);
+                        mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
 
-                    OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                        OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                    }
                 });
                 Register("_mouseDownPosition", "vec2", "current mouse postion", (location, display) =>
                 {
-                    if (MouseDownPosition == null)
-                        MouseDownPosition = new System.Drawing.Point(-1, -1);
-
-                    if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.None)
+                    if (display != null)
                     {
-                        // No mouse button is being pressed...reset the "down" position to reflect that...
-                        var mdp = MouseDownPosition;
-                        mdp.X = mdp.Y = -1;
-                        MouseDownPosition = mdp;
-                    }
-                    
-                    // If the "down" position hasn't been set yet, set it to the current mouse position...
-                    if (MouseDownPosition.X == -1 && MouseDownPosition.Y == -1)
-                    {
-                        // Note: Mouse down position is stored in screen coordinates and translated to 
-                        //       client coordinates prior to sending it to the shader... This is done
-                        //       so that a mouse down in one viewport doesn't confuse the shader running
-                        //       in another viewport.
-                        MouseDownPosition = System.Windows.Forms.Control.MousePosition;
-                    }
+                        if (MouseDownPosition == null)
+                            MouseDownPosition = new System.Drawing.Point(-1, -1);
 
-                    var mouse = display.Viewport.ParentView.ScreenToClient(MouseDownPosition);
-                    mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
+                        if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.None)
+                        {
+                            // No mouse button is being pressed...reset the "down" position to reflect that...
+                            var mdp = MouseDownPosition;
+                            mdp.X = mdp.Y = -1;
+                            MouseDownPosition = mdp;
+                        }
 
-                    OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                        // If the "down" position hasn't been set yet, set it to the current mouse position...
+                        if (MouseDownPosition.X == -1 && MouseDownPosition.Y == -1)
+                        {
+                            // Note: Mouse down position is stored in screen coordinates and translated to 
+                            //       client coordinates prior to sending it to the shader... This is done
+                            //       so that a mouse down in one viewport doesn't confuse the shader running
+                            //       in another viewport.
+                            MouseDownPosition = System.Windows.Forms.Control.MousePosition;
+                        }
+
+                        var mouse = display.Viewport.ParentView.ScreenToClient(MouseDownPosition);
+                        mouse.Y = display.Viewport.Size.Height - mouse.Y - 1;
+
+                        OpenGL.glUniform2f(location, mouse.X, mouse.Y);
+                    }
                 });
                 Register("_mouseState", "ivec3", "current mouse postion and button state", (location, display) =>
                 {
@@ -158,40 +173,52 @@ namespace ghgl
                 });
                 Register("_worldToCamera", "mat4", "transformation from world to camera coordinates", (location, display) =>
                 {
-                    float[] w2c = display.GetOpenGLWorldToCamera(true);
-                    OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
+                    if (display != null)
+                    {
+                        float[] w2c = display.GetOpenGLWorldToCamera(true);
+                        OpenGL.glUniformMatrix4fv(location, 1, false, w2c);
+                    }
                 });
                 Register("_worldToCameraNormal", "mat3", "transformation to apply to normals for world to camera", (location, display) =>
                 {
-                    var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Camera);
-                    xf = xf.Transpose();
-                    Rhino.Geometry.Transform m;
-                    xf.TryGetInverse(out m);
-                    m = m.Transpose();
-                    float[] w2cn = new float[] {(float)m.M00, (float)m.M01, (float)m.M02,
+                    if (display != null)
+                    {
+                        var xf = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Camera);
+                        xf = xf.Transpose();
+                        Rhino.Geometry.Transform m;
+                        xf.TryGetInverse(out m);
+                        m = m.Transpose();
+                        float[] w2cn = new float[] {(float)m.M00, (float)m.M01, (float)m.M02,
                       (float)m.M10, (float)m.M11, (float)m.M12,
                       (float)m.M20, (float)m.M21, (float)m.M22};
-                    OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
+                        OpenGL.glUniformMatrix3fv(location, 1, false, w2cn);
+                    }
                 });
                 Register("_worldToScreen", "mat4" ,"transformation from world to screen coordinates. Screen origin is upper left", (location, display) =>
                 {
-                    var m = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
-                    m = m.Transpose();
-                    float[] w2s = new float[] {(float)m.M00, (float)m.M01, (float)m.M02, (float)m.M03,
+                    if (display != null)
+                    {
+                        var m = display.Viewport.GetTransform(Rhino.DocObjects.CoordinateSystem.World, Rhino.DocObjects.CoordinateSystem.Screen);
+                        m = m.Transpose();
+                        float[] w2s = new float[] {(float)m.M00, (float)m.M01, (float)m.M02, (float)m.M03,
                       (float)m.M10, (float)m.M11, (float)m.M12, (float)m.M13,
                       (float)m.M20, (float)m.M21, (float)m.M22, (float)m.M23,
                       (float)m.M30, (float)m.M31, (float)m.M32, (float)m.M33};
-                    // flip z
-                    w2s[2] = -w2s[2];
-                    w2s[6] = -w2s[6];
-                    w2s[10] = -w2s[10];
-                    w2s[14] = -w2s[14];
-                    OpenGL.glUniformMatrix4fv(location, 1, false, w2s);
+                        // flip z
+                        w2s[2] = -w2s[2];
+                        w2s[6] = -w2s[6];
+                        w2s[10] = -w2s[10];
+                        w2s[14] = -w2s[14];
+                        OpenGL.glUniformMatrix4fv(location, 1, false, w2s);
+                    }
                 });
                 Register("_cameraToClip", "mat4", "transformation from camera to clipping coordinates", (location, display) =>
                 {
-                    float[] c2c = display.GetOpenGLCameraToClip();
-                    OpenGL.glUniformMatrix4fv(location, 1, false, c2c);
+                    if (display != null)
+                    {
+                        float[] c2c = display.GetOpenGLCameraToClip();
+                        OpenGL.glUniformMatrix4fv(location, 1, false, c2c);
+                    }
                 });
                 Register("_time", "float", "total elapsed seconds since starting GL Component", (location, display) =>
                 {
@@ -206,98 +233,125 @@ namespace ghgl
                 });
                 Register("_timeDelta", "float", "seconds since the last time this view was drawn", (location, display) =>
                 {
-                    if (_drawTimes == null)
-                        _drawTimes = new Dictionary<uint, DateTime>();
-                    uint viewSerialNumber = display.Viewport.ParentView.RuntimeSerialNumber;
-                    DateTime previousTime;
-                    double seconds = 0;
-                    if( _drawTimes.TryGetValue(viewSerialNumber, out previousTime))
+                    if (display != null)
                     {
-                        var span = DateTime.Now - previousTime;
-                        seconds = span.TotalSeconds;
+                        if (_drawTimes == null)
+                            _drawTimes = new Dictionary<uint, DateTime>();
+                        uint viewSerialNumber = display.Viewport.ParentView.RuntimeSerialNumber;
+                        DateTime previousTime;
+                        double seconds = 0;
+                        if (_drawTimes.TryGetValue(viewSerialNumber, out previousTime))
+                        {
+                            var span = DateTime.Now - previousTime;
+                            seconds = span.TotalSeconds;
+                        }
+                        _drawTimes[viewSerialNumber] = DateTime.Now;
+                        OpenGL.glUniform1f(location, (float)seconds);
                     }
-                    _drawTimes[viewSerialNumber] = DateTime.Now;
-                    OpenGL.glUniform1f(location, (float)seconds);
                 });
                 Register("_cameraLocation", "vec3", "world location of camera", (location, display) =>
                 {
-                    var camLoc = display.Viewport.CameraLocation;
-                    OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
+                    if (display != null)
+                    {
+                        var camLoc = display.Viewport.CameraLocation;
+                        OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
+                    }
                 });
                 Register("_cameraNear", "float", "near clip plane distance in camera coordinates", (location, display) =>
                 {
-                    display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
-                    OpenGL.glUniform1f(location, (float)near);
+                    if (display != null)
+                    {
+                        display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
+                        OpenGL.glUniform1f(location, (float)near);
+                    }
                 });
                 Register("_cameraFar", "float", "farclip  plane distance in camera coordinates", (location, display) =>
                 {
-                    display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
-                    OpenGL.glUniform1f(location, (float)far);
+                    if (display != null)
+                    {
+                        display.Viewport.GetFrustum(out double l, out double r, out double b, out double t, out double near, out double far);
+                        OpenGL.glUniform1f(location, (float)far);
+                    }
                 });
                 Register("_parallelViewport", "int", "1 if viewport has a parallel projection. 0 if perspective", (location, display) =>
                 {
-                    int parallel = display.Viewport.IsParallelProjection ? 1:0;
-                    OpenGL.glUniform1i(location, parallel);
+                    if (display != null)
+                    {
+                        int parallel = display.Viewport.IsParallelProjection ? 1 : 0;
+                        OpenGL.glUniform1i(location, parallel);
+                    }
                 });
                 const int maxlights = 4;
                 Register("_lightCount", "int", "number of lights in the scene", (location, display) =>
                 {
-                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                    //var lights = display.GetLights();
-                    var lights = GetLightsHelper(display);
-                    int count = lights.Length < maxlights ? lights.Length : 4;
-                    OpenGL.glUniform1i(location, count);
+                    if (display != null)
+                    {
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        int count = lights.Length < maxlights ? lights.Length : 4;
+                        OpenGL.glUniform1i(location, count);
+                    }
                 });
 
                 Register($"_lightPosition[{maxlights}]", "vec3", "array of four light positions", (location, display) =>
                 {
-                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                    //var lights = display.GetLights();
-                    var lights = GetLightsHelper(display);
-                    float[] v = new float[3 * maxlights];
-                    for (int i = 0; i < lights.Length; i++)
+                    if (display != null)
                     {
-                        if (i >= maxlights)
-                            break;
-                        var loc = lights[i].Location;
-                        v[i * 3] = (float)loc.X;
-                        v[i * 3 + 1] = (float)loc.Y;
-                        v[i * 3 + 2] = (float)loc.Z;
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        float[] v = new float[3 * maxlights];
+                        for (int i = 0; i < lights.Length; i++)
+                        {
+                            if (i >= maxlights)
+                                break;
+                            var loc = lights[i].Location;
+                            v[i * 3] = (float)loc.X;
+                            v[i * 3 + 1] = (float)loc.Y;
+                            v[i * 3 + 2] = (float)loc.Z;
+                        }
+                        OpenGL.glUniform3fv(location, maxlights, v);
                     }
-                    OpenGL.glUniform3fv(location, maxlights, v);
                 });
                 Register($"_lightDirection[{maxlights}]", "vec3", "array of four light direction vectors", (location, display) =>
                 {
-                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                    //var lights = display.GetLights();
-                    var lights = GetLightsHelper(display);
-                    float[] v = new float[3 * maxlights];
-                    for(int i=0; i<lights.Length; i++)
+                    if (display != null)
                     {
-                        if (i >= maxlights)
-                            break;
-                        var direction = lights[i].Direction;
-                        v[i * 3] = (float)direction.X;
-                        v[i * 3 + 1] = (float)direction.Y;
-                        v[i * 3 + 2] = (float)direction.Z;
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        float[] v = new float[3 * maxlights];
+                        for (int i = 0; i < lights.Length; i++)
+                        {
+                            if (i >= maxlights)
+                                break;
+                            var direction = lights[i].Direction;
+                            v[i * 3] = (float)direction.X;
+                            v[i * 3 + 1] = (float)direction.Y;
+                            v[i * 3 + 2] = (float)direction.Z;
+                        }
+                        OpenGL.glUniform3fv(location, maxlights, v);
                     }
-                    OpenGL.glUniform3fv(location, maxlights, v);
                 });
                 Register($"_lightInCameraSpace[{maxlights}]", "vec3", "array of four light posiitons in camera space", (location, display) =>
                 {
-                    // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
-                    //var lights = display.GetLights();
-                    var lights = GetLightsHelper(display);
-                    int[] v = new int[maxlights];
-                    for (int i = 0; i < lights.Length; i++)
+                    if (display != null)
                     {
-                        if (i >= maxlights)
-                            break;
+                        // Use reflection until 6.3 goes to release candidate. GetLights is not available until 6.3
+                        //var lights = display.GetLights();
+                        var lights = GetLightsHelper(display);
+                        int[] v = new int[maxlights];
+                        for (int i = 0; i < lights.Length; i++)
+                        {
+                            if (i >= maxlights)
+                                break;
 
-                        bool isCameraLight = lights[i].CoordinateSystem == Rhino.DocObjects.CoordinateSystem.Camera;
-                        v[i] = isCameraLight ? 1 : 0;
+                            bool isCameraLight = lights[i].CoordinateSystem == Rhino.DocObjects.CoordinateSystem.Camera;
+                            v[i] = isCameraLight ? 1 : 0;
+                        }
+                        OpenGL.glUniform1iv(location, maxlights, v);
                     }
-                    OpenGL.glUniform1iv(location, maxlights, v);
                 });
 
                 _uniformBuiltins.Sort((a, b) => (a.Name.CompareTo(b.Name)));
@@ -315,7 +369,7 @@ namespace ghgl
             return rc;
         }
 
-        static void Register(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
+        public static void Register(string name, string datatype, string description, Action<int, Rhino.Display.DisplayPipeline> setup)
         {
             if (_uniformBuiltins == null)
                 _uniformBuiltins = new List<BuiltIn>();

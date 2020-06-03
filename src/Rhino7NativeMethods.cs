@@ -82,6 +82,9 @@ namespace ghgl
 
         public static bool RhTexture2dCapture(Rhino.Display.DisplayPipeline pipeline, IntPtr ptrTexture2d, CaptureFormat captureFormat)
         {
+            if (pipeline == null)
+                return false;
+
             var fieldInfo = pipeline.GetType().GetField("m_ptr", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             IntPtr ptrPipeline = (IntPtr)fieldInfo.GetValue(pipeline);
             if (Rhino.Runtime.HostUtils.RunningOnWindows)

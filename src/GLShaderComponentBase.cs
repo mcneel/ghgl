@@ -27,6 +27,7 @@ namespace ghgl
         static IdleRedraw _idleRedraw;
         int _majorVersion = 0;
         int _minorVersion = 2;
+        protected bool _is_pep_component = false;
 
         protected GLShaderComponentBase(string name, string nickname, string description)
           : base(name, nickname, description, "Display", "Preview")
@@ -207,10 +208,13 @@ namespace ghgl
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Error, VersionErrorMessage);
             }
 
-            if (!_conduitEnabled)
+            if(!_is_pep_component)
             {
-                Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
-                _conduitEnabled = true;
+                if (!_conduitEnabled)
+                {
+                    Rhino.Display.DisplayPipeline.PostDrawObjects += PostDrawObjects;
+                    _conduitEnabled = true;
+                }
             }
 
             if (!ActivateGlContext())
@@ -895,7 +899,9 @@ namespace ghgl
                             component._model.TryGetUniformType("_mousePosition", out dataType, out arrayLength) ||
                             component._model.TryGetUniformType("_mouseDownPosition", out dataType, out arrayLength) ||
                             component._model.TryGetUniformType("_mouseState", out dataType, out arrayLength))
+                        {
                             AnimationTimerEnabled = true;
+                        }
                     }
 
                     component._model.Draw(args.Display, component);
@@ -914,7 +920,7 @@ namespace ghgl
 
         static List<GLShaderComponentBase> _activeShaderComponents = new List<GLShaderComponentBase>();
 
-        static void AddToActiveComponentList(GLShaderComponentBase comp)
+        protected static void AddToActiveComponentList(GLShaderComponentBase comp)
         {
             AnimationTimerEnabled = false;
             foreach(var component in _activeShaderComponents)

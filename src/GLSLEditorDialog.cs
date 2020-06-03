@@ -235,6 +235,7 @@ namespace ghgl
                 },
             };
             GLShaderComponentBase.AnimationTimerEnabled = true;
+            GLPostEffectShaderComponent.PepAnimationTimerEnabled = true;
             OnShadersCompiled(null, EventArgs.Empty);
         }
 

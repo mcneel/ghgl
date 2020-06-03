@@ -63,6 +63,19 @@ namespace ghgl
                 _glGenBuffers = (glGenBuffersProc)procBuilder.GetProc<glGenBuffersProc>();
                 _glBufferData = (glBufferDataProc)procBuilder.GetProc<glBufferDataProc>();
 
+                _glGenFramebuffers = (glGenFramebuffersProc)procBuilder.GetProc<glGenFramebuffersProc>();
+                _glDeleteFramebuffers = (glDeleteFramebuffersProc)procBuilder.GetProc<glDeleteFramebuffersProc>();
+                _glGenRenderbuffers = (glGenRenderbuffersProc)procBuilder.GetProc<glGenRenderbuffersProc>();
+                _glDeleteRenderbuffers = (glDeleteRenderbuffersProc)procBuilder.GetProc<glDeleteRenderbuffersProc>();
+                _glBindRenderbuffer = (glBindRenderbufferProc)procBuilder.GetProc<glBindRenderbufferProc>();
+                _glRenderbufferStorage = (glRenderbufferStorageProc)procBuilder.GetProc<glRenderbufferStorageProc>();
+                _glBindFramebuffer = (glBindFramebufferProc)procBuilder.GetProc<glBindFramebufferProc>();
+                _glFramebufferRenderbuffer = (glFramebufferRenderbufferProc)procBuilder.GetProc<glFramebufferRenderbufferProc>();
+                _glDrawBuffers = (glDrawBuffersProc)procBuilder.GetProc<glDrawBuffersProc>();
+                _glViewport = (glViewportProc)procBuilder.GetProc<glViewportProc>();
+                _glScissor = (glScissorProc)procBuilder.GetProc<glScissorProc>();
+                _glCopyTexSubImage2D = (glCopyTexSubImage2DProc)procBuilder.GetProc<glCopyTexSubImage2DProc>();
+
                 _glAttachShader = (glAttachShaderProc)procBuilder.GetProc<glAttachShaderProc>();
                 _glCompileShader = (glCompileShaderProc)procBuilder.GetProc<glCompileShaderProc>();
                 _glDeleteShader = (glDeleteShaderProc)procBuilder.GetProc<glDeleteShaderProc>();
@@ -239,6 +252,7 @@ namespace ghgl
         public const uint GL_BGRA = 0x80E1;
         public const uint GL_RGB8 = 0x8051;
         public const uint GL_RGBA8 = 0x8058;
+        public const uint GL_RGBA32F = 0x8814;
 
         public const uint GL_TEXTURE_MAG_FILTER = 0x2800;
         public const uint GL_TEXTURE_MIN_FILTER = 0x2801;
@@ -253,7 +267,9 @@ namespace ghgl
         public const uint GL_CLAMP = 0x2900;
         public const uint GL_REPEAT = 0x2901;
 
-
+        public const uint GL_FRAMEBUFFER = 0x8D40;
+        public const uint GL_RENDERBUFFER = 0x8D41;
+        public const uint GL_COLOR_ATTACHMENT0 = 0x8CE0;
 
         delegate void glBlendFuncProc(GLenum sfactor, GLenum dfactor);
         static glBlendFuncProc _glBlendFunc;
@@ -400,6 +416,92 @@ namespace ghgl
         public static void glBufferData(GLenum target, GLsizeiptr size, IntPtr data, GLenum usage)
         {
             _glBufferData(target, size, data, usage);
+        }
+
+        delegate void glGenFramebuffersProc(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] framebuffers);
+        static glGenFramebuffersProc _glGenFramebuffers;
+        public static void glGenFramebuffers(GLsizei n, out GLuint[] buffers)
+        {
+            buffers = new GLuint[n];
+            _glGenFramebuffers(n, buffers);
+        }
+
+        delegate void glDeleteFramebuffersProc(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] framebuffers);
+        static glDeleteFramebuffersProc _glDeleteFramebuffers;
+        public static void glDeleteFramebuffers(GLsizei n, GLuint[] buffers)
+        {
+            _glDeleteFramebuffers(n, buffers);
+        }
+
+        delegate void glGenRenderbuffersProc(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] renderbuffers);
+        static glGenRenderbuffersProc _glGenRenderbuffers;
+        public static void glGenRenderbuffers(GLsizei n, out GLuint[] buffers)
+        {
+            buffers = new GLuint[n];
+            _glGenRenderbuffers(n, buffers);
+        }
+
+        delegate void glDeleteRenderbuffersProc(GLsizei n, [MarshalAs(UnmanagedType.LPArray)]GLuint[] renderbuffers);
+        static glDeleteRenderbuffersProc _glDeleteRenderbuffers;
+        public static void glDeleteRenderbuffers(GLsizei n, GLuint[] buffers)
+        {
+            _glDeleteRenderbuffers(n, buffers);
+        }
+
+        delegate void glBindFramebufferProc(GLenum target, uint framebuffer);
+        static glBindFramebufferProc _glBindFramebuffer;
+        public static void glBindFramebuffer(GLenum target, uint framebuffer)
+        {
+            _glBindFramebuffer(target, framebuffer);
+        }
+
+        delegate void glBindRenderbufferProc(GLenum target, uint renderbuffer);
+        static glBindRenderbufferProc _glBindRenderbuffer;
+        public static void glBindRenderbuffer(GLenum target, uint renderbuffer)
+        {
+            _glBindRenderbuffer(target, renderbuffer);
+        }
+
+        delegate void glRenderbufferStorageProc(GLenum target, GLenum internal_format, GLsizei width, GLsizei height);
+        static glRenderbufferStorageProc _glRenderbufferStorage;
+        public static void glRenderbufferStorage(GLenum target, GLenum internal_format, GLsizei width, GLsizei height)
+        {
+            _glRenderbufferStorage(target, internal_format, width, height);
+        }
+
+        delegate void glFramebufferRenderbufferProc(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+        static glFramebufferRenderbufferProc _glFramebufferRenderbuffer;
+        public static void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+        {
+            _glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+        }
+
+        delegate void glDrawBuffersProc(GLsizei n, GLuint[] buffers);
+        static glDrawBuffersProc _glDrawBuffers;
+        public static void glDrawBuffers(GLsizei n, GLuint[] buffers)
+        {
+            _glDrawBuffers(n, buffers);
+        }
+
+        delegate void glViewportProc(GLint x, GLint y, GLsizei width, GLsizei height);
+        static glViewportProc _glViewport;
+        public static void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+        {
+            _glViewport(x, y, width, height);
+        }
+
+        delegate void glScissorProc(GLint x, GLint y, GLsizei width, GLsizei height);
+        static glScissorProc _glScissor;
+        public static void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+        {
+            _glScissor(x, y, width, height);
+        }
+
+        delegate void glCopyTexSubImage2DProc(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+        static glCopyTexSubImage2DProc _glCopyTexSubImage2D;
+        public static void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+        {
+            _glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         }
 
         //delegate void glBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
@@ -878,6 +980,12 @@ namespace ghgl.PlatformGL
 
         [DllImport(OPENGL_LIB)]
         public static extern void glGenerateTextureMipmap(GLuint texture);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+
+        [DllImport(OPENGL_LIB)]
+        public static extern void glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
         [DllImport(OPENGL_LIB)]
         public static extern HGLRC wglGetCurrentContext();
