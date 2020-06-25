@@ -5,5 +5,7 @@ authors:
 - Robert McNeel & Associates
 description: OpenGL shader support in Grasshopper
 url: https://github.com/mcneel/ghgl
-secret:
-  id: 835c3e29-712f-4585-9d0b-8192359ad167
+keywords:
+- guid:835c3e29-712f-4585-9d0b-8192359ad167
+- opengl
+- shader
