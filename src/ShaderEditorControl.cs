@@ -19,7 +19,7 @@ namespace ghgl
             MarkErrors();
             _compileTimer.Elapsed += CompileTimerTick;
             _compileTimer.Interval = 1; //every second
-
+            IsFoldingMarginVisible = true;
         }
 
         private void CompileTimerTick(object sender, EventArgs e)
