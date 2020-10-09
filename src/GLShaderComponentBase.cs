@@ -351,6 +351,26 @@ namespace ghgl
                                 uniformsAndAttributes.AddUniform(varname, values, arrayLength);
                                 break;
                             }
+                        case "mat4":
+                            {
+                                Mat4[] values = new Mat4[destinationList.Count];
+                                for (int j = 0; j < values.Length; j++)
+                                {
+                                    IGH_Goo destination = destinationList[j];
+                                    Transform xform;
+                                    if (destination.CastTo(out xform))
+                                    {
+                                        values[j] = new Mat4(xform);
+                                    }
+                                }
+
+                                // hack for iterations
+                                if (arrayLength == 0 && data.Iteration < destinationList.Count)
+                                    values[0] = values[data.Iteration];
+
+                                uniformsAndAttributes.AddUniform(varname, values, arrayLength);
+                                break;
+                            }
                         case "bool":
                             {
                                 int[] values = new int[destinationList.Count];
@@ -505,6 +525,19 @@ namespace ghgl
                                 vec4_array[index] = new Vec4(color.R, color.G, color.B, color.A);
                             }
                             uniformsAndAttributes.AddAttribute(varname, location, vec4_array);
+                        }
+                    }
+                    if (datatype == "mat4")
+                    {
+                        List<Transform> destination = new List<Transform>();
+                        if (data.GetDataList(i, destination))
+                        {
+                            Mat4[] mat4_array = new Mat4[destination.Count];
+                            for (int index = 0; index < destination.Count; index++)
+                            {
+                                mat4_array[index] = new Mat4(destination[index]);
+                            }
+                            uniformsAndAttributes.AddAttribute(varname, location, mat4_array);
                         }
                     }
 

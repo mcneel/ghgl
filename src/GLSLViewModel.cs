@@ -663,6 +663,10 @@ namespace ghgl
             {
                 _vec4Uniforms.Add(new UniformData<Vec4>(name, arrayLength, values));
             }
+            public void AddUniform(string name, Mat4[] values, int arrayLength)
+            {
+                _mat4Uniforms.Add(new UniformData<Mat4>(name, arrayLength, values));
+            }
             public void AddSampler2DUniform(string name, string path)
             {
                 var data = new SamplerUniformData(name, path);
@@ -710,6 +714,10 @@ namespace ghgl
             public void AddAttribute(string name, int location, Vec4[] value)
             {
                 _vec4Attribs.Add(new GLAttribute<Vec4>(name, location, value));
+            }
+            public void AddAttribute(string name, int location, Mat4[] value)
+            {
+                _mat4Attribs.Add(new GLAttribute<Mat4>(name, location, value));
             }
 
             public void Draw(Rhino.Display.DisplayPipeline display, uint programId, uint drawMode)
@@ -824,6 +832,8 @@ namespace ghgl
                     DisableVertexAttribArray(item.Location);
                 foreach (var item in _vec4Attribs)
                     DisableVertexAttribArray(item.Location);
+                foreach (var item in _mat4Attribs)
+                    DisableVertexAttribArray(item.Location);
             }
 
 
@@ -894,6 +904,40 @@ namespace ghgl
                             }
                             OpenGL.glUniform4fv(location, arrayLength, data);
                         }
+                    }
+                }
+                foreach (var uniform in _mat4Uniforms)
+                {
+                    int arrayLength = uniform.ArrayLength;
+                    if (arrayLength == 0)
+                        arrayLength = 1;
+                    int location = OpenGL.glGetUniformLocation(programId, uniform.Name);
+                    if (-1 != location)
+                    {
+                        float[] data = new float[arrayLength * 16];
+                        for (int i = 0; i < arrayLength; i++)
+                        {
+                            data[i * 16] = uniform.Data[i]._00;
+                            data[i * 16 + 1] = uniform.Data[i]._01;
+                            data[i * 16 + 2] = uniform.Data[i]._02;
+                            data[i * 16 + 3] = uniform.Data[i]._03;
+
+                            data[i * 16 + 4] = uniform.Data[i]._10;
+                            data[i * 16 + 5] = uniform.Data[i]._11;
+                            data[i * 16 + 6] = uniform.Data[i]._12;
+                            data[i * 16 + 7] = uniform.Data[i]._13;
+
+                            data[i * 16 + 8] = uniform.Data[i]._20;
+                            data[i * 16 + 9] = uniform.Data[i]._21;
+                            data[i * 16 + 10] = uniform.Data[i]._22;
+                            data[i * 16 + 11] = uniform.Data[i]._23;
+
+                            data[i * 16 + 12] = uniform.Data[i]._30;
+                            data[i * 16 + 13] = uniform.Data[i]._31;
+                            data[i * 16 + 14] = uniform.Data[i]._32;
+                            data[i * 16 + 15] = uniform.Data[i]._33;
+                        }
+                        OpenGL.glUniformMatrix4fv(location, uniform.Data.Length, true, data);
                     }
                 }
 
@@ -1251,6 +1295,39 @@ namespace ghgl
                         }
                     }
                 }
+
+                foreach (var item in _mat4Attribs)
+                {
+                    if (element_count == 0)
+                        element_count = item.Items.Length;
+                    if (element_count > item.Items.Length && item.Items.Length > 1)
+                        element_count = item.Items.Length;
+
+                    if (item.Location < 0)
+                    {
+                        item.Location = OpenGL.glGetAttribLocation(programId, item.Name);
+                    }
+                    if (item.Location >= 0)
+                    {
+                        uint location = (uint)item.Location;
+                        if (item.VboHandle == 0)
+                        {
+                            uint[] buffers;
+                            OpenGL.glGenBuffers(1, out buffers);
+                            item.VboHandle = buffers[0];
+                            OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, item.VboHandle);
+                            IntPtr size = new IntPtr(16 * sizeof(float) * item.Items.Length);
+                            var handle = GCHandle.Alloc(item.Items, GCHandleType.Pinned);
+                            IntPtr pointer = handle.AddrOfPinnedObject();
+                            OpenGL.glBufferData(OpenGL.GL_ARRAY_BUFFER, size, pointer, OpenGL.GL_STREAM_DRAW);
+                            handle.Free();
+                        }
+                        OpenGL.glBindBuffer(OpenGL.GL_ARRAY_BUFFER, item.VboHandle);
+                        OpenGL.glEnableVertexAttribArray(location);
+                        OpenGL.glVertexAttribPointer(location, 16, OpenGL.GL_FLOAT, 0, 16 * sizeof(float), IntPtr.Zero);
+                    }
+                }
+
                 return element_count;
             }
 
@@ -1270,6 +1347,7 @@ namespace ghgl
                 _floatUniforms.Clear();
                 _vec3Uniforms.Clear();
                 _vec4Uniforms.Clear();
+                _mat4Uniforms.Clear();
 
                 foreach (var attr in _intAttribs)
                     GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
@@ -1286,6 +1364,9 @@ namespace ghgl
                 foreach (var attr in _vec4Attribs)
                     GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
                 _vec4Attribs.Clear();
+                foreach (var attr in _mat4Attribs)
+                    GLRecycleBin.AddVboToDeleteList(attr.VboHandle);
+                _mat4Attribs.Clear();
 
                 _samplerCache.AddRange(_sampler2DUniforms);
                 while (_samplerCache.Count > 10)
@@ -1327,8 +1408,9 @@ namespace ghgl
                 _floatUniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
                 _vec3Uniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
                 _vec4Uniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
-                
-                for(int i=0; i<chunks.Count; i++)
+                _mat4Uniforms.ForEach((u) => chunks.Add(u.ToJsonString(indent + 2)));
+
+                for (int i=0; i<chunks.Count; i++)
                 {
                     sb.Append(chunks[i]);
                     if (i < (chunks.Count - 1))
@@ -1346,6 +1428,7 @@ namespace ghgl
             readonly List<UniformData<float>> _floatUniforms = new List<UniformData<float>>();
             readonly List<UniformData<Point3f>> _vec3Uniforms = new List<UniformData<Point3f>>();
             readonly public List<UniformData<Vec4>> _vec4Uniforms = new List<UniformData<Vec4>>();
+            readonly List<UniformData<Mat4>> _mat4Uniforms = new List<UniformData<Mat4>>();
             readonly List<SamplerUniformData> _sampler2DUniforms = new List<SamplerUniformData>();
 
             readonly public List<GLAttribute<int>> _intAttribs = new List<GLAttribute<int>>();
@@ -1353,6 +1436,7 @@ namespace ghgl
             readonly public List<GLAttribute<Point2f>> _vec2Attribs = new List<GLAttribute<Point2f>>();
             readonly public List<GLAttribute<Point3f>> _vec3Attribs = new List<GLAttribute<Point3f>>();
             readonly public List<GLAttribute<Vec4>> _vec4Attribs = new List<GLAttribute<Vec4>>();
+            readonly public List<GLAttribute<Mat4>> _mat4Attribs = new List<GLAttribute<Mat4>>();
         }
         readonly List<UniformsAndAttributes> _uniformAndAttributeIterations = new List<UniformsAndAttributes>();
 
@@ -1526,6 +1610,11 @@ namespace ghgl
                 if (length < 0 || attr.Items.Length < length)
                     length = attr.Items.Length;
             }
+            foreach (var attr in attrs._mat4Attribs)
+            {
+                if (length < 0 || attr.Items.Length < length)
+                    length = attr.Items.Length;
+            }
             return length;
         }
 
@@ -1693,6 +1782,12 @@ namespace ghgl
                     if (!string.IsNullOrWhiteSpace(attrAsJson))
                         chunks.Add(attrAsJson);
                 }
+                foreach (var attr in iterationData._mat4Attribs)
+                {
+                    string attrAsJson = attr.ToJsonString(2);
+                    if (!string.IsNullOrWhiteSpace(attrAsJson))
+                        chunks.Add(attrAsJson);
+                }
                 for (int j = 0; j < chunks.Count; j++)
                 {
                     sb.Append(chunks[j]);
@@ -1747,6 +1842,13 @@ namespace ghgl
                 sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));");
                 positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));";
             }
+            //foreach (var attr in attrs._mat4Attribs)
+            //{
+            //    if (attr.Name == "position")
+            //        positionHandled = true;
+            //    sb.AppendLine($"          geometry.addAttribute('{attr.Name}', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));");
+            //    positionFiller = $"          geometry.addAttribute('position', new THREE.BufferAttribute( ghglAttributes[i].{attr.Name}, 4 ));";
+            //}
             foreach (var attr in attrs._vec2Attribs)
             {
                 if (attr.Name == "position")

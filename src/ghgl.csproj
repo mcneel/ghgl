@@ -72,6 +72,7 @@
     <Compile Include="GlslifyPackage.cs" />
     <Compile Include="GLSLViewModel.cs" />
     <Compile Include="IdleRedraw.cs" />
+    <Compile Include="Mat4.cs" />
     <Compile Include="OpenGL.cs" />
     <Compile Include="PerFrameCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
