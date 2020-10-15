@@ -722,14 +722,14 @@ namespace ghgl
 
             public void Draw(Rhino.Display.DisplayPipeline display, uint programId, uint drawMode)
             {
-                SetupGLUniforms(programId);
-
                 int totalCount = 1;
                 if (_meshes != null && _meshes.Count > 1)
                     totalCount = _meshes.Count;
 
                 for (int i = 0; i < totalCount; i++)
                 {
+                    SetupGLUniforms(programId, i);
+
                     int element_count = SetupGLAttributes(i, programId);
                     if (element_count < 1)
                         continue;
@@ -837,7 +837,7 @@ namespace ghgl
             }
 
 
-            public void SetupGLUniforms(uint programId)
+            public void SetupGLUniforms(uint programId, int itemIndex)
             {
                 foreach (var uniform in _intUniforms)
                 {
@@ -846,7 +846,12 @@ namespace ghgl
                     if (-1 != location)
                     {
                         if (arrayLength < 1)
-                            OpenGL.glUniform1i(location, uniform.Data[0]);
+                        {
+                            int dataIndex = itemIndex;
+                            if (itemIndex >= uniform.Data.Length)
+                                dataIndex = uniform.Data.Length - 1;
+                            OpenGL.glUniform1i(location, uniform.Data[dataIndex]);
+                        }
                         else if (uniform.Data.Length >= arrayLength)
                             OpenGL.glUniform1iv(location, arrayLength, uniform.Data);
                     }
@@ -858,7 +863,12 @@ namespace ghgl
                     if (-1 != location)
                     {
                         if (arrayLength < 1)
-                            OpenGL.glUniform1f(location, uniform.Data[0]);
+                        {
+                            int dataIndex = itemIndex;
+                            if (itemIndex >= uniform.Data.Length)
+                                dataIndex = uniform.Data.Length - 1;
+                            OpenGL.glUniform1f(location, uniform.Data[dataIndex]);
+                        }
                         else if (uniform.Data.Length >= arrayLength)
                             OpenGL.glUniform1fv(location, arrayLength, uniform.Data);
                     }
@@ -870,7 +880,12 @@ namespace ghgl
                     if (-1 != location)
                     {
                         if (arrayLength < 1)
-                            OpenGL.glUniform3f(location, uniform.Data[0].X, uniform.Data[0].Y, uniform.Data[0].Z);
+                        {
+                            int dataIndex = itemIndex;
+                            if (itemIndex >= uniform.Data.Length)
+                                dataIndex = uniform.Data.Length - 1;
+                            OpenGL.glUniform3f(location, uniform.Data[dataIndex].X, uniform.Data[dataIndex].Y, uniform.Data[dataIndex].Z);
+                        }
                         else if (uniform.Data.Length >= arrayLength)
                         {
                             float[] data = new float[arrayLength * 3];
@@ -891,7 +906,12 @@ namespace ghgl
                     if (-1 != location)
                     {
                         if (arrayLength < 1)
-                            OpenGL.glUniform4f(location, uniform.Data[0]._x, uniform.Data[0]._y, uniform.Data[0]._z, uniform.Data[0]._w);
+                        {
+                            int dataIndex = itemIndex;
+                            if (itemIndex >= uniform.Data.Length)
+                                dataIndex = uniform.Data.Length - 1;
+                            OpenGL.glUniform4f(location, uniform.Data[dataIndex]._x, uniform.Data[dataIndex]._y, uniform.Data[dataIndex]._z, uniform.Data[dataIndex]._w);
+                        }
                         else if (uniform.Data.Length >= arrayLength)
                         {
                             float[] data = new float[arrayLength * 4];
