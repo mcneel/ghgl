@@ -467,9 +467,9 @@ namespace ghgl
                                 else if (goo[index].CastTo(out iValue))
                                 {
                                     if (ints != null)
-                                        ints[index] = (int)dValue;
+                                        ints[index] = iValue;
                                     if (floats != null)
-                                        floats[index] = (float)dValue;
+                                        floats[index] = (float)iValue;
                                 }
                                 else if (goo[index].CastTo(out sValue))
                                 {
@@ -833,8 +833,14 @@ namespace ghgl
             RedrawViewportControl();
         }
 
+        GLSLEditorDialog _activeEditor;
         void OpenEditor()
         {
+            if (_activeEditor!=null)
+            {
+                _activeEditor.Focus();
+                return;
+            }
             string savedVS = _model.VertexShaderCode;
             string savedGS = _model.GeometryShaderCode;
             string savedTC = _model.TessellationControlCode;
@@ -842,11 +848,14 @@ namespace ghgl
             string savedFS = _model.FragmentShaderCode;
             string savedXfrmFeedbackVertex = _model.TransformFeedbackShaderCode;
 
-            var dlg = new GLSLEditorDialog(_model, false, NickName);
+            _activeEditor = new GLSLEditorDialog(_model, false, NickName);
+
             var parent = Rhino.UI.Runtime.PlatformServiceProvider.Service.GetEtoWindow(Grasshopper.Instances.DocumentEditor.Handle);
             _model.Modified = false;
-            dlg.Closed += (s, e) =>
+            _activeEditor.Closed += (s, e) =>
             {
+                var dlg = _activeEditor;
+                _activeEditor = null;
                 if (!dlg.Canceled)
                 {
                     if (_model.Modified)
@@ -869,8 +878,8 @@ namespace ghgl
                 if (_model.ProgramId == 0)
                     ExpireSolution(true);
             };
-            dlg.Owner = parent;
-            dlg.Show();
+            _activeEditor.Owner = parent;
+            _activeEditor.Show();
         }
 
         void Export()
