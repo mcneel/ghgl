@@ -77,10 +77,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper">
-      <Version>7.3.21053.23031</Version>
+      <Version>7.8.21196.5001</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>7.3.21053.23031</Version>
+      <Version>7.8.21196.5001</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

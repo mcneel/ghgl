@@ -66,6 +66,7 @@ namespace ghgl
             data.GetData(0, ref resourceName);
             data.GetData(1, ref defines);
             defines = defines.Replace("\\n", "\n");
+            defines = defines.Replace("\r", "");
             if (!resourceName.Equals(_resourceName) || !defines.Equals(_defines))
             {
                 _resourceName = resourceName;
