@@ -57,6 +57,7 @@ namespace ghgl
 
         public static IntPtr InitialColorBuffer { get; private set; }
         public static IntPtr InitialDepthBuffer { get; private set; }
+        public static IntPtr PostColorBuffer { get; set; }
 
         /// <summary>
         /// Return true if the output color buffer from a given component is used downstream
@@ -117,6 +118,8 @@ namespace ghgl
             InitialColorBuffer = IntPtr.Zero;
             GLRecycleBin.AddTextureToDeleteList(InitialDepthBuffer);
             InitialDepthBuffer = IntPtr.Zero;
+            GLRecycleBin.AddTextureToDeleteList(PostColorBuffer);
+            PostColorBuffer = IntPtr.Zero;
         }
     }
 }
