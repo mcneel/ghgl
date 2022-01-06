@@ -20,12 +20,15 @@ namespace ghgl
             // check to see if any components use _colorBuffer or _depthBuffer
             bool usesInitialColorBuffer = false;
             bool usesInitialDepthBuffer = false;
+            UsesPostColorBuffer = false;
             foreach (var component in components)
             {
                 if (!usesInitialColorBuffer && component._model.TryGetUniformType("_colorBuffer", out string dataType, out int arrayLength))
                     usesInitialColorBuffer = true;
                 if (!usesInitialDepthBuffer && component._model.TryGetUniformType("_depthBuffer", out dataType, out arrayLength))
                     usesInitialDepthBuffer = true;
+                if (!UsesPostColorBuffer && component._model.TryGetUniformType("_previousColorBuffer", out dataType, out arrayLength))
+                    UsesPostColorBuffer = true;
             }
             if (usesInitialColorBuffer)
             {
@@ -58,6 +61,7 @@ namespace ghgl
         public static IntPtr InitialColorBuffer { get; private set; }
         public static IntPtr InitialDepthBuffer { get; private set; }
         public static IntPtr PostColorBuffer { get; set; }
+        public static bool UsesPostColorBuffer { get; private set; } = false;
 
         /// <summary>
         /// Return true if the output color buffer from a given component is used downstream
