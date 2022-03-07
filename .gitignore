@@ -8,3 +8,4 @@
 /dist/*.xml
 /dist/*.yak
 /dist/*.dll
+/.vs
