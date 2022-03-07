@@ -62,6 +62,7 @@ namespace ghgl
                 _glDeleteBuffers = (glDeleteBuffersProc)procBuilder.GetProc<glDeleteBuffersProc>();
                 _glGenBuffers = (glGenBuffersProc)procBuilder.GetProc<glGenBuffersProc>();
                 _glBufferData = (glBufferDataProc)procBuilder.GetProc<glBufferDataProc>();
+                _glBufferSubData = (glBufferSubDataProc)procBuilder.GetProc<glBufferSubDataProc>();
 
                 _glAttachShader = (glAttachShaderProc)procBuilder.GetProc<glAttachShaderProc>();
                 _glCompileShader = (glCompileShaderProc)procBuilder.GetProc<glCompileShaderProc>();
@@ -402,8 +403,12 @@ namespace ghgl
             _glBufferData(target, size, data, usage);
         }
 
-        //delegate void glBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
-
+        delegate void glBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
+        static glBufferSubDataProc _glBufferSubData;
+        public static void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data)
+        {
+            _glBufferSubData(target, offset, size, data);
+        }
 
         delegate void glAttachShaderProc(GLuint program, GLuint shader);
         static glAttachShaderProc _glAttachShader;
