@@ -61,8 +61,17 @@ namespace ghgl
                 _glBindBuffer = (glBindBufferProc)procBuilder.GetProc<glBindBufferProc>();
                 _glDeleteBuffers = (glDeleteBuffersProc)procBuilder.GetProc<glDeleteBuffersProc>();
                 _glGenBuffers = (glGenBuffersProc)procBuilder.GetProc<glGenBuffersProc>();
+                _glGenQueries = (glGenQueriesProc)procBuilder.GetProc<glGenQueriesProc>();
                 _glBufferData = (glBufferDataProc)procBuilder.GetProc<glBufferDataProc>();
                 _glBufferSubData = (glBufferSubDataProc)procBuilder.GetProc<glBufferSubDataProc>();
+                _glBeginTransformFeedback = (glBeginTransformFeedbackProc)procBuilder.GetProc<glBeginTransformFeedbackProc>();
+                _glEndTransformFeedback = (glEndTransformFeedbackProc)procBuilder.GetProc<glEndTransformFeedbackProc>();
+                _glTransformFeedbackVaryings = (glTransformFeedbackVaryingsProc)procBuilder.GetProc<glTransformFeedbackVaryingsProc>();
+                _glBindBufferBase = (glBindBufferBaseProc)procBuilder.GetProc<glBindBufferBaseProc>();
+                _glGetBufferSubData = (glGetBufferSubDataProc)procBuilder.GetProc<glGetBufferSubDataProc>();
+                _glBeginQuery = (glBeginQueryProc)procBuilder.GetProc<glBeginQueryProc>();
+                _glEndQuery = (glEndQueryProc)procBuilder.GetProc<glEndQueryProc>();
+                _glGetQueryObjectuiv = (glGetQueryObjectuivProc)procBuilder.GetProc<glGetQueryObjectuivProc>();
 
                 _glAttachShader = (glAttachShaderProc)procBuilder.GetProc<glAttachShaderProc>();
                 _glCompileShader = (glCompileShaderProc)procBuilder.GetProc<glCompileShaderProc>();
@@ -154,6 +163,13 @@ namespace ghgl
         public const uint GL_ARRAY_BUFFER = 0x8892;
         public const uint GL_ELEMENT_ARRAY_BUFFER = 0x8893;
 
+        public const uint GL_TRANSFORM_FEEDBACK_BUFFER = 0x8C8E;
+        public const uint GL_INTERLEAVED_ATTRIBS = 0x8C8C;
+        public const uint GL_SEPARATE_ATTRIBS = 0x8C8D;
+
+        public const uint GL_READ_ONLY = 0x88B8;
+        public const uint GL_WRITE_ONLY = 0x88B9;
+        public const uint GL_READ_WRITE = 0x88BA;
         public const uint GL_STREAM_DRAW = 0x88E0;
         public const uint GL_STREAM_READ = 0x88E1;
         public const uint GL_STREAM_COPY = 0x88E2;
@@ -163,6 +179,10 @@ namespace ghgl
         public const uint GL_DYNAMIC_DRAW = 0x88E8;
         public const uint GL_DYNAMIC_READ = 0x88E9;
         public const uint GL_DYNAMIC_COPY = 0x88EA;
+
+        public const uint GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN = 0x8C88;
+        public const uint GL_PRIMITIVES_GENERATED = 0x8C87;
+        public const uint GL_QUERY_RESULT = 0x8866;
 
 
         public const int GL_FRAGMENT_SHADER = 0x8B30;
@@ -396,6 +416,14 @@ namespace ghgl
             _glGenBuffers(n, buffers);
         }
 
+        delegate void glGenQueriesProc(GLsizei n, [MarshalAs(UnmanagedType.LPArray)] GLuint[] buffers);
+        static glGenQueriesProc _glGenQueries;
+        public static void glGenQueries(GLsizei n, out GLuint[] buffers)
+        {
+            buffers = new GLuint[n];
+            _glGenQueries(n, buffers);
+        }
+
         delegate void glBufferDataProc(GLenum target, GLsizeiptr size, IntPtr data, GLenum usage);
         static glBufferDataProc _glBufferData;
         public static void glBufferData(GLenum target, GLsizeiptr size, IntPtr data, GLenum usage)
@@ -408,6 +436,63 @@ namespace ghgl
         public static void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data)
         {
             _glBufferSubData(target, offset, size, data);
+        }
+
+        delegate void glBeginTransformFeedbackProc(GLenum primitiveMode);
+        static glBeginTransformFeedbackProc _glBeginTransformFeedback;
+        public static void glBeginTransformFeedback(GLenum primitiveMode)
+        {
+            _glBeginTransformFeedback(primitiveMode);
+        }
+
+        delegate void glEndTransformFeedbackProc();
+        static glEndTransformFeedbackProc _glEndTransformFeedback;
+        public static void glEndTransformFeedback()
+        {
+            _glEndTransformFeedback();
+        }
+
+        delegate void glTransformFeedbackVaryingsProc(GLuint program, GLsizei count, string[] varyings, GLenum bufferMode);
+        static glTransformFeedbackVaryingsProc _glTransformFeedbackVaryings;
+        public static void glTransformFeedbackVaryings(GLuint program, GLsizei count, string[] varyings, GLenum bufferMode)
+        {
+            _glTransformFeedbackVaryings(program, count, varyings, bufferMode);
+        }
+
+        delegate void glBindBufferBaseProc(GLenum target, GLuint index, GLuint buffer);
+        static glBindBufferBaseProc _glBindBufferBase;
+        public static void glBindBufferBase(GLenum target, GLuint index, GLuint buffer)
+        {
+            _glBindBufferBase(target, index, buffer);
+        }
+
+        delegate void glGetBufferSubDataProc(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data);
+        static glGetBufferSubDataProc _glGetBufferSubData;
+        public static void glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, IntPtr data)
+        {
+            _glGetBufferSubData(target, offset, size, data);
+        }
+
+        delegate void glBeginQueryProc(GLenum target, GLuint id);
+        static glBeginQueryProc _glBeginQuery;
+        public static void glBeginQuery(GLenum target, GLuint id)
+        {
+            _glBeginQuery(target, id);
+        }
+
+        delegate void glEndQueryProc(GLenum target);
+        static glEndQueryProc _glEndQuery;
+        public static void glEndQuery(GLenum target)
+        {
+            _glEndQuery(target);
+        }
+
+        delegate void glGetQueryObjectuivProc(GLuint id, GLenum pname, [MarshalAs(UnmanagedType.LPArray)] GLuint[] _params);
+        static glGetQueryObjectuivProc _glGetQueryObjectuiv;
+        public static void glGetQueryObjectuiv(GLuint id, GLenum pname, out GLuint[] _params)
+        {
+            _params = new GLuint[1];
+            _glGetQueryObjectuiv(id, pname, _params);
         }
 
         delegate void glAttachShaderProc(GLuint program, GLuint shader);
