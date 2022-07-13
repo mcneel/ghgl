@@ -98,6 +98,19 @@ namespace ghgl
                     OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
                 });
 
+                Register("_previousColorBuffer", "sampler2D", "The rhino viewport after the last shader components executed", (location, display) =>
+                {
+                    IntPtr texture2dPtr = PerFrameCache.PostColorBuffer;
+                    uint textureId = 0;
+                    textureId = Rhino7NativeMethods.RhTexture2dHandle(texture2dPtr);
+
+                    const int textureUnit = (int)SamplerTextureUnit.BaseSampler;
+                    OpenGL.glUniform1i(location, textureUnit);
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0 + (uint)textureUnit);
+                    OpenGL.glBindTexture(OpenGL.GL_TEXTURE_2D, textureId);
+                    OpenGL.glActiveTexture(OpenGL.GL_TEXTURE0);
+                });
+
                 Register("_worldToClip", "mat4", "transformation from world to clipping coordinates", (location, display) =>
                 {
                     float[] w2c = display.GetOpenGLWorldToClip(true);
