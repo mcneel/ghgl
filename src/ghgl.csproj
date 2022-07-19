@@ -38,7 +38,11 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="Eto.CodeEditor">
       <HintPath>refs\Eto.CodeEditor.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Eto.CodeEditor.Wpf">
+      <HintPath>refs\Eto.CodeEditor.Wpf.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
