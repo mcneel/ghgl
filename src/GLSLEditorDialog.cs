@@ -1,7 +1,9 @@
 ﻿using System;
 using Eto.Forms;
 //using CodeEditor;
+using ee = Ed.Eto;
 using System.ComponentModel;
+using ghgl.CodeEditor;
 
 namespace ghgl
 {
@@ -55,7 +57,9 @@ namespace ghgl
             if (sc.Control == null)
             {
                 var model = DataContext as GLSLViewModel;
-                sc.Control = new ShaderEditorControl(type, model);
+                var editor = new ShaderEditorControl(type, model);
+                editor.RegisterProvideCompletions(GhglCompletionProvider.GetCompletion);
+                sc.Control = editor;
                 sc.Control.ShaderCompiled += OnShadersCompiled;
             }
 
@@ -305,7 +309,7 @@ namespace ghgl
             if (asUniform)
             {
                 string text = $"uniform {b.DataType} {b.Name};";
-                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+                shaderCtrl.InsertTextAtCursorPosition(text);
             }
             else
             {
@@ -320,7 +324,7 @@ namespace ghgl
                     index = code.IndexOf("(location=", index+10);
                 }
                 string text = $"layout(location = {count}) in {b.DataType} {b.Name};";
-                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+                shaderCtrl.InsertTextAtCursorPosition(text);
             }
         }
 
@@ -331,7 +335,7 @@ namespace ghgl
             {
 
                 string text = package.PragmaLine(null);
-                shaderCtrl.InsertText(shaderCtrl.CurrentPosition, text);
+                shaderCtrl.InsertTextAtCursorPosition(text);
             }
         }
     }

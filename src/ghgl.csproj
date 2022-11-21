@@ -36,15 +36,12 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="Eto.CodeEditor">
-      <HintPath>refs\Eto.CodeEditor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttributeDescription.cs" />
     <Compile Include="BuiltIn.cs" />
+    <Compile Include="CodeEditor\GhglCompletionProvider.cs" />
     <Compile Include="CodeEditor\ScriptEditorControl.cs" />
     <Compile Include="CodeEditor\ScriptEditorControlHandlerWin.cs" />
     <Compile Include="CompileError.cs" />
@@ -76,12 +73,32 @@
     <EmbeddedResource Include="resources\threejs_template.html" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Eto.Forms">
+      <Version>2.7.2</Version>
+    </PackageReference>
+    <PackageReference Include="Eto.Platform.Wpf">
+      <Version>2.7.2</Version>
+    </PackageReference>
     <PackageReference Include="Grasshopper">
-      <Version>7.8.21196.5001</Version>
+      <Version>7.24.22308.15001</Version>
     </PackageReference>
     <PackageReference Include="RhinoCommon">
-      <Version>7.8.21196.5001</Version>
+      <Version>7.24.22308.15001</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="TextEditor\Ed.Core\Ed.Core.csproj">
+      <Project>{eef65e16-7efa-46da-bbde-eaaca8e4ef7a}</Project>
+      <Name>Ed.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="TextEditor\Ed.Eto.Wpf\Ed.Eto.Wpf.csproj">
+      <Project>{cb18bf7e-0e0a-4299-b880-09663a563024}</Project>
+      <Name>Ed.Eto.Wpf</Name>
+    </ProjectReference>
+    <ProjectReference Include="TextEditor\Ed.Eto\Ed.Eto.csproj">
+      <Project>{adf4c509-3458-4550-b922-9795f3d6edc1}</Project>
+      <Name>Ed.Eto</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
