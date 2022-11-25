@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{00653268-8423-4B6A-A404-A75A98A7DA28}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ghgl</RootNamespace>
+    <AssemblyName>ghgl</AssemblyName>
+    <TargetExt>.gha</TargetExt>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <RhinoPluginType>gha</RhinoPluginType>
+    <RhinoMacLauncher>/Users/stevenbaer/Library/Developer/Xcode/DerivedData/MacRhino-czfxbuxsfmepsddqjdyfntcnznbj/Build/Products/Debug/Rhinoceros.app</RhinoMacLauncher>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>..\dist\</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="Eto.CodeEditor">
+      <HintPath>refs\Eto.CodeEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AttributeDescription.cs" />
+    <Compile Include="BuiltIn.cs" />
+    <Compile Include="CodeEditor\ScriptEditorControl.cs" />
+    <Compile Include="CodeEditor\ScriptEditorControlHandlerWin.cs" />
+    <Compile Include="CompileError.cs" />
+    <Compile Include="GLAttribute.cs" />
+    <Compile Include="GLBuiltInShader.cs" />
+    <Compile Include="GLMeshShaderComponent.cs" />
+    <Compile Include="GLRecycleBin.cs" />
+    <Compile Include="GLShaderComponent.cs" />
+    <Compile Include="GLShaderComponentBase.cs" />
+    <Compile Include="GLSLEditorDialog.cs" />
+    <Compile Include="GlslifyPackage.cs" />
+    <Compile Include="GLSLViewModel.cs" />
+    <Compile Include="IdleRedraw.cs" />
+    <Compile Include="Mat4.cs" />
+    <Compile Include="OpenGL.cs" />
+    <Compile Include="PerFrameCache.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rhino7NativeMethods.cs" />
+    <Compile Include="Shader.cs" />
+    <Compile Include="ShaderEditorControl.cs" />
+    <Compile Include="UniformDescription.cs" />
+    <Compile Include="Vec4.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\GLSL_Component_24x24.png" />
+    <EmbeddedResource Include="resources\GLSL_MeshComponent_24x24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\threejs_template.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grasshopper">
+      <Version>7.8.21196.5001</Version>
+    </PackageReference>
+    <PackageReference Include="RhinoCommon">
+      <Version>7.8.21196.5001</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

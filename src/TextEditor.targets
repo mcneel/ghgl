@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<PackageReference Remove="Eto.Forms" />
+		<PackageReference Remove="Eto.Platform.Wpf" />
+		<PackageReference Remove="Eto.Platform.macOS" />
+		<PackageReference Remove="Eto.UnitTest.NUnit" />
+		
+		<!-- we don't want these in the Plug-ins folder, they are referenced from RhinoWindows and RhinoMac -->
+		<PackageReference Update="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Update="Microsoft.CodeAnalysis.CSharp.Features" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Update="Microsoft.CodeAnalysis.CSharp.Scripting" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Update="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" ExcludeAssets="runtime" />
+		<PackageReference Update="SQLitePCLRaw.bundle_green" PrivateAssets="all" ExcludeAssets="runtime" />		
+		<PackageReference Update="sqlite-net-pcl" PrivateAssets="all" ExcludeAssets="runtime" />		
+	</ItemGroup>
+</Project>
