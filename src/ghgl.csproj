@@ -10,6 +10,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release' and $(TargetFramework) == 'net48'">
     <OutputPath>..\dist\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework) == 'net48'">
     <Reference Include="System" />
