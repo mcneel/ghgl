@@ -1,27 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
   <ItemGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.csproj'">
-          <PackageReference Include="RhinoCommon">
-            <Version>7.24.22308.15001</Version>
-          </PackageReference>
+      <PackageReference Include="RhinoCommon" Version="8.0.22326.12305-wip" />
   </ItemGroup>
-  <ItemGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.macOS.csproj'">
-          <PackageReference Include="RhinoCommon">
-            <Version>7.24.22308.15001</Version>
-          </PackageReference>
-  </ItemGroup>
-  <!--<ItemGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.Wpf.csproj'">
-          <PackageReference Include="RhinoCommon">
-            <Version>7.24.22308.15001</Version>
-          </PackageReference>
-  </ItemGroup>-->
-  <!--<PropertyGroup>
-          <SignAssembly>true</SignAssembly>
-          <DelaySign>false</DelaySign>
-          <DefineConstants>$(DefineConstants);STRONGNAME</DefineConstants>
-          <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Rhino_DotNet\RDN_StrongName.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>-->
-        <!--
-    <Import Project="..\Directory.Build.props" />
-  -->
+  <PropertyGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.csproj'">
+      <NoWarn>NU1701</NoWarn>
+  </PropertyGroup>
 </Project>

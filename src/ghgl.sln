@@ -2,17 +2,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ghgl", "ghgl.csproj", "{00653268-8423-4B6A-A404-A75A98A7DA28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ghgl", "ghgl.csproj", "{00653268-8423-4B6A-A404-A75A98A7DA28}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeEditorControl", "CodeEditorControl", "{188E0E0D-0860-4BD0-9FA0-8C912F8FD815}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ed.Eto", "TextEditor\Ed.Eto\Ed.Eto.csproj", "{ADF4C509-3458-4550-B922-9795F3D6EDC1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ed.Core", "TextEditor\Ed.Core\Ed.Core.csproj", "{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ed.Eto.Wpf", "TextEditor\Ed.Eto.Wpf\Ed.Eto.Wpf.csproj", "{CB18BF7E-0E0A-4299-B880-09663A563024}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eto", "Eto", "{068B2678-D62E-4778-A9AF-FF3F90290A48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,14 +42,6 @@ Global
 		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug-Ed.TestApp.Wpf|Any CPU.Build.0 = Debug-Ed.TestApp.Wpf|Any CPU
 		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug32|Any CPU.ActiveCfg = Debug32|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug32|Any CPU.Build.0 = Debug32|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug-Ed.TestApp.Wpf|Any CPU.ActiveCfg = Debug32|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Debug-Ed.TestApp.Wpf|Any CPU.Build.0 = Debug32|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CB18BF7E-0E0A-4299-B880-09663A563024}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -61,7 +49,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{ADF4C509-3458-4550-B922-9795F3D6EDC1} = {188E0E0D-0860-4BD0-9FA0-8C912F8FD815}
 		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A} = {188E0E0D-0860-4BD0-9FA0-8C912F8FD815}
-		{CB18BF7E-0E0A-4299-B880-09663A563024} = {188E0E0D-0860-4BD0-9FA0-8C912F8FD815}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3409875D-A51B-405D-9A84-B949E9A52D8F}
