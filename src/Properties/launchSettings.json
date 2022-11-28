@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Rhino 8 WIP": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Rhino 8 WIP\\System\\Rhino.exe",
+      "commandLineArgs": "/netcore",
+      "environmentVariables": {
+        "GRASSHOPPER_PLUGINS": "$(MSBuildProjectDirectory)\\bin\\Debug\\net48\\ghgl.gha"
+      }
+    }
+  }
+}

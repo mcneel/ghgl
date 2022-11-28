@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <ItemGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.csproj'">
+      <PackageReference Include="RhinoCommon" Version="8.0.22326.12305-wip" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(MSBuildProjectFile) == 'Ed.Eto.csproj'">
+      <NoWarn>NU1701</NoWarn>
+  </PropertyGroup>
+</Project>

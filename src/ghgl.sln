@@ -1,17 +1,56 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ghgl", "ghgl.csproj", "{00653268-8423-4B6A-A404-A75A98A7DA28}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ghgl", "ghgl.csproj", "{00653268-8423-4B6A-A404-A75A98A7DA28}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodeEditorControl", "CodeEditorControl", "{188E0E0D-0860-4BD0-9FA0-8C912F8FD815}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ed.Eto", "TextEditor\Ed.Eto\Ed.Eto.csproj", "{ADF4C509-3458-4550-B922-9795F3D6EDC1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ed.Core", "TextEditor\Ed.Core\Ed.Core.csproj", "{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug32|Any CPU = Debug32|Any CPU
+		Debug-Ed.TestApp.Wpf|Any CPU = Debug-Ed.TestApp.Wpf|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug32|Any CPU.ActiveCfg = Debug|Any CPU
+		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug32|Any CPU.Build.0 = Debug|Any CPU
+		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug-Ed.TestApp.Wpf|Any CPU.ActiveCfg = Debug|Any CPU
+		{00653268-8423-4B6A-A404-A75A98A7DA28}.Debug-Ed.TestApp.Wpf|Any CPU.Build.0 = Debug|Any CPU
 		{00653268-8423-4B6A-A404-A75A98A7DA28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{00653268-8423-4B6A-A404-A75A98A7DA28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug32|Any CPU.ActiveCfg = Debug32|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug32|Any CPU.Build.0 = Debug32|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug-Ed.TestApp.Wpf|Any CPU.ActiveCfg = Debug32|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Debug-Ed.TestApp.Wpf|Any CPU.Build.0 = Debug32|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug32|Any CPU.ActiveCfg = Debug32|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug32|Any CPU.Build.0 = Debug32|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug-Ed.TestApp.Wpf|Any CPU.ActiveCfg = Debug-Ed.TestApp.Wpf|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Debug-Ed.TestApp.Wpf|Any CPU.Build.0 = Debug-Ed.TestApp.Wpf|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{ADF4C509-3458-4550-B922-9795F3D6EDC1} = {188E0E0D-0860-4BD0-9FA0-8C912F8FD815}
+		{EEF65E16-7EFA-46DA-BBDE-EAACA8E4EF7A} = {188E0E0D-0860-4BD0-9FA0-8C912F8FD815}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3409875D-A51B-405D-9A84-B949E9A52D8F}
 	EndGlobalSection
 EndGlobal

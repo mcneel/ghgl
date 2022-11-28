@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ghgl
@@ -26,7 +27,7 @@ namespace ghgl
                     _glslifyClient = new System.Net.Http.HttpClient();
 
                 var values = new Dictionary<string, string> { { "code", code } };
-                string json = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(values);
+                string json = JsonSerializer.Serialize(values);
                 var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
                 var response = _glslifyClient.PostAsync(PackageServerUrl + "/process", content);
                 string processedCode = response.Result.Content.ReadAsStringAsync().Result;
@@ -52,11 +53,10 @@ namespace ghgl
                     List<GlslifyPackage> packages = new List<GlslifyPackage>();
                     try
                     {
-                        var jsonSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
                         var msg = await _glslifyClient.GetAsync(PackageServerUrl + "/packages");
                         {
                             string packageList = await msg.Content.ReadAsStringAsync();
-                            var packageDictionaries = jsonSerializer.Deserialize<Dictionary<string, string>[]>(packageList);
+                            var packageDictionaries = JsonSerializer.Deserialize<Dictionary<string, string>[]>(packageList);
                             foreach (var dict in packageDictionaries)
                             {
                                 GlslifyPackage package = new GlslifyPackage(dict);
