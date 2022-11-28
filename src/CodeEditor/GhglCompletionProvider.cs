@@ -33,6 +33,8 @@ namespace ghgl.CodeEditor
 	        return txt.Substring(wordStart, wordLength);
         }
 
+        public static List<char> Triggers = new List<char> { ' ', '_' };
+
         public static async Task<List<string>> GetCompletion(string code, int position, char ch)
         {
            string word = WordAtPosition(code, position);

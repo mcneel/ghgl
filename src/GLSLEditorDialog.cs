@@ -58,7 +58,7 @@ namespace ghgl
             {
                 var model = DataContext as GLSLViewModel;
                 var editor = new ShaderEditorControl(type, model);
-                editor.RegisterProvideCompletions(GhglCompletionProvider.GetCompletion);
+                editor.RegisterProvideCompletions(GhglCompletionProvider.GetCompletion, GhglCompletionProvider.Triggers);
                 sc.Control = editor;
                 sc.Control.ShaderCompiled += OnShadersCompiled;
             }
