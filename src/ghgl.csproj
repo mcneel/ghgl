@@ -4,7 +4,6 @@
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform(windows))">net6.0-windows;net48</TargetFrameworks>
     <TargetFramework>net48</TargetFramework>
     <RhinoPluginType>gha</RhinoPluginType>
-    <DefaultItemExcludes>$(DefaultItemExcludes);TextEditor\**\*</DefaultItemExcludes>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
@@ -24,10 +23,7 @@
     <EmbeddedResource Include="resources\*.html" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grasshopper" Version="8.0.22326.12305-wip" />
+    <PackageReference Include="Grasshopper" Version="8.0.23010.12305-wip" />
     <PackageReference Include="System.Text.Json" Version="6.0.0" ExcludeAssets="runtime" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="TextEditor\Ed.Eto\Ed.Eto.csproj" ExcludeAssets="all" Private="False" />
   </ItemGroup>
 </Project>
