@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetExt>.gha</TargetExt>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform(windows))">net6.0-windows;net48</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform(windows))">net7.0-windows</TargetFrameworks>
     <TargetFramework>net48</TargetFramework>
     <RhinoPluginType>gha</RhinoPluginType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -23,7 +23,7 @@
     <EmbeddedResource Include="resources\*.html" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grasshopper" Version="8.0.23010.12305-wip" />
-    <PackageReference Include="System.Text.Json" Version="6.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Grasshopper" Version="8.0.23290.13303-beta" />
+    <PackageReference Include="System.Text.Json" Version="7.0.0" ExcludeAssets="runtime" />
   </ItemGroup>
 </Project>
