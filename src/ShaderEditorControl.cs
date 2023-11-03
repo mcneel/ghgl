@@ -12,6 +12,7 @@ namespace ghgl
         public ShaderEditorControl(ShaderType type, GLSLViewModel model)
             :base("ghgl")
         {
+            MinimapEnabled = true;
             _shaderType = type;
             _model = model;
             SetTextAsync(model.GetCode(type));
