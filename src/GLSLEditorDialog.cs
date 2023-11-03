@@ -1,7 +1,5 @@
 ﻿using System;
 using Eto.Forms;
-//using CodeEditor;
-using ee = Ed.Eto;
 using System.ComponentModel;
 using ghgl.CodeEditor;
 
@@ -58,7 +56,7 @@ namespace ghgl
             {
                 var model = DataContext as GLSLViewModel;
                 var editor = new ShaderEditorControl(type, model);
-                editor.RegisterProvideCompletions(GhglCompletionProvider.GetCompletion, GhglCompletionProvider.Triggers);
+                editor.RegisterProvideCompletionsAsync(GhglCompletionProvider.GetCompletion, GhglCompletionProvider.Triggers);
                 sc.Control = editor;
                 sc.Control.ShaderCompiled += OnShadersCompiled;
             }
@@ -290,8 +288,7 @@ namespace ghgl
             if (code.Contains("#pragma glslify:"))
             {
                 string processedCode = GlslifyPackage.GlslifyCode(code);
-                shaderCtrl.Text = processedCode;
-                //model.SetCode(shaderCtrl.ShaderType, processedCode);
+                shaderCtrl.SetTextAsync(processedCode);
             }
 
         }
@@ -301,7 +298,7 @@ namespace ghgl
             return _tabarea.SelectedPage.Content as ShaderEditorControl;
         }
 
-        void InsertBuiltIn(BuiltIn b, bool asUniform)
+        async void InsertBuiltIn(BuiltIn b, bool asUniform)
         {
             var shaderCtrl = ActiveEditorControl();
             if (shaderCtrl == null)
@@ -309,12 +306,12 @@ namespace ghgl
             if (asUniform)
             {
                 string text = $"uniform {b.DataType} {b.Name};";
-                shaderCtrl.InsertTextAtCursorPosition(text);
+                await shaderCtrl.InsertTextAtCursorPositionAsync(text);
             }
             else
             {
                 //layout(location = 1) in vec4 vcolor;
-                string code = shaderCtrl.Text;
+                string code = await shaderCtrl.GetTextAsync();
                 code = code.Replace(" ", "");
                 int count = 0;
                 int index = code.IndexOf("(location=", 0);
@@ -324,7 +321,7 @@ namespace ghgl
                     index = code.IndexOf("(location=", index+10);
                 }
                 string text = $"layout(location = {count}) in {b.DataType} {b.Name};";
-                shaderCtrl.InsertTextAtCursorPosition(text);
+                await shaderCtrl.InsertTextAtCursorPositionAsync(text);
             }
         }
 
@@ -335,7 +332,7 @@ namespace ghgl
             {
 
                 string text = package.PragmaLine(null);
-                shaderCtrl.InsertTextAtCursorPosition(text);
+                shaderCtrl.InsertTextAtCursorPositionAsync(text);
             }
         }
     }

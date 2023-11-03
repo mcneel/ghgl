@@ -26,7 +26,7 @@ namespace ghgl
         public string Name { get; }
         public string Description { get; }
         public string DataType { get; }
-        public static System.Drawing.Point MouseDownPosition { get; set; }
+        public static System.Drawing.Point MouseDownPosition { get; set; } = new System.Drawing.Point(-1, -1);
 
         public void Setup(uint program, Rhino.Display.DisplayPipeline dp)
         {
@@ -123,9 +123,6 @@ namespace ghgl
                 });
                 Register("_mouseDownPosition", "vec2", "current mouse postion", (location, display) =>
                 {
-                    if (MouseDownPosition == null)
-                        MouseDownPosition = new System.Drawing.Point(-1, -1);
-
                     if (System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.None)
                     {
                         // No mouse button is being pressed...reset the "down" position to reflect that...
@@ -223,6 +220,11 @@ namespace ghgl
                 {
                     var camLoc = display.Viewport.CameraLocation;
                     OpenGL.glUniform3f(location, (float)camLoc.X, (float)camLoc.Y, (float)camLoc.Z);
+                });
+                Register("_cameraDirection", "vec3", "world direction of camera", (location, display) =>
+                {
+                    var camDir = display.Viewport.CameraDirection;
+                    OpenGL.glUniform3f(location, (float)camDir.X, (float)camDir.Y, (float)camDir.Z);
                 });
                 Register("_cameraNear", "float", "near clip plane distance in camera coordinates", (location, display) =>
                 {
