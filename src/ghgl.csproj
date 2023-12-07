@@ -23,7 +23,7 @@
     <EmbeddedResource Include="resources\*.html" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grasshopper" Version="8.0.23290.13303-beta" />
+    <PackageReference Include="Grasshopper" Version="8.1.23325.13001" />
     <PackageReference Include="System.Text.Json" Version="7.0.0" ExcludeAssets="runtime" />
   </ItemGroup>
 </Project>
