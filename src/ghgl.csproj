@@ -24,6 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Grasshopper" Version="8.6.24101.5001" />
-    <PackageReference Include="System.Text.Json" Version="7.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" ExcludeAssets="runtime" />
   </ItemGroup>
 </Project>
