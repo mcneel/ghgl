@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetExt>.gha</TargetExt>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform(windows))">net8.0-windows</TargetFrameworks>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
     <RhinoPluginType>gha</RhinoPluginType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>True</UseWindowsForms>
   </PropertyGroup>
-  <PropertyGroup Condition="$(Configuration) == 'Release' and $(TargetFramework) == 'net48'">
+  <PropertyGroup Condition="$(Configuration) == 'Release'">
     <OutputPath>..\dist\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>

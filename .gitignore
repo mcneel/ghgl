@@ -3,6 +3,7 @@
 /src/.vs
 /src/ghgl.csproj.user
 /src/bin
+/dist/*.deps.json
 /dist/*.gha
 /dist/*.pdb
 /dist/*.xml

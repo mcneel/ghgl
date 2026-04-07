@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ghgl.CodeEditor
@@ -33,9 +31,9 @@ namespace ghgl.CodeEditor
 	        return txt.Substring(wordStart, wordLength);
         }
 
-        public static char[] Triggers = new char[] { ' ', '_' };
+        public static readonly char[] Triggers = new char[] { ' ', '_' };
 
-        public static async Task<string[]> GetCompletion(string code, int position, char ch)
+        public static Task<string[]> GetCompletion(string code, int position, char ch)
         {
            string word = WordAtPosition(code, position);
            List<string> items = new List<string>();
@@ -74,7 +72,7 @@ namespace ghgl.CodeEditor
                if (add)
                    items.Add(kw);
            }
-          return items.ToArray();
+          return Task.FromResult(items.ToArray());
         }
     }
 }
