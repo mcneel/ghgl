@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ghgl
 {
@@ -10,15 +12,15 @@ namespace ghgl
         bool _updateInTimer = false;
 
         public ShaderEditorControl(ShaderType type, GLSLViewModel model)
-            :base("ghgl")
         {
-            MinimapEnabled = true;
+            _ = SetLanguageAsync("glsl");
+            _ = SetMinimapAsync(true);
             _shaderType = type;
             _model = model;
             SetTextAsync(model.GetCode(type));
             ContentChanged += ShaderEditorControl_ContentChanged;
 
-            MarkErrors();
+            _ = MarkErrors();
             _compileTimer.Elapsed += CompileTimerTick;
             _compileTimer.Interval = 1; //every second
             _compileTimer.Start();
@@ -32,8 +34,8 @@ namespace ghgl
                 GLBuiltInShader.ActivateGL();
                 _model.CompileProgram();
                 GLShaderComponentBase.AnimationTimerEnabled = true;
-                MarkErrors();
                 ShaderCompiled?.Invoke(this, new EventArgs());
+                _ = MarkErrors();
             }
         }
 
@@ -58,7 +60,7 @@ namespace ghgl
             }
         }
 
-        private async void ShaderEditorControl_ContentChanged(object sender, Ed.Eto.ContentChangedEventArgs e)
+        private async void ShaderEditorControl_ContentChanged(object sender, Ed.Core.ContentChangedArgs e)
         {
             string text = await GetTextAsync();
 
@@ -70,23 +72,25 @@ namespace ghgl
             }
         }
 
-        async void MarkErrors()
+        async Task MarkErrors()
         {
-            await ClearDiagnosticsAsync();
-            foreach (var error in _model.AllCompileErrors())
+            // NOTE:
+            // disabled this since compiled errors currently do not have line numbers
+            // and there is not point sending diags to editor control without position.
+
+            var diags = new System.Collections.Generic.List<(string message, Ed.Core.Models.DiagnosticSeverity severity, int startLine, int startCharacter, int endLine, int endCharacter)>();
+
+            /*
+            foreach (CompileError error in _model.AllCompileErrors().Where(e => e.Shader is not null))
             {
-                if (error.Shader == null)
-                    continue;
                 if (error.Shader.ShaderType == _shaderType)
                 {
-                    //AddErrorIndicator(error.LineNumber, 0);
-                    var diagnostics = new System.Collections.Generic.List<(string message, Ed.Eto.DiagnosticSeverity severity, int startLine, int startCharacter, int endLine, int endCharacter)>
-                    {
-                        (message: "", severity: Ed.Eto.DiagnosticSeverity.Error, error.LineNumber, 0, error.LineNumber, 0)
-                    };
-                    await AddDiagnosticsAsync(diagnostics);
+                    diags.Add((message: "", severity: Ed.Core.Models.DiagnosticSeverity.Error, error.LineNumber, 0, error.LineNumber, 0));
                 }
             }
+            */
+
+            await SetDiagnosticsAsync(diags);
         }
     }
 }

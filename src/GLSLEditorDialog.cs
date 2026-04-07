@@ -56,7 +56,7 @@ namespace ghgl
             {
                 var model = DataContext as GLSLViewModel;
                 var editor = new ShaderEditorControl(type, model);
-                editor.RegisterProvideCompletionsAsync(GhglCompletionProvider.GetCompletion, GhglCompletionProvider.Triggers);
+                editor.RegisterCompletionsLegacyProviderAsync(GhglCompletionProvider.GetCompletion, GhglCompletionProvider.Triggers);
                 sc.Control = editor;
                 sc.Control.ShaderCompiled += OnShadersCompiled;
             }
@@ -306,7 +306,7 @@ namespace ghgl
             if (asUniform)
             {
                 string text = $"uniform {b.DataType} {b.Name};";
-                await shaderCtrl.InsertTextAtCursorPositionAsync(text);
+                await shaderCtrl.InsertText(text);
             }
             else
             {
@@ -321,7 +321,7 @@ namespace ghgl
                     index = code.IndexOf("(location=", index+10);
                 }
                 string text = $"layout(location = {count}) in {b.DataType} {b.Name};";
-                await shaderCtrl.InsertTextAtCursorPositionAsync(text);
+                await shaderCtrl.InsertText(text);
             }
         }
 
@@ -332,7 +332,7 @@ namespace ghgl
             {
 
                 string text = package.PragmaLine(null);
-                shaderCtrl.InsertTextAtCursorPositionAsync(text);
+                shaderCtrl.InsertText(text);
             }
         }
     }

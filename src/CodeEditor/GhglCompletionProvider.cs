@@ -33,9 +33,9 @@ namespace ghgl.CodeEditor
 	        return txt.Substring(wordStart, wordLength);
         }
 
-        public static List<char> Triggers = new List<char> { ' ', '_' };
+        public static char[] Triggers = new char[] { ' ', '_' };
 
-        public static async Task<List<string>> GetCompletion(string code, int position, char ch)
+        public static async Task<string[]> GetCompletion(string code, int position, char ch)
         {
            string word = WordAtPosition(code, position);
            List<string> items = new List<string>();
@@ -74,7 +74,7 @@ namespace ghgl.CodeEditor
                if (add)
                    items.Add(kw);
            }
-          return items;
+          return items.ToArray();
         }
     }
 }
